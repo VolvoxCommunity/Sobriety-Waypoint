@@ -7,8 +7,7 @@ jest.mock('react-native', () => {
   const TextInput = (props) => React.createElement('TextInput', props);
   const TouchableOpacity = ({ children, onPress, ...props }) =>
     React.createElement('TouchableOpacity', { onPress, ...props }, children);
-  const ScrollView = ({ children, ...props }) =>
-    React.createElement('ScrollView', props, children);
+  const ScrollView = ({ children, ...props }) => React.createElement('ScrollView', props, children);
   const KeyboardAvoidingView = ({ children, ...props }) =>
     React.createElement('KeyboardAvoidingView', props, children);
 
@@ -127,9 +126,7 @@ jest.mock('@supabase/supabase-js', () => {
       maybeSingle: jest.fn(() => builder),
       csv: jest.fn(() => builder),
       // Promise-like methods for query execution
-      then: jest.fn((resolve) =>
-        Promise.resolve({ data: null, error: null }).then(resolve)
-      ),
+      then: jest.fn((resolve) => Promise.resolve({ data: null, error: null }).then(resolve)),
       catch: jest.fn((reject) => Promise.resolve({ data: null, error: null }).catch(reject)),
     };
     return builder;
