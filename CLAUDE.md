@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 **Start Development Server:**
+
 ```bash
 pnpm dev              # Start Expo dev server for all platforms
 pnpm ios              # Launch in iOS simulator (macOS only)
@@ -14,6 +15,7 @@ pnpm start:clean      # Start with cleared cache (when debugging Metro issues)
 ```
 
 **Quality Checks (run before committing):**
+
 ```bash
 pnpm typecheck        # TypeScript type checking (required before push)
 pnpm lint             # ESLint validation
@@ -22,6 +24,7 @@ pnpm format:check     # Check formatting without modifying
 ```
 
 **Testing:**
+
 ```bash
 pnpm test                     # Run all Jest tests
 pnpm test:watch              # Run tests in watch mode
@@ -31,6 +34,7 @@ pnpm maestro:record          # Record new Maestro flow
 ```
 
 **Build & Deploy:**
+
 ```bash
 pnpm build:web        # Build static web bundle → dist/
 pnpm clean:metro      # Clear Metro bundler cache
@@ -38,12 +42,14 @@ pnpm clean:all        # Nuclear option: clear everything and reinstall
 ```
 
 **Testing a Single Test File:**
+
 ```bash
 pnpm test -- path/to/test-file.test.tsx         # Run specific test file
 pnpm test:watch -- path/to/test-file.test.tsx   # Watch mode for specific file
 ```
 
 **Running a Single Test Suite/Case:**
+
 ```bash
 pnpm test -- -t "test name pattern"             # Run tests matching pattern
 ```
@@ -53,6 +59,7 @@ pnpm test -- -t "test name pattern"             # Run tests matching pattern
 ### Core Architecture Patterns
 
 **Routing & Navigation:**
+
 - Expo Router v6 with typed routes (file-based routing in `app/`)
 - Authentication flow enforced in root layout (`app/_layout.tsx`):
   1. Unauthenticated → `/login` or `/signup`
@@ -62,22 +69,24 @@ pnpm test -- -t "test name pattern"             # Run tests matching pattern
 - Deep linking: `sobrietywaypoint://` scheme
 
 **State Management:**
+
 - Context API for global state (AuthContext, ThemeContext)
 - No Redux/Zustand - contexts wrap the entire app in `app/_layout.tsx`
 - AuthContext provides: `user`, `session`, `profile`, `loading`, auth methods
 - ThemeContext provides: `theme`, `isDark`, `setTheme` (light/dark/system)
 
 **Data Layer:**
+
 - Supabase client (`lib/supabase.ts`) with typed database schema (`types/database.ts`)
 - Platform-aware storage: SecureStore (native) / localStorage (web)
 - Database types are canonical - all data models derive from `types/database.ts`
 - No local schema migrations - Supabase migrations are source of truth
 
 **Authentication:**
+
 - Supabase Auth with multiple providers:
   - Email/password (ready)
   - Google OAuth (configured)
-  - Facebook Sign In (configured)
   - Apple Sign In (design phase, see `docs/plans/`)
 - Session persistence via secure storage adapter
 - Auto-refresh tokens enabled
@@ -122,11 +131,13 @@ styles/                      # Shared theme constants
 ### Important Implementation Details
 
 **Path Aliases:**
+
 - All imports use `@/` prefix (configured in tsconfig.json)
 - Example: `import { supabase } from '@/lib/supabase'`
 
 **Authentication Guard Pattern:**
 The root layout (`app/_layout.tsx`) orchestrates the auth flow:
+
 - Reads `user`, `profile`, `loading` from AuthContext
 - Routes users based on state:
   - No user → `/login`
@@ -136,24 +147,28 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 - This pattern prevents unauthorized access and ensures complete onboarding
 
 **Supabase Integration:**
+
 - All database operations use typed client: `supabase.from('profiles').select()...`
 - Row Level Security (RLS) policies enforce data access (managed in Supabase dashboard)
 - Real-time subscriptions available via `supabase.channel().on(...)`
 - Auth state change listener in AuthContext syncs session with React state
 
 **Theme System:**
+
 - ThemeContext manages light/dark/system modes
 - System mode respects OS preference via `useColorScheme()`
 - Theme persists across sessions (stored in SecureStore/localStorage)
 - Components consume theme via `useTheme()` hook
 
 **Error Handling:**
+
 - Sentry SDK wraps root component for crash reporting
 - Production-only error tracking (disabled in `__DEV__`)
 - Privacy scrubbing configured in `lib/sentry-privacy.ts`
 - ErrorBoundary component wraps app for graceful failures
 
 **Font Loading:**
+
 - JetBrains Mono loaded via expo-font
 - Splash screen hidden after fonts load (`useEffect` in `_layout.tsx`)
 - Font variants: Regular, Medium, SemiBold, Bold
@@ -161,15 +176,18 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 ## Testing Strategy
 
 **Coverage Requirements:**
+
 - 80% minimum across statements, branches, functions, and lines
 - Enforced in CI/CD pipeline
 
 **Testing Layers:**
+
 1. Unit tests: Pure functions, utilities, hooks
 2. Integration tests: Component + context interactions
 3. E2E tests: Maestro flows for critical user journeys
 
 **Testing Patterns:**
+
 - Use `renderWithProviders` from `test-utils/` to wrap components with AuthContext, ThemeContext
 - MSW (Mock Service Worker) for API mocking in `mocks/`
 - Test fixtures in `test-utils/fixtures/`
@@ -178,6 +196,7 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 ## Supabase Schema Overview
 
 **Core Tables:**
+
 - `profiles`: User profiles (name, role, sobriety_date, preferences)
 - `sponsor_sponsee_relationships`: Links between sponsors/sponsees
 - `invite_codes`: Codes for connecting sponsors with sponsees
@@ -189,6 +208,7 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 - `notifications`: In-app notification queue
 
 **Key Types:**
+
 - `UserRole`: 'sponsor' | 'sponsee' | 'both'
 - `RelationshipStatus`: 'pending' | 'active' | 'inactive'
 - `TaskStatus`: 'assigned' | 'in_progress' | 'completed'
@@ -197,14 +217,15 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 ## Environment Configuration
 
 **Required Variables:**
+
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=xxx
-EXPO_PUBLIC_FACEBOOK_APP_ID=xxx
 EXPO_TOKEN=xxx                      # For EAS builds
 ```
 
 **Production-Only:**
+
 ```env
 EXPO_PUBLIC_SENTRY_DSN=xxx
 SENTRY_AUTH_TOKEN=xxx
@@ -213,23 +234,27 @@ SENTRY_PROJECT=sobriety-waypoint
 ```
 
 **Naming Convention:**
+
 - `EXPO_PUBLIC_*` = Available in client-side code
 - Other vars = Build-time only (NOT in app code)
 
 ## CI/CD Pipeline
 
 **GitHub Actions (`.github/workflows/ci.yml`):**
+
 1. Lint → Format check → Typecheck
 2. Web build (artifact retention: 7 days)
 3. Android + iOS preview builds via EAS
 4. Claude Code Review (sticky PR comments)
 
 **EAS Build Profiles:**
+
 - `development`: Dev client for local testing
 - `preview`: CI builds with Release config, OTA channel `preview`
 - `production`: Production builds with auto version bump
 
 **Required GitHub Secrets:**
+
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_TOKEN` (from expo.dev → Access Tokens)
@@ -237,6 +262,7 @@ SENTRY_PROJECT=sobriety-waypoint
 ## MCP Server Usage
 
 When using MCP servers (Model Context Protocol):
+
 - **expo-mcp**: For Expo-specific operations (library installation, docs search)
   - Use `search_documentation` for Expo API questions
   - Use `add_library` to install Expo packages correctly
@@ -251,20 +277,24 @@ When using MCP servers (Model Context Protocol):
 ## Code Style & Conventions
 
 **TypeScript:**
+
 - Strict mode enabled (`strict: true` in tsconfig)
 - Prefer explicit types over inference for public APIs
 - Use database types from `types/database.ts` as source of truth
 
 **Imports:**
+
 - Use `@/` path alias for all local imports
 - Group imports: React → third-party → local (Prettier enforces)
 
 **Components:**
+
 - Functional components with hooks (no class components)
 - Props interfaces defined inline or exported if shared
 - StyleSheet.create() for component styles (no inline objects)
 
 **Git Workflow:**
+
 - Husky + lint-staged auto-format on commit
 - Pre-commit checks: Prettier format + ESLint on staged TS/JS files
 - Skip hooks only via `git commit -n` (not recommended)

@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Heart } from 'lucide-react-native';
-import { GoogleLogo, FacebookLogo } from '@/components/auth/SocialLogos';
+import { GoogleLogo } from '@/components/auth/SocialLogos';
 
 export default function LoginScreen() {
   const { theme } = useTheme();
@@ -22,8 +22,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [facebookLoading, setFacebookLoading] = useState(false);
-  const { signIn, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   // Refs for field navigation
@@ -65,21 +64,6 @@ export default function LoginScreen() {
       }
     } finally {
       setGoogleLoading(false);
-    }
-  };
-
-  const handleFacebookSignIn = async () => {
-    setFacebookLoading(true);
-    try {
-      await signInWithFacebook();
-    } catch (error: any) {
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + (error.message || 'Failed to sign in with Facebook'));
-      } else {
-        Alert.alert('Error', error.message || 'Failed to sign in with Facebook');
-      }
-    } finally {
-      setFacebookLoading(false);
     }
   };
 
@@ -134,7 +118,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={loading || googleLoading || facebookLoading}
+            disabled={loading || googleLoading}
           >
             <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
           </TouchableOpacity>
@@ -148,7 +132,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
             onPress={handleGoogleSignIn}
-            disabled={loading || googleLoading || facebookLoading}
+            disabled={loading || googleLoading}
           >
             {!googleLoading && <GoogleLogo size={20} />}
             <Text style={styles.googleButtonText}>
@@ -157,20 +141,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.facebookButton, facebookLoading && styles.buttonDisabled]}
-            onPress={handleFacebookSignIn}
-            disabled={loading || googleLoading || facebookLoading}
-          >
-            {!facebookLoading && <FacebookLogo size={20} />}
-            <Text style={styles.facebookButtonText}>
-              {facebookLoading ? 'Signing in with Facebook...' : 'Continue with Facebook'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() => router.push('/signup')}
-            disabled={loading || googleLoading || facebookLoading}
+            disabled={loading || googleLoading}
           >
             <Text style={styles.secondaryButtonText}>Create New Account</Text>
           </TouchableOpacity>
@@ -279,23 +252,6 @@ const createStyles = (theme: any) =>
       marginBottom: 12,
     },
     googleButtonText: {
-      color: '#374151',
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-    },
-    facebookButton: {
-      backgroundColor: theme.card,
-      borderWidth: 1,
-      borderColor: '#d1d5db',
-      borderRadius: 12,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 12,
-    },
-    facebookButtonText: {
       color: '#374151',
       fontSize: 16,
       fontFamily: theme.fontRegular,

@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types/database';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
-import * as Facebook from 'expo-facebook';
 import { Platform } from 'react-native';
 import { setSentryUser, clearSentryUser, setSentryContext } from '@/lib/sentry';
 
@@ -17,7 +16,6 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInWithFacebook: () => Promise<void>;
   signUp: (
     email: string,
     password: string,
@@ -35,7 +33,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => {},
   signInWithGoogle: async () => {},
-  signInWithFacebook: async () => {},
   signUp: async () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -239,66 +236,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signInWithFacebook = async () => {
-    try {
-      if (Platform.OS === 'web') {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'facebook',
-          options: {
-            redirectTo: window.location.origin,
-            scopes: 'email public_profile',
-          },
-        });
-        if (error) throw error;
-      } else {
-        // Native flow using expo-facebook
-        const appId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-        if (!appId) {
-          throw new Error('Facebook App ID not configured');
-        }
-
-        // Initialize Facebook SDK
-        await Facebook.initializeAsync({
-          appId: appId,
-        });
-
-        // Request login with read permissions
-        const result = await Facebook.logInWithReadPermissionsAsync({
-          permissions: ['public_profile', 'email'],
-        });
-
-        if (result.type === 'cancel') {
-          // User cancelled - return gracefully
-          return;
-        }
-
-        if (result.type !== 'success') {
-          throw new Error('Facebook sign in failed');
-        }
-
-        if (!result.token) {
-          throw new Error('No access token received from Facebook');
-        }
-
-        // Exchange Facebook token with Supabase
-        const { data: sessionData, error: sessionError } = await supabase.auth.signInWithIdToken({
-          provider: 'facebook',
-          token: result.token,
-        });
-
-        if (sessionError) throw sessionError;
-
-        // Create profile if needed
-        if (sessionData.user) {
-          await createOAuthProfileIfNeeded(sessionData.user);
-        }
-      }
-    } catch (error) {
-      console.error('Facebook sign in error:', error);
-      throw error;
-    }
-  };
-
   const signUp = async (
     email: string,
     password: string,
@@ -343,7 +280,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         signIn,
         signInWithGoogle,
-        signInWithFacebook,
         signUp,
         signOut,
         refreshProfile,

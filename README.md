@@ -34,7 +34,7 @@ Sobriety Waypoint helps sponsors and sponsees stay connected and accountable thr
 - **Framework**: Expo 54 · React Native 0.81.5 · React 19
 - **Routing**: Expo Router v6 with typed routes
 - **Backend**: Supabase (Postgres + RLS) with typed client access
-- **Auth**: Supabase Auth (email/password, Google OAuth, Facebook Sign In, Apple Sign In design ready)
+- **Auth**: Supabase Auth (email/password, Google OAuth, Apple Sign In design ready)
 - **Storage**: SecureStore (native) / localStorage (web) via platform-aware adapter
 - **Language / Tooling**: TypeScript (strict), pnpm, ESLint, Prettier, Husky + lint-staged
 - **Icons & UI**: lucide-react-native, custom theme context
@@ -80,7 +80,6 @@ Sobriety-Waypoint/
    ```env
    EXPO_PUBLIC_SUPABASE_URL=<your-supabase-url>
    EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-   EXPO_PUBLIC_FACEBOOK_APP_ID=<your-facebook-app-id>  # optional
    ```
 3. Provision Supabase
    1. Create a Supabase project
@@ -113,7 +112,6 @@ pnpm build:web  # Static web build → dist/
 - **Supabase Auth** powers all providers
 - Email/password ready out of the box
 - Google OAuth setup documented in `GOOGLE_OAUTH_SETUP.md`
-- Facebook Sign In covered in `FACEBOOK_SIGNIN_SETUP.md`
 - Apple Sign In design lives in `docs/plans/2025-11-12-apple-signin-design.md`
 - Deep link scheme: `12stepstracker://`
 - Bundle IDs: `com.billchirico.12steptracker` (iOS) / `com.billchirico.twelvesteptracker` (Android)
@@ -177,7 +175,7 @@ Templates live in `docs/templates/` for components, hooks, integration tests, an
 - `docs/TESTING.md` – testing strategies, coverage targets, MSW patterns
 - `.github/CICD.md` – CI/CD deep dive + Claude review notes
 - `.github/GIT_HOOKS.md` – Husky/lint-staged troubleshooting
-- `GOOGLE_OAUTH_SETUP.md`, `FACEBOOK_SIGNIN_SETUP.md`, `docs/plans/2025-11-12-apple-signin-design.md`
+- `GOOGLE_OAUTH_SETUP.md`, `docs/plans/2025-11-12-apple-signin-design.md`
 - `supabase/migrations/` – schema + RLS source of truth
 
 ## License
