@@ -14,24 +14,33 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
       return Promise.resolve(localStorage.getItem(key));
     }
-    return SecureStore.getItemAsync(key);
+    if (Platform.OS !== 'web') {
+      return SecureStore.getItemAsync(key);
+    }
+    return Promise.resolve(null);
   },
   setItem: (key: string, value: string) => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
       localStorage.setItem(key, value);
       return Promise.resolve();
     }
-    return SecureStore.setItemAsync(key, value);
+    if (Platform.OS !== 'web') {
+      return SecureStore.setItemAsync(key, value);
+    }
+    return Promise.resolve();
   },
   removeItem: (key: string) => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
       localStorage.removeItem(key);
       return Promise.resolve();
     }
-    return SecureStore.deleteItemAsync(key);
+    if (Platform.OS !== 'web') {
+      return SecureStore.deleteItemAsync(key);
+    }
+    return Promise.resolve();
   },
 };
 
