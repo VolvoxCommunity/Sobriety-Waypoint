@@ -33,7 +33,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "@sentry/react-native": "7.6.0",
-    "@supabase/supabase-js": "^2.81.1",
+    "@supabase/supabase-js": "^2.84.0",
     "expo": "~54.0.25",
     "expo-auth-session": "^7.0.8",
     "expo-constants": "~18.0.10",
