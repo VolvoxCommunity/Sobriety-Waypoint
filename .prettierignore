@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+build/
+dist/
+.expo/
+.expo-shared/
+web-build/
+
+# Native
+ios/
+android/
+
+# Package manager
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Coverage
+coverage/
+
+# Other
+*.min.js
+*.min.css

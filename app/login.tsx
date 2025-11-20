@@ -1,0 +1,317 @@
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Heart } from 'lucide-react-native';
+import { GoogleLogo, FacebookLogo } from '@/components/auth/SocialLogos';
+
+export default function LoginScreen() {
+  const { theme } = useTheme();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
+  const { signIn, signInWithGoogle, signInWithFacebook } = useAuth();
+  const router = useRouter();
+
+  // Refs for field navigation
+  const passwordRef = useRef<TextInput>(null);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      if (Platform.OS === 'web') {
+        window.alert('Please fill in all fields');
+      } else {
+        Alert.alert('Error', 'Please fill in all fields');
+      }
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signIn(email, password);
+    } catch (error: any) {
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + (error.message || 'Failed to sign in'));
+      } else {
+        Alert.alert('Error', error.message || 'Failed to sign in');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + (error.message || 'Failed to sign in with Google'));
+      } else {
+        Alert.alert('Error', error.message || 'Failed to sign in with Google');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    setFacebookLoading(true);
+    try {
+      await signInWithFacebook();
+    } catch (error: any) {
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + (error.message || 'Failed to sign in with Facebook'));
+      } else {
+        Alert.alert('Error', error.message || 'Failed to sign in with Facebook');
+      }
+    } finally {
+      setFacebookLoading(false);
+    }
+  };
+
+  const styles = createStyles(theme);
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Heart size={48} color="#007AFF" fill="#007AFF" />
+          </View>
+          <Text style={styles.title}>Sobriety Waypoint</Text>
+          <Text style={styles.subtitle}>Your journey to recovery</Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="your@email.com"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              editable={!loading}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              blurOnSubmit={false}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              ref={passwordRef}
+              style={styles.input}
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              editable={!loading}
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading || googleLoading || facebookLoading}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={loading || googleLoading || facebookLoading}
+          >
+            {!googleLoading && <GoogleLogo size={20} />}
+            <Text style={styles.googleButtonText}>
+              {googleLoading ? 'Signing in with Google...' : 'Continue with Google'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.facebookButton, facebookLoading && styles.buttonDisabled]}
+            onPress={handleFacebookSignIn}
+            disabled={loading || googleLoading || facebookLoading}
+          >
+            {!facebookLoading && <FacebookLogo size={20} />}
+            <Text style={styles.facebookButtonText}>
+              {facebookLoading ? 'Signing in with Facebook...' : 'Continue with Facebook'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => router.push('/signup')}
+            disabled={loading || googleLoading || facebookLoading}
+          >
+            <Text style={styles.secondaryButtonText}>Create New Account</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 24,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 48,
+    },
+    iconContainer: {
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: 32,
+      fontFamily: theme.fontRegular,
+      fontWeight: '700',
+      color: theme.text,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      color: theme.textSecondary,
+    },
+    form: {
+      width: '100%',
+      maxWidth: 400,
+      alignSelf: 'center',
+    },
+    inputContainer: {
+      marginBottom: 20,
+    },
+    label: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: '#374151',
+      marginBottom: 8,
+    },
+    input: {
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      color: theme.text,
+    },
+    button: {
+      backgroundColor: '#007AFF',
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: '#e5e7eb',
+    },
+    dividerText: {
+      marginHorizontal: 16,
+      color: '#9ca3af',
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+    },
+    googleButton: {
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    googleButtonText: {
+      color: '#374151',
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+    },
+    facebookButton: {
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    facebookButtonText: {
+      color: '#374151',
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+    },
+    secondaryButton: {
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+    },
+    secondaryButtonText: {
+      color: '#374151',
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+    },
+  });
