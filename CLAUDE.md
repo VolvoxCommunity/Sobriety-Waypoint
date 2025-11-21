@@ -58,21 +58,22 @@ pnpm test -- -t "test name pattern"             # Run tests matching pattern
 
 **MANDATORY**: After changing or editing any files, you MUST follow this workflow:
 
-1. **Type Checking**: Run `pnpm build` to verify TypeScript compilation passes
+1. **Formatting**: Run `pnpm format` to ensure consistent code formatting
 2. **Linting**: Run `pnpm lint` to check for code quality issues
-3. **Formatting**: Run `pnpm format` to ensure consistent code formatting
-4. **Testing**: Run `pnpm test` to verify all tests pass
-5. **Commit and Push**: After all checks pass, commit and push all changes
+3. **Type Checking**: Run `pnpm typecheck` to verify TypeScript types
+4. **Build**: Run `pnpm build` to verify compilation passes
+5. **Testing**: Run `pnpm test` to verify all tests pass
+6. **Commit and Push**: After all checks pass, commit and push all changes
 
-These checks are not optional. All four validation steps must pass before committing. If any check fails, fix the issues and re-run all checks before proceeding.
+These checks are not optional. All five validation steps must pass before committing. If any check fails, fix the issues and re-run all checks before proceeding.
 
 **Complete Workflow:**
 
 ```bash
-# Step 1-4: Run all validation checks
-pnpm format && pnpm lint && pnpm build && pnpm test
+# Step 1-5: Run all validation checks
+pnpm format && pnpm lint && pnpm typecheck && pnpm build && pnpm test
 
-# Step 5: If all checks pass, commit and push
+# Step 6: If all checks pass, commit and push
 git add .
 git commit -m "your commit message"
 git push
