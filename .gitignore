@@ -72,11 +72,13 @@ build/
 *.ipa
 
 # iOS
+ios/
 ios/Pods/
 ios/build/
 ios/.xcode.env.local
 
 # Android
+android/
 android/build/
 android/app/build/
 android/.gradle/
@@ -108,3 +110,4 @@ android/local.properties
 
 expo-env.d.ts
 # @end expo-cli
+android/app/src/main/res/values/colors.xml
