@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -49,7 +49,21 @@ interface TimelineEvent {
 export default function JourneyScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
-  const { daysSober, loading: loadingDaysSober } = useDaysSober();
+  const { daysSober, hasSlipUps, mostRecentSlipUp, loading: loadingDaysSober } = useDaysSober();
+  // Calculate journey days from original sobriety date
+  // Shared utility function to calculate date difference in days
+  function getDateDiffInDays(date1: Date, date2: Date): number {
+    const diffTime = date2.getTime() - date1.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  }
+
+  const journeyDays = useMemo(() => {
+    if (!profile?.sobriety_date) return 0;
+    const sobrietyDate = new Date(profile.sobriety_date);
+    const today = new Date();
+    return getDateDiffInDays(sobrietyDate, today);
+  }, [profile?.sobriety_date]);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +90,7 @@ export default function JourneyScreen() {
         });
       }
 
-      // 2. Fetch slip ups
+      // 2. Fetch slip ups for timeline events
       const { data: slipUps, error: slipUpsError } = await supabase
         .from('slip_ups')
         .select('*')
@@ -178,12 +192,16 @@ export default function JourneyScreen() {
         });
       }
 
-      // 6. Calculate sobriety milestones
+      // 6. Calculate sobriety milestones from current streak
       if (profile.sobriety_date) {
-        const sobrietyDate = new Date(profile.sobriety_date);
+        // Use mostRecentSlipUp from useDaysSober hook for consistency
+        const streakStartDate = mostRecentSlipUp
+          ? new Date(mostRecentSlipUp.recovery_restart_date)
+          : new Date(profile.sobriety_date);
+
         const today = new Date();
-        const daysSober = Math.floor(
-          (today.getTime() - sobrietyDate.getTime()) / (1000 * 60 * 60 * 24)
+        const daysSinceStreakStart = Math.floor(
+          (today.getTime() - streakStartDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
         const milestones = [
@@ -197,8 +215,8 @@ export default function JourneyScreen() {
         ];
 
         milestones.forEach(({ days, label }) => {
-          if (daysSober >= days) {
-            const milestoneDate = new Date(sobrietyDate);
+          if (daysSinceStreakStart >= days) {
+            const milestoneDate = new Date(streakStartDate);
             milestoneDate.setDate(milestoneDate.getDate() + days);
 
             timelineEvents.push({
@@ -224,7 +242,7 @@ export default function JourneyScreen() {
     } finally {
       setLoading(false);
     }
-  }, [profile, theme]);
+  }, [profile, theme, mostRecentSlipUp]);
 
   useFocusEffect(
     useCallback(() => {
@@ -305,13 +323,32 @@ export default function JourneyScreen() {
       <ScrollView style={styles.content}>
         {profile?.sobriety_date && (
           <View style={styles.statsCard}>
-            <View style={styles.statMain}>
-              <TrendingUp size={32} color={theme.primary} />
-              <View style={styles.statMainContent}>
-                <Text style={styles.statMainNumber}>{loadingDaysSober ? '...' : daysSober}</Text>
-                <Text style={styles.statMainLabel}>Days Sober</Text>
+            {!hasSlipUps ? (
+              // Single metric display - no slip-ups
+              <View style={styles.statMain}>
+                <TrendingUp size={32} color={theme.primary} />
+                <View style={styles.statMainContent}>
+                  <Text style={styles.statMainNumber}>{loadingDaysSober ? '...' : daysSober}</Text>
+                  <Text style={styles.statMainLabel}>Days Sober</Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              // Dual metric display - has slip-ups
+              <View style={styles.statMainDual}>
+                <View style={styles.statMainColumn}>
+                  <TrendingUp size={24} color={theme.primary} />
+                  <Text style={styles.statMainNumberSmall}>
+                    {loadingDaysSober ? '...' : daysSober}
+                  </Text>
+                  <Text style={styles.statMainLabelSmall}>Current Streak</Text>
+                </View>
+                <View style={styles.statMainColumn}>
+                  <Calendar size={24} color={theme.textSecondary} />
+                  <Text style={styles.statMainNumberSmall}>{journeyDays}</Text>
+                  <Text style={styles.statMainLabelSmall}>Journey Started</Text>
+                </View>
+              </View>
+            )}
             <View style={styles.statRow}>
               <View style={styles.statItem}>
                 <CheckCircle size={18} color="#10b981" />
@@ -464,6 +501,33 @@ const createStyles = (theme: any) =>
       fontFamily: theme.fontRegular,
       color: theme.textSecondary,
       marginTop: 4,
+    },
+    statMainDual: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      gap: 16,
+      marginBottom: 20,
+      paddingBottom: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    statMainColumn: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 8,
+    },
+    statMainNumberSmall: {
+      fontSize: 32,
+      fontFamily: theme.fontRegular,
+      fontWeight: '700',
+      color: theme.primary,
+    },
+    statMainLabelSmall: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      color: theme.textSecondary,
+      marginTop: 4,
+      textAlign: 'center',
     },
     statRow: {
       flexDirection: 'row',
