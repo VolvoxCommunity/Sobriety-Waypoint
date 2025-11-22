@@ -13,6 +13,7 @@
 ## Task 1: Add New Styles for Dual Metric Layout
 
 **Files:**
+
 - Modify: `app/(tabs)/journey.tsx:385-583`
 
 **Step 1: Add dual metric styles to createStyles function**
@@ -66,6 +67,7 @@ git commit -m "style: Add dual metric layout styles for journey stats card"
 ## Task 2: Calculate Journey Days from Original Date
 
 **Files:**
+
 - Modify: `app/(tabs)/journey.tsx:49-227`
 
 **Step 1: Add journeyDays calculation after daysSober destructuring**
@@ -101,6 +103,7 @@ git commit -m "feat: Add journey days calculation from original sobriety date"
 ## Task 3: Update Stats Card to Conditionally Show Dual Metrics
 
 **Files:**
+
 - Modify: `app/(tabs)/journey.tsx:305-342`
 
 **Step 1: Replace single metric display with conditional rendering**
@@ -160,6 +163,7 @@ git commit -m "feat: Add conditional dual metric display in journey stats card"
 ## Task 4: Update Milestone Calculation to Use Current Streak
 
 **Files:**
+
 - Modify: `app/(tabs)/journey.tsx:180-215`
 
 **Step 1: Replace milestone calculation logic**
@@ -226,6 +230,7 @@ git commit -m "feat: Calculate milestones from current streak start date"
 ## Task 5: Run Code Quality Checks
 
 **Files:**
+
 - Modified: `app/(tabs)/journey.tsx`
 
 **Step 1: Format code**
@@ -265,11 +270,13 @@ git commit -m "style: Apply formatting and linting fixes"
 ## Task 6: Manual Testing
 
 **Files:**
+
 - Test: `app/(tabs)/journey.tsx`
 
 **Step 1: Test user with no slip-ups**
 
 Run: `pnpm dev`
+
 1. Navigate to Journey tab
 2. Verify stats card shows single metric: "X Days Sober"
 3. Verify milestones appear based on sobriety date
@@ -277,6 +284,7 @@ Run: `pnpm dev`
 **Step 2: Test user with slip-ups (database setup)**
 
 Using Supabase dashboard or SQL:
+
 1. Insert a slip-up record for test user
 2. Set `slip_up_date` to a past date
 3. Set `recovery_restart_date` to a more recent date
@@ -312,6 +320,7 @@ Document all test scenarios and results
 ## Task 7: Final Commit and Push
 
 **Files:**
+
 - All modified files
 
 **Step 1: Review all changes**
