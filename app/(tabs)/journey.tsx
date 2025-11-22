@@ -33,15 +33,15 @@ interface TimelineEvent {
   title: string;
   description: string;
   icon:
-    | 'calendar'
-    | 'check'
-    | 'heart'
-    | 'refresh'
-    | 'award'
-    | 'trending'
-    | 'check-square'
-    | 'list-checks'
-    | 'target';
+  | 'calendar'
+  | 'check'
+  | 'heart'
+  | 'refresh'
+  | 'award'
+  | 'trending'
+  | 'check-square'
+  | 'list-checks'
+  | 'target';
   color: string;
   metadata?: any;
 }
@@ -191,14 +191,19 @@ export default function JourneyScreen() {
         });
       }
 
-      // 6. Calculate sobriety milestones
+      // 6. Calculate sobriety milestones from current streak
       if (profile.sobriety_date) {
-        const sobrietyDate = new Date(profile.sobriety_date);
+        // Determine streak start date (most recent slip-up or original sobriety date)
+        const mostRecentSlipUp = slipUps && slipUps.length > 0 ? slipUps[0] : null;
+        const streakStartDate = mostRecentSlipUp
+          ? new Date(mostRecentSlipUp.recovery_restart_date)
+          : new Date(profile.sobriety_date);
+
         const today = new Date();
         // Prevent negative days (guard against future dates from timezone issues or data entry errors)
-        const daysSober = Math.max(
+        const daysSinceStreakStart = Math.max(
           0,
-          Math.floor((today.getTime() - sobrietyDate.getTime()) / (1000 * 60 * 60 * 24))
+          Math.floor((today.getTime() - streakStartDate.getTime()) / (1000 * 60 * 60 * 24))
         );
 
         const milestones = [
@@ -212,8 +217,8 @@ export default function JourneyScreen() {
         ];
 
         milestones.forEach(({ days, label }) => {
-          if (daysSober >= days) {
-            const milestoneDate = new Date(sobrietyDate);
+          if (daysSinceStreakStart >= days) {
+            const milestoneDate = new Date(streakStartDate);
             milestoneDate.setDate(milestoneDate.getDate() + days);
 
             timelineEvents.push({
