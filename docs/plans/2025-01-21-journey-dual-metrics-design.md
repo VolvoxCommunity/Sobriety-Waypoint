@@ -22,14 +22,14 @@ No changes required - existing schema already supports this feature:
 ```typescript
 // Profile table - sobriety_date NEVER updated after initial set
 interface Profile {
-  sobriety_date: string;  // Original journey start date
+  sobriety_date: string; // Original journey start date
   // ... other fields
 }
 
 // Slip-ups table - tracks recovery restarts
 interface SlipUp {
-  slip_up_date: string;           // When the slip-up occurred
-  recovery_restart_date: string;  // New sobriety start date
+  slip_up_date: string; // When the slip-up occurred
+  recovery_restart_date: string; // New sobriety start date
   notes?: string;
   // ... other fields
 }
@@ -42,22 +42,27 @@ The `useDaysSober` hook already tracks both `journeyStartDate` and `currentStrea
 ### Stats Card Display
 
 **When no slip-ups exist:**
+
 ```
 📈 45
    Days Sober
 ```
+
 Single centered metric (current behavior maintained)
 
 **When slip-ups exist:**
+
 ```
 📈 15                    🗓️ 120
    Current Streak          Journey Started
 
                           [Days Ago]
 ```
+
 Two side-by-side metrics with equal visual weight
 
 **Layout Details:**
+
 - Split into two columns when `hasSlipUps === true`
 - Left: Current Streak (from `currentStreakStartDate`) with TrendingUp icon
 - Right: Journey Started (from `journeyStartDate`) with Calendar icon
@@ -97,6 +102,7 @@ milestones.forEach(({ days, label }) => {
 **Timeline Event Order (Most Recent First):**
 
 When slip-ups exist:
+
 1. Recent milestones (based on current streak)
 2. Recent task completions
 3. Slip-up event(s) (refresh icon, amber color)
@@ -105,6 +111,7 @@ When slip-ups exist:
 6. "Recovery Journey Began" (calendar icon, primary color) - original date, always at bottom
 
 **Visual Treatment:**
+
 - All events use existing styling (no special emphasis)
 - Timeline flows chronologically with slip-ups as natural separators
 
