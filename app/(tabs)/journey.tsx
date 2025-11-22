@@ -62,6 +62,7 @@ export default function JourneyScreen() {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasSlipUps, setHasSlipUps] = useState(false);
 
   const fetchTimelineData = useCallback(async () => {
     if (!profile) return;
@@ -93,6 +94,9 @@ export default function JourneyScreen() {
         .order('slip_up_date', { ascending: false });
 
       if (slipUpsError) throw slipUpsError;
+
+      // Track if user has any slip-ups
+      setHasSlipUps(slipUps ? slipUps.length > 0 : false);
 
       slipUps?.forEach((slipUp: SlipUp) => {
         timelineEvents.push({
@@ -316,13 +320,32 @@ export default function JourneyScreen() {
       <ScrollView style={styles.content}>
         {profile?.sobriety_date && (
           <View style={styles.statsCard}>
-            <View style={styles.statMain}>
-              <TrendingUp size={32} color={theme.primary} />
-              <View style={styles.statMainContent}>
-                <Text style={styles.statMainNumber}>{loadingDaysSober ? '...' : daysSober}</Text>
-                <Text style={styles.statMainLabel}>Days Sober</Text>
+            {!hasSlipUps ? (
+              // Single metric display - no slip-ups
+              <View style={styles.statMain}>
+                <TrendingUp size={32} color={theme.primary} />
+                <View style={styles.statMainContent}>
+                  <Text style={styles.statMainNumber}>{loadingDaysSober ? '...' : daysSober}</Text>
+                  <Text style={styles.statMainLabel}>Days Sober</Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              // Dual metric display - has slip-ups
+              <View style={styles.statMainDual}>
+                <View style={styles.statMainColumn}>
+                  <TrendingUp size={24} color={theme.primary} />
+                  <Text style={styles.statMainNumberSmall}>
+                    {loadingDaysSober ? '...' : daysSober}
+                  </Text>
+                  <Text style={styles.statMainLabelSmall}>Current Streak</Text>
+                </View>
+                <View style={styles.statMainColumn}>
+                  <Calendar size={24} color={theme.textSecondary} />
+                  <Text style={styles.statMainNumberSmall}>{journeyDays}</Text>
+                  <Text style={styles.statMainLabelSmall}>Journey Started</Text>
+                </View>
+              </View>
+            )}
             <View style={styles.statRow}>
               <View style={styles.statItem}>
                 <CheckCircle size={18} color="#10b981" />
