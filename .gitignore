@@ -111,3 +111,4 @@ android/local.properties
 expo-env.d.ts
 # @end expo-cli
 android/app/src/main/res/values/colors.xml
+worktrees/
