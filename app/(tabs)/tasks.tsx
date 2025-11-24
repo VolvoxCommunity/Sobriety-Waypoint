@@ -22,6 +22,7 @@ import { Task, Profile } from '@/types/database';
 import { CheckCircle, Circle, X, Calendar, Plus, Clock, Trash2 } from 'lucide-react-native';
 import SegmentedControl from '@/components/SegmentedControl';
 import TaskCreationModal from '@/components/TaskCreationModal';
+import { formatSponseeName } from '@/lib/format';
 
 // =============================================================================
 // Types & Interfaces
@@ -185,7 +186,7 @@ export default function TasksScreen() {
       } else {
         Alert.alert('Success', 'Task marked as completed!');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error completing task:', error);
       if (Platform.OS === 'web') {
         window.alert('Failed to complete task');
@@ -238,7 +239,7 @@ export default function TasksScreen() {
       } else {
         Alert.alert('Success', 'Task deleted successfully');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting task:', error);
       if (Platform.OS === 'web') {
         window.alert('Failed to delete task');
@@ -380,7 +381,7 @@ export default function TasksScreen() {
                     )}
                     <View style={styles.taskFooter}>
                       <Text style={styles.sponsorText}>
-                        From: {task.sponsor?.first_name} {task.sponsor?.last_initial}.
+                        From: {formatSponseeName(task.sponsor)}
                       </Text>
                       <TouchableOpacity
                         style={styles.completeButton}
@@ -638,8 +639,7 @@ export default function TasksScreen() {
                         selectedSponseeFilter === sponsee.id && styles.filterChipTextActive,
                       ]}
                     >
-                      {sponsee?.first_name}
-                      {sponsee?.last_initial ? ` ${sponsee?.last_initial}.` : ''}
+                      {formatSponseeName(sponsee)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -689,9 +689,7 @@ export default function TasksScreen() {
                         </Text>
                       </View>
                       <View style={styles.sponseeInfo}>
-                        <Text style={styles.sponseeName}>
-                          {sponsee?.first_name} {sponsee?.last_initial}.
-                        </Text>
+                        <Text style={styles.sponseeName}>{formatSponseeName(sponsee)}</Text>
                         <Text style={styles.sponseeMeta}>
                           {sponseeTasks.length} task
                           {sponseeTasks.length !== 1 ? 's' : ''}
