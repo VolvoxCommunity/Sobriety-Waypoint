@@ -84,6 +84,6 @@ const createStyles = (theme: any) =>
       color: theme.textSecondary,
     },
     segmentTextActive: {
-      color: theme.textOnPrimary ?? '#ffffff',
+      color: theme.textOnPrimary,
     },
   });
