@@ -11,6 +11,7 @@ interface ThemeColors {
   text: string;
   textSecondary: string;
   textTertiary: string;
+  textOnPrimary: string;
   primary: string;
   primaryLight: string;
   border: string;
@@ -39,6 +40,7 @@ const lightTheme: ThemeColors = {
   text: '#111827',
   textSecondary: '#6b7280',
   textTertiary: '#9ca3af',
+  textOnPrimary: '#ffffff',
   primary: '#007AFF',
   primaryLight: '#e5f1ff',
   border: '#e5e7eb',

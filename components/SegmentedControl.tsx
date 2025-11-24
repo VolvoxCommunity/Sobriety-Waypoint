@@ -8,6 +8,24 @@ interface SegmentedControlProps {
   onChange: (index: number) => void;
 }
 
+/**
+ * A segmented control component that displays multiple options as buttons
+ * and allows the user to select one active segment.
+ *
+ * @param segments - Array of string labels to display as segment options
+ * @param activeIndex - The index of the currently selected segment
+ * @param onChange - Callback function invoked when a segment is pressed, receives the selected index
+ * @returns JSX.Element representing the segmented control UI
+ *
+ * @example
+ * ```tsx
+ * <SegmentedControl
+ *   segments={['My Tasks', 'Assign Tasks']}
+ *   activeIndex={activeTab}
+ *   onChange={setActiveTab}
+ * />
+ * ```
+ */
 export default function SegmentedControl({
   segments,
   activeIndex,

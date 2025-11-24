@@ -109,3 +109,6 @@ worktrees/
 
 # Expo environment types
 expo-env.d.ts
+
+# Documentation plans
+docs/plans
