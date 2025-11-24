@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getDateDiffInDays } from '@/lib/date';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,25 +92,33 @@ export function useDaysSober(userId?: string): DaysSoberResult {
   const isCurrentUser = !userId || userId === user?.id;
   const targetProfile = isCurrentUser ? profile : fetchedProfile;
 
+  // Ref to track the active midnight refresh timer
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Set up midnight refresh timer
   useEffect(() => {
     /**
      * Schedules a state update at midnight to trigger day count recalculation.
      * Reschedules itself for the following midnight after each update.
      */
-    function scheduleMidnightRefresh(): ReturnType<typeof setTimeout> {
+    function scheduleMidnightRefresh(): void {
       const msUntilMidnight = getMillisecondsUntilMidnight();
 
-      return setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setCurrentDate(new Date().toDateString());
         // Schedule next midnight refresh
         scheduleMidnightRefresh();
       }, msUntilMidnight);
     }
 
-    const timerId = scheduleMidnightRefresh();
+    scheduleMidnightRefresh();
 
-    return () => clearTimeout(timerId);
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
 
   // Fetch slip-up and profile data
