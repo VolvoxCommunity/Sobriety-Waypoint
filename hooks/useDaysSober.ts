@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getDateDiffInDays } from '@/lib/date';
 import { useAuth } from '@/contexts/AuthContext';
 import type { SlipUp, Profile } from '@/types/database';
 import type { PostgrestError } from '@supabase/supabase-js';
@@ -48,19 +49,6 @@ function getMillisecondsUntilMidnight(): number {
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
   return tomorrow.getTime() - now.getTime();
-}
-
-/**
- * Calculates the difference in days between two dates.
- *
- * @param startDate - The earlier date
- * @param endDate - The later date (defaults to now)
- * @returns Number of full days between dates, minimum 0
- */
-function calculateDaysDifference(startDate: Date, endDate: Date = new Date()): number {
-  const diffTime = endDate.getTime() - startDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  return Math.max(0, diffDays);
 }
 
 // =============================================================================
@@ -190,13 +178,13 @@ export function useDaysSober(userId?: string): DaysSoberResult {
     // Calculate days in current streak
     let daysSober = 0;
     if (streakStartDate) {
-      daysSober = calculateDaysDifference(new Date(streakStartDate));
+      daysSober = getDateDiffInDays(new Date(streakStartDate));
     }
 
     // Calculate total journey days from original sobriety date
     let journeyDays = 0;
     if (sobrietyDate) {
-      journeyDays = calculateDaysDifference(new Date(sobrietyDate));
+      journeyDays = getDateDiffInDays(new Date(sobrietyDate));
     }
 
     return {
