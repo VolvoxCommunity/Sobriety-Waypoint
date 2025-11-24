@@ -338,6 +338,33 @@ When using MCP servers (Model Context Protocol):
 - Pre-commit checks: Prettier format + ESLint on staged TS/JS files
 - Skip hooks only via `git commit -n` (not recommended)
 
+**Branch Naming (Conventional Branch):**
+
+Use [Conventional Branch](https://conventional-branch.github.io/) naming format:
+
+```
+<type>/<description>
+```
+
+Types:
+
+- `feat/` - New feature (e.g., `feat/user-authentication`)
+- `fix/` - Bug fix (e.g., `fix/login-validation-error`)
+- `docs/` - Documentation only (e.g., `docs/api-readme`)
+- `style/` - Code style/formatting (e.g., `style/prettier-config`)
+- `refactor/` - Code refactoring (e.g., `refactor/auth-context`)
+- `test/` - Adding/updating tests (e.g., `test/journey-screen`)
+- `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`)
+- `perf/` - Performance improvements (e.g., `perf/optimize-queries`)
+- `ci/` - CI/CD changes (e.g., `ci/github-actions`)
+
+Examples:
+
+- `feat/dual-metrics-journey`
+- `fix/supabase-ssr-compatibility`
+- `refactor/theme-context-hooks`
+- `chore/bump-expo-sdk`
+
 ## Common Pitfalls
 
 1. **Don't bypass auth guards** - always test routes with different auth states
