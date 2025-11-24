@@ -352,7 +352,9 @@ export default function JourneyScreen() {
                 </View>
                 <View style={styles.statMainColumn}>
                   <Calendar size={24} color={theme.textSecondary} />
-                  <Text style={styles.statMainNumberSmall}>{journeyDays}</Text>
+                  <Text style={styles.statMainNumberSmall}>
+                    {loadingDaysSober ? '...' : journeyDays}
+                  </Text>
                   <Text style={styles.statMainLabelSmall}>Journey Started</Text>
                 </View>
               </View>
