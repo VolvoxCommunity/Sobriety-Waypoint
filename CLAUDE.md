@@ -315,22 +315,154 @@ When using MCP servers (Model Context Protocol):
 
 ## Code Style & Conventions
 
+**MANDATORY Code Quality Standards:**
+
+When writing or modifying code, you MUST follow these practices:
+
+1. **Documentation**: Every function, method, and component MUST have JSDoc/TSDoc comments that work with IntelliSense
+2. **Testing**: Add or update tests for any code changes; all tests must pass before committing
+3. **Clean Code**: Remove unnecessary code, dead imports, and commented-out blocks
+4. **File Organization**: Section files logically (imports, types, constants, component, styles)
+5. **Naming Conventions**: Use recommended naming conventions for the language/framework
+6. **Documentation Updates**: Update README.md and CLAUDE.md to reflect significant changes
+7. **TODO Tracking**: Create and maintain TODO lists for multi-step tasks
+
+**Documentation Standards (JSDoc/TSDoc):**
+
+All exported functions, hooks, components, and complex logic MUST include documentation:
+
+````typescript
+/**
+ * Calculates the number of days since a given date.
+ *
+ * @param startDate - The starting date to calculate from
+ * @param endDate - The ending date (defaults to today)
+ * @returns The number of days between the two dates, minimum 0
+ *
+ * @example
+ * ```ts
+ * const days = getDaysSince(new Date('2024-01-01'));
+ * // Returns: 180 (if today is July 1, 2024)
+ * ```
+ */
+function getDaysSince(startDate: Date, endDate: Date = new Date()): number {
+  // implementation
+}
+
+/**
+ * Custom hook for tracking user's sobriety streak.
+ *
+ * @returns Object containing days sober, loading state, and slip-up info
+ *
+ * @example
+ * ```tsx
+ * const { daysSober, hasSlipUps, loading } = useDaysSober();
+ * ```
+ */
+function useDaysSober(): DaysSoberResult {
+  // implementation
+}
+
+/**
+ * Displays the user's recovery journey timeline with milestones.
+ *
+ * @remarks
+ * This component fetches timeline events from Supabase and displays
+ * them in chronological order with visual indicators.
+ *
+ * @see {@link useDaysSober} for sobriety calculation logic
+ */
+function JourneyScreen(): JSX.Element {
+  // implementation
+}
+````
+
+**File Organization:**
+
+Organize files in this order with clear section comments:
+
+```typescript
+// =============================================================================
+// Imports
+// =============================================================================
+import React from 'react';
+import { View } from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
+
+// =============================================================================
+// Types & Interfaces
+// =============================================================================
+interface Props {
+  title: string;
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+const DEFAULT_TIMEOUT = 5000;
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+/**
+ * Formats a date for display.
+ */
+function formatDate(date: Date): string {
+  // implementation
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+/**
+ * Main component description.
+ */
+export default function MyComponent({ title }: Props): JSX.Element {
+  // implementation
+}
+
+// =============================================================================
+// Styles
+// =============================================================================
+const styles = StyleSheet.create({
+  // styles
+});
+```
+
+**Naming Conventions:**
+
+| Element            | Convention             | Example                        |
+| ------------------ | ---------------------- | ------------------------------ |
+| Components         | PascalCase             | `JourneyScreen`, `TaskCard`    |
+| Functions/Hooks    | camelCase              | `useDaysSober`, `formatDate`   |
+| Constants          | SCREAMING_SNAKE_CASE   | `DEFAULT_TIMEOUT`, `API_URL`   |
+| Types/Interfaces   | PascalCase             | `UserProfile`, `TaskStatus`    |
+| Files (components) | PascalCase             | `TaskCard.tsx`                 |
+| Files (utilities)  | camelCase              | `validation.ts`                |
+| CSS/Style keys     | camelCase              | `backgroundColor`, `marginTop` |
+| Boolean variables  | is/has/should prefix   | `isLoading`, `hasSlipUps`      |
+| Event handlers     | handle prefix          | `handlePress`, `handleSubmit`  |
+| Async functions    | verb describing action | `fetchTasks`, `updateProfile`  |
+
 **TypeScript:**
 
 - Strict mode enabled (`strict: true` in tsconfig)
 - Prefer explicit types over inference for public APIs
 - Use database types from `types/database.ts` as source of truth
+- Avoid `any` - use `unknown` with type guards when type is truly unknown
 
 **Imports:**
 
 - Use `@/` path alias for all local imports
 - Group imports: React → third-party → local (Prettier enforces)
+- Remove unused imports before committing
 
 **Components:**
 
 - Functional components with hooks (no class components)
 - Props interfaces defined inline or exported if shared
 - StyleSheet.create() for component styles (no inline objects)
+- Extract reusable logic into custom hooks
 
 **Git Workflow:**
 
