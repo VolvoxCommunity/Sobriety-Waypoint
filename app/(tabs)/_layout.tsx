@@ -1,5 +1,5 @@
 import { Tabs, usePathname, useRouter } from 'expo-router';
-import { Home, BookOpen, TrendingUp, CheckSquare, User, ClipboardList } from 'lucide-react-native';
+import { Home, BookOpen, TrendingUp, CheckSquare, User } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import AnimatedBottomNav, { AnimatedNavItem } from '@/components/AnimatedBottomNav';
 import { useEffect, useState } from 'react';
@@ -9,12 +9,6 @@ const tabRoutes = [
   { route: '/steps', name: 'steps', title: 'Steps', icon: BookOpen },
   { route: '/journey', name: 'journey', title: 'Journey', icon: TrendingUp },
   { route: '/tasks', name: 'tasks', title: 'Tasks', icon: CheckSquare },
-  {
-    route: '/manage-tasks',
-    name: 'manage-tasks',
-    title: 'Manage',
-    icon: ClipboardList,
-  },
   { route: '/profile', name: 'profile', title: 'Profile', icon: User },
 ];
 
@@ -59,7 +53,6 @@ export default function TabLayout() {
       <Tabs.Screen name="steps" />
       <Tabs.Screen name="journey" />
       <Tabs.Screen name="tasks" />
-      <Tabs.Screen name="manage-tasks" />
       <Tabs.Screen name="profile" />
     </Tabs>
   );
