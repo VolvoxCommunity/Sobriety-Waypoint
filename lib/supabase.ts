@@ -67,5 +67,9 @@ function getSupabaseClient(): SupabaseClient {
   return supabaseInstance;
 }
 
-// Export as a getter to ensure lazy initialization
-export const supabase = getSupabaseClient();
+// Export a Proxy to allow lazy initialization
+export const supabase = new Proxy({} as SupabaseClient, {
+  get: (_, prop) => {
+    return (getSupabaseClient() as any)[prop];
+  },
+});
