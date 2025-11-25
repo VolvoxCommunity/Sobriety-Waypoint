@@ -324,44 +324,6 @@ const createStyles = (theme: ThemeColors) =>
       fontFamily: theme.fontRegular,
       color: theme.text,
     },
-    roleContainer: {
-      marginBottom: 32,
-    },
-    roleCard: {
-      flexDirection: 'row',
-      backgroundColor: theme.card,
-      borderWidth: 2,
-      borderColor: theme.border,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 16,
-    },
-    roleCardSelected: {
-      borderColor: '#007AFF',
-      backgroundColor: '#f0fdf4',
-    },
-    roleIcon: {
-      marginRight: 16,
-    },
-    roleContent: {
-      flex: 1,
-    },
-    roleTitle: {
-      fontSize: 18,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: '#374151',
-      marginBottom: 4,
-    },
-    roleTextSelected: {
-      color: '#007AFF',
-    },
-    roleDescription: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      lineHeight: 20,
-    },
     dateContainer: {
       alignItems: 'center',
       marginBottom: 32,

@@ -131,7 +131,7 @@ app/
 ├── _layout.tsx              # Root layout with auth guards + provider wrapping
 ├── login.tsx                # Email/password + social sign in
 ├── signup.tsx               # Registration flow
-├── onboarding.tsx           # Profile setup (name, role, sobriety date)
+├── onboarding.tsx           # Profile setup (name, sobriety date)
 ├── +not-found.tsx           # 404 handler
 └── (tabs)/                  # Authenticated tab navigation
     ├── _layout.tsx          # Tab bar configuration
@@ -244,21 +244,27 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 
 **Core Tables:**
 
-- `profiles`: User profiles (name, role, sobriety_date, preferences)
-- `sponsor_sponsee_relationships`: Links between sponsors/sponsees
+- `profiles`: User profiles (name, sobriety_date, preferences) - NO role field
+- `sponsor_sponsee_relationships`: Links between users in mentor relationships
 - `invite_codes`: Codes for connecting sponsors with sponsees
-- `tasks`: Assigned recovery work items
+- `tasks`: Assigned recovery work items (sponsor assigns to sponsee)
 - `task_completions`: Task completion records with notes
 - `steps`: 12-step program content
 - `messages`: Direct messaging between users
 - `milestones`: Sobriety milestone tracking
 - `notifications`: In-app notification queue
 
+**Key Concepts:**
+
+- **No Role Restrictions**: Users can be both sponsors (helping others) and sponsees (being helped) in different relationships
+- **Role is Contextual**: Role is determined by relationship - who is `sponsor_id` vs `sponsee_id` in the relationship
+- **Task Direction**: Tasks flow from sponsor → sponsee (unidirectional within a relationship)
+
 **Key Types:**
 
-- `UserRole`: 'sponsor' | 'sponsee' | 'both'
 - `RelationshipStatus`: 'pending' | 'active' | 'inactive'
 - `TaskStatus`: 'assigned' | 'in_progress' | 'completed'
+- `NotificationType`: 'task_assigned' | 'milestone' | 'message' | 'connection_request' | 'task_completed'
 - All types defined in `types/database.ts`
 
 ## Environment Configuration

@@ -8,8 +8,13 @@ module.exports = {
   ],
   setupFiles: ['<rootDir>/jest.setup.js'],
   testMatch: ['**/__tests__/**/*.(spec|test).[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/__tests__/test-utils/', '/worktrees/'],
-  modulePathIgnorePatterns: ['<rootDir>/worktrees/'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/__tests__/test-utils/',
+    '/worktrees/',
+    '/.worktrees/',
+  ],
+  modulePathIgnorePatterns: ['<rootDir>/worktrees/', '<rootDir>/.worktrees/'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',

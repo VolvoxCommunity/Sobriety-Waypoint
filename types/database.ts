@@ -1,3 +1,6 @@
+// =============================================================================
+// Type Definitions
+// =============================================================================
 export type RelationshipStatus = 'pending' | 'active' | 'inactive';
 export type TaskStatus = 'assigned' | 'in_progress' | 'completed';
 export type NotificationType =
@@ -7,6 +10,18 @@ export type NotificationType =
   | 'connection_request'
   | 'task_completed';
 
+// =============================================================================
+// Database Interfaces
+// =============================================================================
+
+/**
+ * User profile information.
+ *
+ * @remarks
+ * Users can be both sponsors (helping others) and sponsees (being helped)
+ * simultaneously through different relationships. There is no role field -
+ * the role is determined by the relationship context.
+ */
 export interface Profile {
   id: string;
   email: string;

@@ -17,11 +17,14 @@ A cross-platform companion app that helps sponsors and sponsees stay connected, 
 
 ## Overview
 
-Sobriety Waypoint helps sponsors and sponsees stay connected and accountable through structured task management, milestone tracking, and transparent progress visualization. Create tasks, complete them with private notes, and watch your sobriety journey unfold on a timeline that celebrates every step forward (and documents the tough moments, too).
+Sobriety Waypoint helps people in recovery stay connected and accountable through structured task management, milestone tracking, and transparent progress visualization. Create tasks, complete them with private notes, and watch your sobriety journey unfold on a timeline that celebrates every step forward (and documents the tough moments, too).
+
+**Everyone can be both a sponsor (helping others) and a sponsee (being helped) simultaneously.** There are no role restrictions - you can guide some people through their journey while receiving guidance from others.
 
 ### Highlights
 
-- Sponsor-sponsee relationships linked through invite codes
+- Flexible relationships: Be both a sponsor and sponsee in different connections
+- Relationships linked through secure invite codes
 - Step-aligned task assignments, reminders, and completion tracking
 - Direct messaging with Row Level Security-backed privacy
 - Sobriety day counters, relapse restart workflows, and milestone logging
