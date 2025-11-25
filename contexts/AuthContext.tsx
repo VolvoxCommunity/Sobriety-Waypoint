@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
 import { setSentryUser, clearSentryUser, setSentryContext } from '@/lib/sentry';
+import { logger, LogCategory } from '@/lib/logger';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -64,7 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(data);
       return data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      logger.error('Profile fetch failed', error as Error, {
+        category: LogCategory.DATABASE,
+        userId: userId,
+      });
       return null;
     }
   };
@@ -126,7 +130,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await fetchProfile(session.user.id);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        logger.error('Auth initialization failed', error as Error, {
+          category: LogCategory.AUTH,
+        });
       } finally {
         if (isMounted) {
           initialLoadComplete = true;
@@ -158,7 +164,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await createOAuthProfileIfNeeded(session.user);
           await fetchProfile(session.user.id);
         } catch (error) {
-          console.error('Error handling auth state change:', error);
+          logger.error('Auth state change handling failed', error as Error, {
+            category: LogCategory.AUTH,
+          });
         } finally {
           if (isMounted) {
             setLoading(false);
@@ -213,7 +221,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         path: 'auth/callback',
       });
 
-      console.log('[Google Auth] Redirect URL:', redirectUrl);
+      logger.debug('Google Auth redirect URL configured', {
+        category: LogCategory.AUTH,
+        redirectUrl,
+      });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -226,33 +237,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       if (data?.url) {
-        console.log('[Google Auth] Opening browser with URL:', data.url);
+        logger.debug('Opening Google Auth browser session', {
+          category: LogCategory.AUTH,
+          authUrl: data.url,
+        });
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
-        console.log('[Google Auth] Browser result type:', result.type);
+        logger.debug('Google Auth browser result received', {
+          category: LogCategory.AUTH,
+          resultType: result.type,
+        });
 
         if (result.type === 'success' && result.url) {
-          console.log('[Google Auth] Full redirect URL:', result.url);
+          logger.debug('Google Auth redirect received', {
+            category: LogCategory.AUTH,
+            redirectUrl: result.url,
+          });
 
           const url = new URL(result.url);
 
-          // Log what's in query params
-          console.log(
-            '[Google Auth] Query params access_token:',
-            url.searchParams.get('access_token')
-          );
-          console.log(
-            '[Google Auth] Query params refresh_token:',
-            url.searchParams.get('refresh_token')
-          );
-
-          // Log what's in the hash/fragment
-          console.log('[Google Auth] URL hash:', url.hash);
-
           // Try extracting from hash
           const hashParams = new URLSearchParams(url.hash.substring(1)); // Remove leading #
-          console.log('[Google Auth] Hash access_token:', hashParams.get('access_token'));
-          console.log('[Google Auth] Hash refresh_token:', hashParams.get('refresh_token'));
+
+          logger.debug('Google Auth parsing redirect tokens', {
+            category: LogCategory.AUTH,
+            hasQueryAccessToken: !!url.searchParams.get('access_token'),
+            hasQueryRefreshToken: !!url.searchParams.get('refresh_token'),
+            hasHashAccessToken: !!hashParams.get('access_token'),
+            hasHashRefreshToken: !!hashParams.get('refresh_token'),
+            urlHash: url.hash,
+          });
 
           let access_token = url.searchParams.get('access_token');
           let refresh_token = url.searchParams.get('refresh_token');
@@ -264,24 +278,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           if (access_token && refresh_token) {
-            console.log('[Google Auth] Tokens found in query params, setting session');
+            logger.debug('Google Auth tokens extracted, creating session', {
+              category: LogCategory.AUTH,
+            });
             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token,
               refresh_token,
             });
 
             if (sessionError) {
-              console.error('[Google Auth] setSession error:', sessionError);
+              logger.error('Google Auth session creation failed', sessionError, {
+                category: LogCategory.AUTH,
+              });
               throw sessionError;
             }
 
-            console.log('[Google Auth] Session created successfully');
+            logger.info('Google Auth session created successfully', {
+              category: LogCategory.AUTH,
+            });
 
             if (sessionData.user) {
               await createOAuthProfileIfNeeded(sessionData.user);
             }
           } else {
-            console.warn('[Google Auth] No tokens found in query params');
+            logger.warn('Google Auth tokens not found in redirect', {
+              category: LogCategory.AUTH,
+            });
           }
         }
       }
@@ -310,7 +332,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileError) {
         // Profile creation failed - the user account exists but is incomplete
         // Could attempt to delete the user, but auth.admin.deleteUser requires service role
-        console.error('Profile creation failed for user', data.user.id, profileError);
+        logger.error('Profile creation failed during signup', profileError as Error, {
+          category: LogCategory.DATABASE,
+          userId: data.user.id,
+        });
         throw new Error('Account created but profile setup failed. Please contact support.');
       }
     }

@@ -151,6 +151,7 @@ lib/
 ├── supabase.ts              # Configured Supabase client + storage adapter
 ├── sentry.ts                # Centralized Sentry initialization
 ├── sentry-privacy.ts        # PII scrubbing rules
+├── logger.ts                # Universal logging with Sentry breadcrumbs
 └── validation.ts            # Shared validation logic
 
 types/
@@ -199,6 +200,19 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 - Environment tags help filter errors in Sentry dashboard
 - Privacy scrubbing configured in `lib/sentry-privacy.ts`
 - ErrorBoundary component wraps app for graceful failures
+
+**Logging:**
+
+- Universal logger (`lib/logger.ts`) provides centralized, structured logging
+- All logs sent to Sentry as breadcrumbs and console (development only)
+- **NEVER use console.log/error/warn directly** - use logger instead
+- ESLint enforces no-console rule (exceptions: logger.ts, sentry.ts, jest.setup.js)
+- Five log levels: `logger.error()`, `logger.warn()`, `logger.info()`, `logger.debug()`, `logger.trace()`
+- Categorize logs with `LogCategory` enum (AUTH, DATABASE, UI, STORAGE, etc.)
+- Always pass Error objects to `logger.error()` for stack traces
+- Include contextual metadata for better debugging in Sentry
+- Privacy scrubbing via existing `beforeBreadcrumb` hook in `lib/sentry-privacy.ts`
+- See `docs/logger.md` for complete API reference and best practices
 
 **Font Loading:**
 
@@ -655,3 +669,4 @@ feat(auth)!: migrate to new session storage format
 8. **Platform-specific code requires Platform.OS checks** - especially storage, auth flows
 9. **Metro cache issues** - run `pnpm start:clean` when imports break mysteriously
 10. **Sentry tracks all environments** - errors appear in Sentry dashboard with environment tags (development/preview/production)
+11. **Don't use console.log/error/warn directly** - use the universal logger instead (ESLint will catch this)

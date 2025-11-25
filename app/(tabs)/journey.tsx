@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDaysSober } from '@/hooks/useDaysSober';
+import { logger, LogCategory } from '@/lib/logger';
 
 type TimelineEventType =
   | 'sobriety_start'
@@ -125,7 +126,9 @@ export default function JourneyScreen() {
         completedTasks: completedTasks || [],
       });
     } catch (err) {
-      console.error('Error fetching timeline data:', err);
+      logger.error('Timeline data fetch failed', err as Error, {
+        category: LogCategory.DATABASE,
+      });
       setError('Failed to load your journey timeline');
     } finally {
       setLoading(false);

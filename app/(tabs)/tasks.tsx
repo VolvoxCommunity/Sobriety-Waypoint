@@ -23,6 +23,7 @@ import { CheckCircle, Circle, X, Calendar, Plus, Clock, Trash2 } from 'lucide-re
 import SegmentedControl from '@/components/SegmentedControl';
 import TaskCreationModal from '@/components/TaskCreationModal';
 import { formatProfileName } from '@/lib/format';
+import { logger, LogCategory } from '@/lib/logger';
 
 // =============================================================================
 // Types & Interfaces
@@ -188,7 +189,9 @@ export default function TasksScreen() {
         Alert.alert('Success', 'Task marked as completed!');
       }
     } catch (error) {
-      console.error('Error completing task:', error);
+      logger.error('Task completion failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to complete task');
       } else {
@@ -241,7 +244,9 @@ export default function TasksScreen() {
         Alert.alert('Success', 'Task deleted successfully');
       }
     } catch (error) {
-      console.error('Error deleting task:', error);
+      logger.error('Task deletion failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to delete task');
       } else {

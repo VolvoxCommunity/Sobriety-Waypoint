@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import TaskCreationModal from '@/components/TaskCreationModal';
+import { logger, LogCategory } from '@/lib/logger';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
@@ -144,7 +145,9 @@ export default function HomeScreen() {
         Alert.alert('Success', 'Successfully disconnected');
       }
     } catch (error: any) {
-      console.error('Error disconnecting:', error);
+      logger.error('Relationship disconnect failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to disconnect. Please try again.');
       } else {

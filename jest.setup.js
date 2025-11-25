@@ -44,6 +44,9 @@ jest.mock('react-native', () => {
 // Mock processColor
 global.processColor = (color) => color;
 
+// Define __DEV__ for tests
+global.__DEV__ = false;
+
 // Mock expo-router
 jest.mock('expo-router', () => ({
   useRouter: () => ({
@@ -87,6 +90,17 @@ const mockAsyncStorage = {
   clear: jest.fn(() => Promise.resolve()),
 };
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
+
+// Mock @sentry/react-native
+jest.mock('@sentry/react-native', () => ({
+  addBreadcrumb: jest.fn(),
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+  setUser: jest.fn(),
+  setContext: jest.fn(),
+  init: jest.fn(),
+  wrap: jest.fn((component) => component),
+}));
 
 // Mock @supabase/supabase-js with chainable query builder
 jest.mock('@supabase/supabase-js', () => {

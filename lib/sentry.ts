@@ -1,5 +1,4 @@
 import React from 'react';
-import { Platform } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import { isRunningInExpoGo } from 'expo';
@@ -22,6 +21,8 @@ export const navigationIntegration = Sentry.reactNavigationIntegration({
 function shouldInitialize(): boolean {
   // Verify DSN is available
   if (!process.env.EXPO_PUBLIC_SENTRY_DSN) {
+    // Note: Console used here to avoid circular dependency (logger imports Sentry)
+     
     console.warn('[Sentry] DSN not configured, skipping initialization');
     return false;
   }
@@ -43,6 +44,10 @@ function getEnvironment(): string {
 
 /**
  * Initialize Sentry with platform-specific configuration
+ *
+ * Note: This function uses console.log/error directly to avoid circular dependency,
+ * as the logger module imports Sentry. These are the only allowed console calls
+ * in production code.
  */
 export function initializeSentry(): void {
   if (!shouldInitialize()) {
@@ -50,6 +55,7 @@ export function initializeSentry(): void {
   }
 
   const environment = getEnvironment();
+   
   console.log(`[Sentry] Initializing for environment: ${environment}`);
 
   try {
@@ -97,8 +103,10 @@ export function initializeSentry(): void {
       sampleRate: 1.0,
     });
 
+     
     console.log('[Sentry] Initialized successfully');
   } catch (error) {
+     
     console.error('[Sentry] Failed to initialize:', error);
   }
 }

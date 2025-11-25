@@ -16,6 +16,7 @@ import { Task, Profile } from '@/types/database';
 import { Plus, CheckCircle, Clock, Calendar, Trash2 } from 'lucide-react-native';
 import TaskCreationModal from '@/components/TaskCreationModal';
 import { formatProfileName } from '@/lib/format';
+import { logger, LogCategory } from '@/lib/logger';
 
 export default function ManageTasksScreen() {
   const { profile } = useAuth();
@@ -97,7 +98,9 @@ export default function ManageTasksScreen() {
         Alert.alert('Success', 'Task deleted successfully');
       }
     } catch (error: any) {
-      console.error('Error deleting task:', error);
+      logger.error('Task deletion failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to delete task');
       } else {

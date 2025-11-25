@@ -1,0 +1,136 @@
+import { logger } from './logger';
+import * as Sentry from '@sentry/react-native';
+
+describe('Logger', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('info()', () => {
+    it('creates Sentry breadcrumb with info level', () => {
+      logger.info('Test message');
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'info',
+        category: 'log',
+        message: 'Test message',
+        data: {},
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('includes metadata in breadcrumb data', () => {
+      logger.info('Test message', { userId: '123', action: 'login' });
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'info',
+        category: 'log',
+        message: 'Test message',
+        data: { userId: '123', action: 'login' },
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('uses custom category from metadata', () => {
+      logger.info('User signed in', { category: 'auth', userId: '123' });
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'info',
+        category: 'auth',
+        message: 'User signed in',
+        data: { category: 'auth', userId: '123' },
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+
+  describe('warn()', () => {
+    it('creates Sentry breadcrumb with warning level', () => {
+      logger.warn('Warning message');
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'warning',
+        category: 'log',
+        message: 'Warning message',
+        data: {},
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+
+  describe('error()', () => {
+    it('creates Sentry breadcrumb with error level', () => {
+      logger.error('Error message');
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'error',
+        category: 'log',
+        message: 'Error message',
+        data: {},
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('includes error object in breadcrumb data', () => {
+      const error = new Error('Test error');
+      logger.error('Operation failed', error);
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'error',
+        category: 'log',
+        message: 'Operation failed',
+        data: {
+          error: 'Test error',
+          stack: expect.any(String),
+        },
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('includes both error and metadata', () => {
+      const error = new Error('Test error');
+      logger.error('Operation failed', error, { userId: '456', operation: 'delete' });
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'error',
+        category: 'log',
+        message: 'Operation failed',
+        data: {
+          userId: '456',
+          operation: 'delete',
+          error: 'Test error',
+          stack: expect.any(String),
+        },
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+
+  describe('debug()', () => {
+    it('creates Sentry breadcrumb with debug level', () => {
+      logger.debug('Debug message');
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'debug',
+        category: 'log',
+        message: 'Debug message',
+        data: {},
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+
+  describe('trace()', () => {
+    it('creates Sentry breadcrumb with debug level', () => {
+      logger.trace('Trace message');
+
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+        level: 'debug',
+        category: 'log',
+        message: 'Trace message',
+        data: {},
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+});

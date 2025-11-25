@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StepContent, UserStepProgress } from '@/types/database';
 import { X, CheckCircle, Circle } from 'lucide-react-native';
+import { logger, LogCategory } from '@/lib/logger';
 
 export default function StepsScreen() {
   const { theme } = useTheme();
@@ -25,7 +26,9 @@ export default function StepsScreen() {
         .eq('user_id', profile.id);
 
       if (fetchError) {
-        console.error('Error fetching progress:', fetchError);
+        logger.error('Step progress fetch failed', fetchError as Error, {
+          category: LogCategory.DATABASE,
+        });
       } else {
         const progressMap: Record<number, UserStepProgress> = {};
         data?.forEach((p) => {
@@ -34,7 +37,9 @@ export default function StepsScreen() {
         setProgress(progressMap);
       }
     } catch (err) {
-      console.error('Exception fetching progress:', err);
+      logger.error('Step progress fetch exception', err as Error, {
+        category: LogCategory.DATABASE,
+      });
     }
   }, [profile]);
 
@@ -48,14 +53,21 @@ export default function StepsScreen() {
         .order('step_number');
 
       if (fetchError) {
-        console.error('Error fetching steps:', fetchError);
+        logger.error('Steps content fetch failed', fetchError as Error, {
+          category: LogCategory.DATABASE,
+        });
         setError('Failed to load steps content');
       } else {
-        console.log('Steps loaded:', data?.length);
+        logger.debug('Steps content loaded successfully', {
+          category: LogCategory.DATABASE,
+          count: data?.length,
+        });
         setSteps(data || []);
       }
     } catch (err) {
-      console.error('Exception fetching steps:', err);
+      logger.error('Steps content fetch exception', err as Error, {
+        category: LogCategory.DATABASE,
+      });
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -101,7 +113,9 @@ export default function StepsScreen() {
         setProgress({ ...progress, [stepNumber]: data });
       }
     } catch (err) {
-      console.error('Error toggling step completion:', err);
+      logger.error('Step completion toggle failed', err as Error, {
+        category: LogCategory.DATABASE,
+      });
     }
   };
 
