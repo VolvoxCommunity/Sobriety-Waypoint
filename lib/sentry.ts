@@ -22,7 +22,6 @@ function shouldInitialize(): boolean {
   // Verify DSN is available
   if (!process.env.EXPO_PUBLIC_SENTRY_DSN) {
     // Note: Console used here to avoid circular dependency (logger imports Sentry)
-
     console.warn('[Sentry] DSN not configured, skipping initialization');
     return false;
   }
