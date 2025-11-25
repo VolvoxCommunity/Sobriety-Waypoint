@@ -242,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data?.url) {
         logger.debug('Opening Google Auth browser session', {
           category: LogCategory.AUTH,
-          // Note: Not logging authUrl to avoid exposing OAuth state parameters
+          // Note: Not logging data.url to avoid exposing OAuth state parameters
         });
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
