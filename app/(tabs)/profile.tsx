@@ -8,7 +8,6 @@ import {
   TextInput,
   Alert,
   Share,
-  Switch,
   Platform,
   ActivityIndicator,
   Linking,
@@ -23,7 +22,6 @@ import {
   Heart,
   Share2,
   QrCode,
-  Bell,
   Moon,
   Sun,
   Monitor,
@@ -147,12 +145,6 @@ export default function ProfileScreen() {
     []
   );
   const [loadingRelationships, setLoadingRelationships] = useState(true);
-  const [notificationSettings, setNotificationSettings] = useState({
-    tasks: profile?.notification_preferences?.tasks ?? true,
-    messages: profile?.notification_preferences?.messages ?? true,
-    milestones: profile?.notification_preferences?.milestones ?? true,
-    daily: profile?.notification_preferences?.daily ?? true,
-  });
   const [showSobrietyDatePicker, setShowSobrietyDatePicker] = useState(false);
   const [selectedSobrietyDate, setSelectedSobrietyDate] = useState<Date>(new Date());
   const [showSlipUpModal, setShowSlipUpModal] = useState(false);
@@ -453,25 +445,6 @@ export default function ProfileScreen() {
       }
     } finally {
       setIsConnecting(false);
-    }
-  };
-
-  const updateNotificationSetting = async (key: string, value: boolean) => {
-    if (!profile) return;
-
-    const newSettings = { ...notificationSettings, [key]: value };
-    setNotificationSettings(newSettings);
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ notification_preferences: newSettings })
-      .eq('id', profile.id);
-
-    if (error) {
-      Alert.alert('Error', 'Failed to update notification settings');
-      setNotificationSettings(notificationSettings);
-    } else {
-      await refreshProfile();
     }
   };
 
@@ -1005,53 +978,6 @@ export default function ProfileScreen() {
                 System
               </Text>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={[styles.settingsCard, { marginTop: 16 }]}>
-          <View style={styles.settingRow}>
-            <Bell size={20} color={theme.textSecondary} />
-            <Text style={styles.settingLabel}>Notifications</Text>
-          </View>
-
-          <View style={styles.settingSubRow}>
-            <Text style={styles.settingSubLabel}>Task assignments</Text>
-            <Switch
-              value={notificationSettings.tasks}
-              onValueChange={(value) => updateNotificationSetting('tasks', value)}
-              trackColor={{ false: '#d1d5db', true: '#80c0ff' }}
-              thumbColor={notificationSettings.tasks ? theme.primary : '#f3f4f6'}
-            />
-          </View>
-
-          <View style={styles.settingSubRow}>
-            <Text style={styles.settingSubLabel}>Messages</Text>
-            <Switch
-              value={notificationSettings.messages}
-              onValueChange={(value) => updateNotificationSetting('messages', value)}
-              trackColor={{ false: '#d1d5db', true: '#80c0ff' }}
-              thumbColor={notificationSettings.messages ? theme.primary : '#f3f4f6'}
-            />
-          </View>
-
-          <View style={styles.settingSubRow}>
-            <Text style={styles.settingSubLabel}>Milestones</Text>
-            <Switch
-              value={notificationSettings.milestones}
-              onValueChange={(value) => updateNotificationSetting('milestones', value)}
-              trackColor={{ false: '#d1d5db', true: '#80c0ff' }}
-              thumbColor={notificationSettings.milestones ? theme.primary : '#f3f4f6'}
-            />
-          </View>
-
-          <View style={styles.settingSubRow}>
-            <Text style={styles.settingSubLabel}>Daily reminders</Text>
-            <Switch
-              value={notificationSettings.daily}
-              onValueChange={(value) => updateNotificationSetting('daily', value)}
-              trackColor={{ false: '#d1d5db', true: '#80c0ff' }}
-              thumbColor={notificationSettings.daily ? theme.primary : '#f3f4f6'}
-            />
           </View>
         </View>
       </View>

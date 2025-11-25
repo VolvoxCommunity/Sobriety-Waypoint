@@ -32,11 +32,11 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
-  signIn: async () => { },
-  signInWithGoogle: async () => { },
-  signUp: async () => { },
-  signOut: async () => { },
-  refreshProfile: async () => { },
+  signIn: async () => {},
+  signInWithGoogle: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export const useAuth = () => {
@@ -344,7 +344,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (existingProfile) {
         // Profile already exists - this is OK, user might be re-signing up
-        console.log('Profile already exists for user', data.user.id);
+        logger.info('Profile already exists for user', {
+          category: LogCategory.AUTH,
+          userId: data.user.id,
+        });
         return;
       }
 
