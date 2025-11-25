@@ -14,19 +14,12 @@ export const navigationIntegration = Sentry.reactNavigationIntegration({
 });
 
 /**
- * Check if Sentry should be initialized
- * Only in production builds, not in development or preview
+ * Check if Sentry should be initialized.
+ * Sentry is initialized in all environments to capture errors during development and testing.
+ *
+ * @returns true if DSN is configured, false otherwise
  */
 function shouldInitialize(): boolean {
-  const appEnv = process.env.EXPO_PUBLIC_APP_ENV;
-  const isDev = __DEV__;
-
-  // Only initialize in production
-  if (appEnv !== 'production' || isDev) {
-    console.log('[Sentry] Skipping initialization (not production)');
-    return false;
-  }
-
   // Verify DSN is available
   if (!process.env.EXPO_PUBLIC_SENTRY_DSN) {
     console.warn('[Sentry] DSN not configured, skipping initialization');
@@ -37,6 +30,18 @@ function shouldInitialize(): boolean {
 }
 
 /**
+ * Get the current environment name for Sentry.
+ *
+ * @returns Environment string: 'development', 'preview', or 'production'
+ */
+function getEnvironment(): string {
+  if (__DEV__) {
+    return 'development';
+  }
+  return process.env.EXPO_PUBLIC_APP_ENV || 'production';
+}
+
+/**
  * Initialize Sentry with platform-specific configuration
  */
 export function initializeSentry(): void {
@@ -44,10 +49,13 @@ export function initializeSentry(): void {
     return;
   }
 
+  const environment = getEnvironment();
+  console.log(`[Sentry] Initializing for environment: ${environment}`);
+
   try {
     Sentry.init({
-      dsn: 'https://e24bf0f5fca4a99552550017f19a3838@o216503.ingest.us.sentry.io/4510359449370624',
-      environment: 'production',
+      dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+      environment,
 
       // Release tracking
       release: Constants.expoConfig?.version || '1.0.0',

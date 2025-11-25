@@ -195,7 +195,8 @@ The root layout (`app/_layout.tsx`) orchestrates the auth flow:
 **Error Handling:**
 
 - Sentry SDK wraps root component for crash reporting
-- Production-only error tracking (disabled in `__DEV__`)
+- Error tracking enabled in all environments (development/preview/production)
+- Environment tags help filter errors in Sentry dashboard
 - Privacy scrubbing configured in `lib/sentry-privacy.ts`
 - ErrorBoundary component wraps app for graceful failures
 
@@ -303,9 +304,89 @@ SENTRY_PROJECT=sobriety-waypoint
 - `EXPO_TOKEN` (from expo.dev → Access Tokens)
 - `CLAUDE_CODE_OAUTH_TOKEN` (for Claude Code Review and Auto Label actions)
 
+## Security Reminders
+
+- Never commit secrets, API keys, or connection strings
+- Use environment variables for sensitive data (see Environment Configuration)
+- Validate and sanitize all user inputs
+- Use Supabase RLS policies for data access control
+- Session tokens are stored securely (SecureStore on native, localStorage on web)
+
 ## MCP Server Usage
 
-When using MCP servers (Model Context Protocol):
+Always leverage these Model Context Protocol (MCP) servers when appropriate:
+
+### Context7 (Documentation Lookup)
+
+**Use for:**
+
+- Looking up current API documentation for libraries/frameworks
+- Verifying correct usage of third-party packages (Expo, Supabase, React Native)
+- Finding code examples for unfamiliar APIs
+- Checking for breaking changes in library versions
+
+**Workflow:**
+
+1. First call `resolve-library-id` with the library name
+2. Then call `get-library-docs` with the resolved ID and relevant topic
+3. Use `mode='code'` for API references/examples, `mode='info'` for conceptual guides
+
+**Always use Context7 when:**
+
+- Working with a library you haven't used recently
+- The user asks about specific library functionality
+- Implementing features that require external package APIs
+- Unsure about correct method signatures or parameters
+
+### Sequential Thinking (Problem Solving)
+
+**Use for:**
+
+- Breaking down complex problems into steps
+- Planning multi-step implementations
+- Analyzing bugs that require careful reasoning
+- Architectural decisions with multiple considerations
+- Problems where the full scope isn't immediately clear
+
+**When to use:**
+
+- Complex debugging sessions
+- Implementing features with multiple dependencies
+- Refactoring decisions that affect multiple files
+- Performance optimization analysis
+
+**Key features:**
+
+- Adjust `total_thoughts` as understanding deepens
+- Mark revisions with `is_revision: true`
+- Branch exploration with `branch_from_thought`
+- Express uncertainty and explore alternatives
+
+### Memory (Knowledge Graph)
+
+**Use for:**
+
+- Storing user preferences and project context
+- Remembering decisions made during development
+- Tracking architectural patterns specific to this project
+- Persisting information across conversations
+
+**Operations:**
+
+- `create_entities` - Store new facts/concepts
+- `add_observations` - Add details to existing entities
+- `create_relations` - Link related entities
+- `search_nodes` - Find stored information
+- `read_graph` - Review all stored knowledge
+
+**When to use:**
+
+- User explicitly asks to "remember" something
+- Important project decisions are made
+- User preferences are established
+- Recurring patterns or conventions are identified
+
+### Project-Specific MCP Servers
 
 - **expo-mcp**: For Expo-specific operations (library installation, docs search)
   - Use `search_documentation` for Expo API questions
@@ -317,6 +398,13 @@ When using MCP servers (Model Context Protocol):
 - **brave-search**: For up-to-date web information
   - Use when needing current package versions, API changes
   - Helpful for researching React Native/Expo ecosystem changes
+
+### MCP Usage Guidelines
+
+1. **Prefer MCPs over guessing** - When uncertain about APIs, look them up with Context7
+2. **Think through complex problems** - Use sequential thinking for multi-step tasks
+3. **Persist important context** - Store decisions and preferences in memory
+4. **Combine when needed** - Use Context7 to research, Sequential Thinking to plan, Memory to store decisions
 
 ## Code Style & Conventions
 
@@ -566,4 +654,4 @@ feat(auth)!: migrate to new session storage format
 7. **Don't use `any` without good reason** - strict mode is enforced
 8. **Platform-specific code requires Platform.OS checks** - especially storage, auth flows
 9. **Metro cache issues** - run `pnpm start:clean` when imports break mysteriously
-10. **Sentry is production-only** - errors in dev won't appear in Sentry dashboard
+10. **Sentry tracks all environments** - errors appear in Sentry dashboard with environment tags (development/preview/production)
