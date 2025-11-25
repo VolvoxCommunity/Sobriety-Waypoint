@@ -136,12 +136,6 @@ export default function JourneyScreen() {
   }, [profile]);
 
   // Process raw data into timeline events
-  // Dependencies:
-  // - timelineData: Re-process when fetch completes (set by fetchRawData via useFocusEffect)
-  // - daysSober: Re-calculate milestones when day count changes (from useDaysSober hook)
-  // - theme: Update colors when theme changes
-  // - profile: Handle user changes
-  // Note: This effect only SETS events, which is not a dependency, so no infinite loop
   React.useEffect(() => {
     if (!profile || !timelineData) return;
 
