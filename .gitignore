@@ -3,6 +3,7 @@
 .expo-shared/
 dist/
 web-build/
+expo-env.d.ts
 
 # Native
 *.orig.*
@@ -107,13 +108,5 @@ android/local.properties
 worktrees/
 .worktrees/
 
-# Expo environment types
-expo-env.d.ts
-
 # Documentation plans
 docs/plans
-
-# Expo
-.expo
-dist/
-web-build/

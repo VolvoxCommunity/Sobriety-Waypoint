@@ -57,6 +57,8 @@ export function initializeSentry(): void {
       dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
       environment,
 
+      enableLogs: true,
+
       // Release tracking
       release: Constants.expoConfig?.version || '1.0.0',
       dist: Constants.expoConfig?.extra?.eas?.buildNumber,
