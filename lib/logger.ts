@@ -111,8 +111,7 @@ function createBreadcrumb(
     if (__DEV__ && metadata) {
       const conflicts = RESERVED_ERROR_KEYS.filter((key) => key in metadata);
       if (conflicts.length > 0) {
-          `[Logger] Metadata contains reserved keys that will be overwritten: ${conflicts.join(', ')}`
-        );
+          console.warn(`[Logger] Metadata contains reserved keys that will be overwritten: ${conflicts.join(', ')}`);
       }
     }
 
