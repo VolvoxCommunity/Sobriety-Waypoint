@@ -309,7 +309,11 @@ export default function ProfileScreen() {
         .single();
 
       if (sponsorError || !sponsorProfile) {
-        console.error('Error fetching sponsor profile:', sponsorError);
+        if (sponsorError) {
+          console.error('Error fetching sponsor profile:', sponsorError);
+        } else {
+          console.error('Sponsor profile not found for id:', invite.sponsor_id);
+        }
         if (Platform.OS === 'web') {
           window.alert('Unable to fetch sponsor information');
         } else {
