@@ -72,6 +72,27 @@ export default function HomeScreen() {
     fetchData();
   }, [profile, fetchData]);
 
+  useEffect(() => {
+    console.log(
+      'Debug Environment Variables:',
+      JSON.stringify(
+        {
+          NODE_ENV: process.env.NODE_ENV,
+          EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
+          EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+            ? '(set)'
+            : '(missing)',
+          EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
+          FULL_PROCESS_ENV: process.env,
+        },
+        null,
+        2
+      )
+    );
+    console.log('Debug __DEV__:', __DEV__);
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchData();
