@@ -139,7 +139,7 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => Linking.openURL('https://sobrietywaypoint.com/privacy')}
+              onPress={() => Linking.openURL('https://www.volvoxdev.com/privacy')}
             >
               <View style={styles.menuItemLeft}>
                 <Shield size={20} color={theme.textSecondary} />
@@ -169,7 +169,9 @@ export default function SettingsScreen() {
             <View style={styles.separator} />
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => Linking.openURL('https://github.com/billchirico/sobriety-waypoint')}
+              onPress={() =>
+                Linking.openURL('https://github.com/VolvoxCommunity/Sobriety-Waypoint')
+              }
             >
               <View style={styles.menuItemLeft}>
                 <Github size={20} color={theme.textSecondary} />
