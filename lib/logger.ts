@@ -65,13 +65,40 @@ function extractCategory(metadata?: LogMetadata): string {
 }
 
 /**
+ * Reserved keys used internally for error information in breadcrumb data.
+ * These keys should not be used in metadata to avoid silent overwrites.
+ */
+const RESERVED_ERROR_KEYS = ['error_message', 'error_stack', 'error_name'] as const;
+
+/**
+ * Build error info object with namespaced keys to avoid conflicts with user metadata.
+ * Uses 'error_message', 'error_stack', and 'error_name' instead of 'error' and 'stack'
+ * to prevent silent overwrites if metadata contains those common keys.
+ *
+ * @param error - The Error object to extract info from
+ * @returns Object with namespaced error properties
+ */
+function buildErrorInfo(error: Error): Record<string, unknown> {
+  return {
+    error_message: error.message,
+    error_stack: error.stack,
+    error_name: error.name,
+  };
+}
+
+/**
  * Create Sentry breadcrumb with proper level mapping.
  * Silently fails if Sentry is not initialized to prevent errors.
+ *
+ * @remarks
+ * Error information is stored with namespaced keys ('error_message', 'error_stack',
+ * 'error_name') to avoid conflicts with user-provided metadata. These keys are
+ * reserved and should not be used in metadata.
  *
  * @param level - The log level (debug, info, warn, error, trace)
  * @param message - The log message
  * @param error - Optional Error object with stack trace
- * @param metadata - Optional additional context
+ * @param metadata - Optional additional context (avoid using reserved keys)
  */
 function createBreadcrumb(
   level: LogLevel,
@@ -80,17 +107,27 @@ function createBreadcrumb(
   metadata?: LogMetadata
 ): void {
   try {
-    // Build breadcrumb data, casting to Record<string, any> for Sentry compatibility
+    // Warn in development if metadata contains reserved keys
+    if (__DEV__ && metadata) {
+      const conflicts = RESERVED_ERROR_KEYS.filter((key) => key in metadata);
+      if (conflicts.length > 0) {
+         
+        console.warn(
+          `[Logger] Metadata contains reserved keys that will be overwritten: ${conflicts.join(', ')}`
+        );
+      }
+    }
+
+    // Build breadcrumb data with namespaced error keys to avoid conflicts
     const breadcrumbData: Record<string, unknown> = {
       ...metadata,
-      ...(error && { error: error.message, stack: error.stack }),
+      ...(error && buildErrorInfo(error)),
     };
 
     Sentry.addBreadcrumb({
       level: mapLevelToSentry(level),
       category: extractCategory(metadata),
       message,
-      // Sentry expects Record<string, any>, but our data is safe to pass
       data: breadcrumbData as Record<string, unknown>,
       timestamp: Date.now() / 1000,
     });
