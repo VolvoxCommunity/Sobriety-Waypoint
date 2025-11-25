@@ -279,12 +279,23 @@ SENTRY_PROJECT=sobriety-waypoint
 
 ## CI/CD Pipeline
 
-**GitHub Actions (`.github/workflows/ci.yml`):**
+**GitHub Actions:**
 
-1. Lint → Format check → Typecheck
-2. Web build (artifact retention: 7 days)
-3. Android + iOS preview builds via EAS
-4. Claude Code Review (sticky PR comments)
+1. **CI Pipeline** (`.github/workflows/ci.yml`):
+   - Lint → Format check → Typecheck
+   - Web build (artifact retention: 7 days)
+   - Android + iOS preview builds via EAS
+
+2. **Claude Code Review** (`.github/workflows/claude-code-review.yml`):
+   - Automatic code review on PR open/sync
+   - Commits fixes for simple issues directly to PR branch
+   - Updates sticky comment with comprehensive feedback
+
+3. **Auto Label** (`.github/workflows/auto-label.yml`):
+   - Automatically labels PRs and issues using Claude AI
+   - Analyzes content, changed files, and description
+   - Applies 2-5 relevant labels (type, area, priority)
+   - Runs on PR/issue open, reopen, or edit
 
 **EAS Build Profiles:**
 
@@ -297,6 +308,7 @@ SENTRY_PROJECT=sobriety-waypoint
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_TOKEN` (from expo.dev → Access Tokens)
+- `CLAUDE_CODE_OAUTH_TOKEN` (for Claude Code Review and Auto Label actions)
 
 ## MCP Server Usage
 

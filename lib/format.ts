@@ -9,46 +9,46 @@ import { Profile } from '@/types/database';
 /**
  * A partial profile object that may contain name information.
  */
-type SponseeLike = Partial<Pick<Profile, 'first_name' | 'last_initial'>> | null | undefined;
+type ProfileLike = Partial<Pick<Profile, 'first_name' | 'last_initial'>> | null | undefined;
 
 // =============================================================================
 // Functions
 // =============================================================================
 
 /**
- * Formats a sponsee's name as "FirstName LastInitial." or just "FirstName" if no last initial.
- * Returns "?" if the sponsee is null/undefined or has no first name.
+ * Formats a profile's name as "FirstName LastInitial." or just "FirstName" if no last initial.
+ * Returns "?" if the profile is null/undefined or has no first name.
  *
- * @param sponsee - The sponsee profile object (or partial profile)
+ * @param profile - The profile object (or partial profile) to format
  * @returns Formatted name string
  *
  * @example
  * ```ts
- * formatSponseeName({ first_name: 'John', last_initial: 'D' })
+ * formatProfileName({ first_name: 'John', last_initial: 'D' })
  * // Returns: "John D."
  *
- * formatSponseeName({ first_name: 'Jane', last_initial: null })
+ * formatProfileName({ first_name: 'Jane', last_initial: null })
  * // Returns: "Jane"
  *
- * formatSponseeName(null)
+ * formatProfileName(null)
  * // Returns: "?"
  * ```
  */
-export function formatSponseeName(sponsee: SponseeLike): string {
-  // Handle null/undefined sponsee
-  if (!sponsee) {
+export function formatProfileName(profile: ProfileLike): string {
+  // Handle null/undefined profile
+  if (!profile) {
     return '?';
   }
 
   // Handle missing or empty first name
-  const firstName = sponsee.first_name?.trim();
+  const firstName = profile.first_name?.trim();
   if (!firstName) {
     return '?';
   }
 
   // Format with last initial if available
-  if (sponsee.last_initial) {
-    return `${firstName} ${sponsee.last_initial}.`;
+  if (profile.last_initial) {
+    return `${firstName} ${profile.last_initial}.`;
   }
 
   // Return first name only
