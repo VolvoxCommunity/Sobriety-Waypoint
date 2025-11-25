@@ -22,7 +22,7 @@ function shouldInitialize(): boolean {
   // Verify DSN is available
   if (!process.env.EXPO_PUBLIC_SENTRY_DSN) {
     // Note: Console used here to avoid circular dependency (logger imports Sentry)
-     
+
     console.warn('[Sentry] DSN not configured, skipping initialization');
     return false;
   }
@@ -55,7 +55,7 @@ export function initializeSentry(): void {
   }
 
   const environment = getEnvironment();
-   
+
   console.log(`[Sentry] Initializing for environment: ${environment}`);
 
   try {
@@ -103,10 +103,8 @@ export function initializeSentry(): void {
       sampleRate: 1.0,
     });
 
-     
     console.log('[Sentry] Initialized successfully');
   } catch (error) {
-     
     console.error('[Sentry] Failed to initialize:', error);
   }
 }

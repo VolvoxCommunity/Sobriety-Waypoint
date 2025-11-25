@@ -98,13 +98,10 @@ function logToConsole(
   const formattedMessage = `[${level.toUpperCase()}] ${message}`;
 
   if (error) {
-     
     consoleMethod(formattedMessage, error, metadata || '');
   } else if (metadata && Object.keys(metadata).length > 0) {
-     
     consoleMethod(formattedMessage, metadata);
   } else {
-     
     consoleMethod(formattedMessage);
   }
 }
