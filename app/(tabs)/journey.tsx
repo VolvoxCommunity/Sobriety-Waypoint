@@ -63,7 +63,7 @@ export default function JourneyScreen() {
     daysSober,
     journeyDays,
     hasSlipUps,
-    mostRecentSlipUp,
+    // mostRecentSlipUp available for future use (e.g., slip-up details modal)
     loading: loadingDaysSober,
   } = useDaysSober();
 
@@ -263,7 +263,7 @@ export default function JourneyScreen() {
     timelineEvents.sort((a, b) => b.date.getTime() - a.date.getTime());
 
     setEvents(timelineEvents);
-  }, [profile, theme]); // Re-run when data or display prefs change
+  }, [profile, theme, timelineData, daysSober]); // Re-run when raw data, display prefs, or sobriety calculation changes
 
   useFocusEffect(
     useCallback(() => {
