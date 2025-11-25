@@ -71,7 +71,7 @@ describe('Logger', () => {
       });
     });
 
-    it('includes error object in breadcrumb data', () => {
+    it('includes error object in breadcrumb data with namespaced keys', () => {
       const error = new Error('Test error');
       logger.error('Operation failed', error);
 
@@ -80,14 +80,15 @@ describe('Logger', () => {
         category: 'log',
         message: 'Operation failed',
         data: {
-          error: 'Test error',
-          stack: expect.any(String),
+          error_message: 'Test error',
+          error_stack: expect.any(String),
+          error_name: 'Error',
         },
         timestamp: expect.any(Number),
       });
     });
 
-    it('includes both error and metadata', () => {
+    it('includes both error and metadata without key conflicts', () => {
       const error = new Error('Test error');
       logger.error('Operation failed', error, { userId: '456', operation: 'delete' });
 
@@ -98,8 +99,9 @@ describe('Logger', () => {
         data: {
           userId: '456',
           operation: 'delete',
-          error: 'Test error',
-          stack: expect.any(String),
+          error_message: 'Test error',
+          error_stack: expect.any(String),
+          error_name: 'Error',
         },
         timestamp: expect.any(Number),
       });
