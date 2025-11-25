@@ -7,7 +7,7 @@ module.exports = defineConfig([
   expoConfig,
   prettierConfig,
   {
-    ignores: ['dist/*', 'jest.setup.js'],
+    ignores: ['dist/*'],
   },
   {
     rules: {
@@ -15,7 +15,7 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['lib/logger.ts', 'lib/sentry.ts'],
+    files: ['lib/logger.ts', 'lib/sentry.ts', 'jest.setup.js'],
     rules: {
       'no-console': 'off',
     },

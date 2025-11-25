@@ -127,7 +127,7 @@ logger.debug('Steps content loaded', {
 - Development debugging
 - Detailed flow tracking
 - Data transformation details
-- Only active in development (**DEV** = true)
+- Only active in development (`__DEV__` = true)
 
 #### `logger.trace(message, metadata?)`
 
