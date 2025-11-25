@@ -18,7 +18,7 @@ export const navigationIntegration = Sentry.reactNavigationIntegration({
  * Only in production builds, not in development or preview
  */
 function shouldInitialize(): boolean {
-  const appEnv = process.env.APP_ENV;
+  const appEnv = process.env.EXPO_PUBLIC_APP_ENV;
   const isDev = __DEV__;
 
   // Only initialize in production
