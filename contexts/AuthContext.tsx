@@ -239,7 +239,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data?.url) {
         logger.debug('Opening Google Auth browser session', {
           category: LogCategory.AUTH,
-          authUrl: data.url,
+          // Note: Not logging authUrl to avoid exposing OAuth state parameters
         });
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
@@ -251,7 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (result.type === 'success' && result.url) {
           logger.debug('Google Auth redirect received', {
             category: LogCategory.AUTH,
-            redirectUrl: result.url,
+            // Note: Not logging redirect URL to avoid exposing OAuth tokens
           });
 
           const url = new URL(result.url);
@@ -265,7 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasQueryRefreshToken: !!url.searchParams.get('refresh_token'),
             hasHashAccessToken: !!hashParams.get('access_token'),
             hasHashRefreshToken: !!hashParams.get('refresh_token'),
-            urlHash: url.hash,
+            // Note: Not logging urlHash to avoid exposing OAuth tokens
           });
 
           let access_token = url.searchParams.get('access_token');
