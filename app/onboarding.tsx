@@ -47,8 +47,6 @@ export default function OnboardingScreen() {
     try {
       await signOut();
       router.replace('/login');
-      await signOut();
-      router.replace('/login');
     } catch (error) {
       if (error instanceof Error) {
         Alert.alert('Error', error.message);
@@ -80,8 +78,6 @@ export default function OnboardingScreen() {
 
       if (error) throw error;
 
-      await refreshProfile();
-      router.replace('/(tabs)');
       await refreshProfile();
       router.replace('/(tabs)');
     } catch (error) {

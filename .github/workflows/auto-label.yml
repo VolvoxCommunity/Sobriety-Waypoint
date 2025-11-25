@@ -78,11 +78,10 @@ jobs:
                - **Type Labels** (choose 1-2): bug, feature, enhancement, documentation, refactor, testing, dependencies
                - **Area Labels** (choose 1-3): frontend, backend, supabase, authentication, ci/cd, android, ios, web
                - **Special Labels** (optional): security, accessibility, performance, good first issue, help wanted, question
-               - **Priority** (optional): priority: high, priority: low
 
             4. **Examples:**
                - PR adding new authentication flow → `feature`, `authentication`, `frontend`
-               - Issue reporting login crash → `bug`, `authentication`, `priority: high`
+               - Issue reporting login crash → `bug`, `authentication`, `frontend`
                - PR updating dependencies → `dependencies`, `backend`
                - PR improving accessibility → `enhancement`, `accessibility`, `frontend`
                - Issue asking about API usage → `question`, `backend`
