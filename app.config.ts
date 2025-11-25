@@ -1,5 +1,15 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
 
+/**
+ * Expo configuration for Sobriety Waypoint app.
+ *
+ * @remarks
+ * This configuration includes EAS Update settings for over-the-air updates.
+ * The runtime version uses the SDK version policy for managed workflow compatibility.
+ *
+ * @see {@link https://docs.expo.dev/eas-update/getting-started/ EAS Update Documentation}
+ * @see {@link https://docs.expo.dev/distribution/runtime-versions/ Runtime Version Documentation}
+ */
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   extra: {
@@ -16,6 +26,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: '1.0.0',
   orientation: 'portrait',
   newArchEnabled: true,
+  // =============================================================================
+  // EAS Update Configuration
+  // =============================================================================
+  runtimeVersion: {
+    policy: 'sdkVersion',
+  },
+  updates: {
+    url: 'https://u.expo.dev/8d64bbe4-27d4-41ac-9421-9c2758e4765a',
+    enabled: true,
+    checkAutomatically: 'ON_LOAD',
+    fallbackToCacheTimeout: 0,
+  },
   ios: {
     bundleIdentifier: 'com.volvox.sobrietywaypoint',
     icon: './assets/images/logo.png',
