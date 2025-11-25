@@ -15,6 +15,7 @@ import { TaskTemplate, Profile } from '@/types/database';
 import { ThemeColors } from '@/contexts/ThemeContext';
 import { X, ChevronDown, Calendar } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { logger, LogCategory } from '@/lib/logger';
 
 interface TaskCreationModalProps {
   visible: boolean;
@@ -141,7 +142,9 @@ export default function TaskCreationModal({
       onTaskCreated();
       onClose();
     } catch (err) {
-      console.error('Error creating task:', err);
+      logger.error('Task creation failed', err as Error, {
+        category: LogCategory.DATABASE,
+      });
       setError('Failed to create task. Please try again.');
     } finally {
       setIsSubmitting(false);

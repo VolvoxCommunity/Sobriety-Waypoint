@@ -9,4 +9,15 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    rules: {
+      'no-console': 'error',
+    },
+  },
+  {
+    files: ['lib/logger.ts', 'lib/sentry.ts', 'jest.setup.js'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ]);

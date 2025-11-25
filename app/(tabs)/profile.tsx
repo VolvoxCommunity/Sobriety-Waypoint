@@ -36,6 +36,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import packageJson from '../../package.json';
 import type { SponsorSponseeRelationship } from '@/types/database';
+import { logger, LogCategory } from '@/lib/logger';
 
 // Component for displaying sponsee days sober using the hook
 function SponseeDaysDisplay({
@@ -202,7 +203,9 @@ export default function ProfileScreen() {
         setSponseeTaskStats(stats);
       }
     } catch (error) {
-      console.error('Error fetching relationships:', error);
+      logger.error('Relationships fetch failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
     } finally {
       setLoadingRelationships(false);
     }
@@ -309,11 +312,13 @@ export default function ProfileScreen() {
         .single();
 
       if (sponsorError || !sponsorProfile) {
-        if (sponsorError) {
-          console.error('Error fetching sponsor profile:', sponsorError);
-        } else {
-          console.error('Sponsor profile not found for id:', invite.sponsor_id);
-        }
+        logger.error(
+          'Sponsor profile fetch failed',
+          sponsorError || new Error('Sponsor profile not found'),
+          {
+            category: LogCategory.DATABASE,
+          }
+        );
         if (Platform.OS === 'web') {
           window.alert('Unable to fetch sponsor information');
         } else {
@@ -380,7 +385,9 @@ export default function ProfileScreen() {
         });
 
       if (relationshipError) {
-        console.error('Relationship creation error:', relationshipError);
+        logger.error('Sponsor-sponsee relationship creation failed', relationshipError as Error, {
+          category: LogCategory.DATABASE,
+        });
         const errorMessage =
           relationshipError.message || 'Failed to connect with sponsor. Please try again.';
         if (Platform.OS === 'web') {
@@ -398,7 +405,9 @@ export default function ProfileScreen() {
         .eq('id', invite.id);
 
       if (updateError) {
-        console.error('Error updating invite code:', updateError);
+        logger.error('Invite code update failed', updateError as Error, {
+          category: LogCategory.DATABASE,
+        });
         // Note: This error usually indicates a missing RLS policy in Supabase.
         // Run scripts/fix_invite_codes_rls.sql to fix it.
       }
@@ -434,7 +443,9 @@ export default function ProfileScreen() {
       setShowInviteInput(false);
       setInviteCode('');
     } catch (error: any) {
-      console.error('Error joining with invite code:', error);
+      logger.error('Join with invite code failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Network error. Please check your connection and try again.');
       } else {
@@ -533,7 +544,9 @@ export default function ProfileScreen() {
         Alert.alert('Success', 'Successfully disconnected');
       }
     } catch (error: any) {
-      console.error('Error disconnecting:', error);
+      logger.error('Disconnect relationship failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to disconnect. Please try again.');
       } else {
@@ -600,7 +613,9 @@ export default function ProfileScreen() {
         Alert.alert('Success', 'Sobriety date updated successfully');
       }
     } catch (error: any) {
-      console.error('Error updating sobriety date:', error);
+      logger.error('Sobriety date update failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to update sobriety date');
       } else {
@@ -718,7 +733,9 @@ export default function ProfileScreen() {
         );
       }
     } catch (error: any) {
-      console.error('Error logging slip up:', error);
+      logger.error('Slip up logging failed', error as Error, {
+        category: LogCategory.DATABASE,
+      });
       if (Platform.OS === 'web') {
         window.alert('Failed to log slip up. Please try again.');
       } else {

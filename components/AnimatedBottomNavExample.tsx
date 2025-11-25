@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import AnimatedBottomNav, { AnimatedNavItem } from './AnimatedBottomNav';
 import { Home, Briefcase, Calendar, Shield, Settings } from 'lucide-react-native';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
+import { logger, LogCategory } from '@/lib/logger';
 
 export default function AnimatedBottomNavExample() {
   const { theme } = useTheme();
@@ -12,27 +13,32 @@ export default function AnimatedBottomNavExample() {
     {
       label: 'Home',
       icon: Home,
-      onPress: () => console.log('Home pressed'),
+      onPress: () =>
+        logger.debug('Demo nav item pressed', { category: LogCategory.UI, item: 'Home' }),
     },
     {
       label: 'Strategy',
       icon: Briefcase,
-      onPress: () => console.log('Strategy pressed'),
+      onPress: () =>
+        logger.debug('Demo nav item pressed', { category: LogCategory.UI, item: 'Strategy' }),
     },
     {
       label: 'Period',
       icon: Calendar,
-      onPress: () => console.log('Period pressed'),
+      onPress: () =>
+        logger.debug('Demo nav item pressed', { category: LogCategory.UI, item: 'Period' }),
     },
     {
       label: 'Security',
       icon: Shield,
-      onPress: () => console.log('Security pressed'),
+      onPress: () =>
+        logger.debug('Demo nav item pressed', { category: LogCategory.UI, item: 'Security' }),
     },
     {
       label: 'Settings',
       icon: Settings,
-      onPress: () => console.log('Settings pressed'),
+      onPress: () =>
+        logger.debug('Demo nav item pressed', { category: LogCategory.UI, item: 'Settings' }),
     },
   ];
 
