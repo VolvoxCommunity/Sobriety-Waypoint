@@ -30,6 +30,7 @@ jobs:
           prompt: |
             REPO: ${{ github.repository }}
             ${{ github.event.pull_request && format('PR NUMBER: {0}', github.event.pull_request.number) || format('ISSUE NUMBER: {0}', github.event.issue.number) }}
+            EVENT TYPE: ${{ github.event.pull_request && 'pull_request' || 'issue' }}
 
             **Task: Intelligent Auto-Labeling**
 
@@ -40,9 +41,6 @@ jobs:
             - `documentation` - Improvements or additions to documentation
             - `enhancement` - Enhancement on existing feature
             - `feature` - New feature
-            - `good first issue` - Good for newcomers
-            - `help wanted` - Extra attention is needed
-            - `question` - Further information is requested
             - `dependencies` - Dependency updates
             - `backend` - Backend/API related changes
             - `frontend` - Frontend/UI related changes
@@ -58,40 +56,53 @@ jobs:
             - `ci/cd` - CI/CD pipeline related
             - `refactor` - Code refactoring
 
+            **Available Issue Types (ISSUES ONLY - choose exactly 1):**
+            - `Bug` - Something isn't working correctly
+            - `Feature` - New functionality or capability
+            - `Documentation` - Documentation improvements
+            - `Task` - General work item or chore
+
             **Instructions:**
 
             1. **Analyze the Content:**
                ${{ github.event.pull_request && '- Read the PR title, description, and changed files using `gh pr view`' || '- Read the issue title and description using `gh issue view`' }}
                ${{ github.event.pull_request && '- Use `gh pr diff` to understand what code is being changed' || '' }}
-               - Identify the type of change (bug fix, feature, documentation, etc.)
+               - Identify the type of change (bug fix, feature, documentation, task)
                - Determine which areas of the codebase are affected
-               - Assess the priority and complexity
 
-            2. **Apply Labels:**
-               - Select 2-5 appropriate labels that best describe this ${{ github.event.pull_request && 'PR' || 'issue' }}
+            2. **Assign Issue Type (ISSUES ONLY - REQUIRED):**
+               - Skip this step for pull requests
+               - For issues: Choose exactly ONE type that best describes this issue
+               - Use: ${{ github.event.issue && format('`gh issue edit {0} --type "TypeName"`', github.event.issue.number) || '(not applicable for PRs)' }}
+
+            3. **Apply Labels:**
+               - Select all appropriate labels that apply to this ${{ github.event.pull_request && 'PR' || 'issue' }}
                - Use the `gh` CLI to add labels:
                  ${{ github.event.pull_request && format('`gh pr edit {0} --add-label "label1,label2,label3"`', github.event.pull_request.number) || format('`gh issue edit {0} --add-label "label1,label2,label3"`', github.event.issue.number) }}
 
-            3. **Labeling Guidelines:**
-               - **Type Labels** (choose 1-2): bug, feature, enhancement, documentation, refactor, testing, dependencies
-               - **Area Labels** (choose 1-3): frontend, backend, supabase, authentication, ci/cd, android, ios, web
-               - **Special Labels** (optional): security, accessibility, performance, good first issue, help wanted, question
+            4. **Labeling Guidelines:**
+               - **Type Labels**: bug, feature, enhancement, documentation, refactor, testing, dependencies
+               - **Area Labels**: frontend, backend, supabase, authentication, ci/cd, android, ios, web
+               - **Special Labels**: security, accessibility, performance
 
-            4. **Examples:**
-               - PR adding new authentication flow → `feature`, `authentication`, `frontend`
-               - Issue reporting login crash → `bug`, `authentication`, `frontend`
-               - PR updating dependencies → `dependencies`, `backend`
-               - PR improving accessibility → `enhancement`, `accessibility`, `frontend`
-               - Issue asking about API usage → `question`, `backend`
-               - PR refactoring database queries → `refactor`, `supabase`, `backend`
+            5. **Examples:**
+               - Issue reporting login crash → Type: `Bug`, Labels: `bug`, `authentication`, `frontend`
+               - Issue requesting new feature → Type: `Feature`, Labels: `feature`, `frontend`
+               - Issue requesting docs update → Type: `Documentation`, Labels: `documentation`
+               - Issue for general work → Type: `Task`, Labels: `enhancement`, `backend`
+               - PR adding new authentication flow → Labels: `feature`, `authentication`, `frontend`
+               - PR updating dependencies → Labels: `dependencies`
+               - PR improving accessibility → Labels: `enhancement`, `accessibility`, `frontend`
+               - PR refactoring database queries → Labels: `refactor`, `supabase`, `backend`
 
             **Important:**
             - Do NOT create new labels; only use the labels listed above
-            - Be conservative: only add labels that clearly apply
+            - For ISSUES: ALWAYS assign a type - this is required
+            - For PRs: Do NOT try to assign a type (types are for issues only)
+            - Be conservative with labels: only add labels that clearly apply
             - For PRs, prioritize file changes over description
             - For issues, prioritize the problem description and impact
-            - Do not add generic labels like "wontfix", "duplicate", or "invalid" (those are manual)
 
-            **Execute the labeling now using the gh CLI.**
+            **Execute the labeling (and type assignment if this is an issue) now using the gh CLI.**
 
-          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*),Bash(gh issue view:*),Bash(gh issue edit:*)"'
+          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue type:*)"'
