@@ -6,12 +6,18 @@ import * as Sentry from '@sentry/react-native';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'trace';
 
+/**
+ * Type-safe metadata for log entries.
+ * Uses `unknown` instead of `any` to enforce type checking at call sites.
+ */
+export type LogMetadata = Record<string, unknown>;
+
 export interface Logger {
-  debug(message: string, metadata?: Record<string, any>): void;
-  info(message: string, metadata?: Record<string, any>): void;
-  warn(message: string, metadata?: Record<string, any>): void;
-  error(message: string, error?: Error, metadata?: Record<string, any>): void;
-  trace(message: string, metadata?: Record<string, any>): void;
+  debug(message: string, metadata?: LogMetadata): void;
+  info(message: string, metadata?: LogMetadata): void;
+  warn(message: string, metadata?: LogMetadata): void;
+  error(message: string, error?: Error, metadata?: LogMetadata): void;
+  trace(message: string, metadata?: LogMetadata): void;
 }
 
 export enum LogCategory {
@@ -31,14 +37,14 @@ export enum LogCategory {
 // =============================================================================
 
 /**
- * Internal log function that handles Sentry breadcrumbs and console output
+ * Internal log function that handles Sentry breadcrumbs and console output.
+ *
+ * @param level - The severity level of the log
+ * @param message - Human-readable log message
+ * @param error - Optional Error object for error-level logs
+ * @param metadata - Optional structured data to attach to the log
  */
-function log(
-  level: LogLevel,
-  message: string,
-  error?: Error,
-  metadata?: Record<string, any>
-): void {
+function log(level: LogLevel, message: string, error?: Error, metadata?: LogMetadata): void {
   createBreadcrumb(level, message, error, metadata);
 
   if (__DEV__) {
@@ -47,23 +53,45 @@ function log(
 }
 
 /**
- * Create Sentry breadcrumb with proper level mapping
+ * Safely extract the category string from metadata.
+ * Returns 'log' as default if category is not a valid string.
+ *
+ * @param metadata - The log metadata object
+ * @returns The category string or 'log' default
+ */
+function extractCategory(metadata?: LogMetadata): string {
+  if (!metadata?.category) return 'log';
+  return typeof metadata.category === 'string' ? metadata.category : 'log';
+}
+
+/**
+ * Create Sentry breadcrumb with proper level mapping.
+ * Silently fails if Sentry is not initialized to prevent errors.
+ *
+ * @param level - The log level (debug, info, warn, error, trace)
+ * @param message - The log message
+ * @param error - Optional Error object with stack trace
+ * @param metadata - Optional additional context
  */
 function createBreadcrumb(
   level: LogLevel,
   message: string,
   error?: Error,
-  metadata?: Record<string, any>
+  metadata?: LogMetadata
 ): void {
   try {
+    // Build breadcrumb data, casting to Record<string, any> for Sentry compatibility
+    const breadcrumbData: Record<string, unknown> = {
+      ...metadata,
+      ...(error && { error: error.message, stack: error.stack }),
+    };
+
     Sentry.addBreadcrumb({
       level: mapLevelToSentry(level),
-      category: metadata?.category || 'log',
+      category: extractCategory(metadata),
       message,
-      data: {
-        ...metadata,
-        ...(error && { error: error.message, stack: error.stack }),
-      },
+      // Sentry expects Record<string, any>, but our data is safe to pass
+      data: breadcrumbData as Record<string, unknown>,
       timestamp: Date.now() / 1000,
     });
   } catch {
@@ -86,19 +114,26 @@ function mapLevelToSentry(level: LogLevel): Sentry.SeverityLevel {
 }
 
 /**
- * Output formatted log to console in development
+ * Output formatted log to console in development.
+ * Console methods accept unknown values and stringify them appropriately.
+ *
+ * @param level - The log level for formatting
+ * @param message - The log message
+ * @param error - Optional Error object
+ * @param metadata - Optional metadata to display
  */
 function logToConsole(
   level: LogLevel,
   message: string,
   error?: Error,
-  metadata?: Record<string, any>
+  metadata?: LogMetadata
 ): void {
   const consoleMethod = getConsoleMethod(level);
   const formattedMessage = `[${level.toUpperCase()}] ${message}`;
 
   if (error) {
-    consoleMethod(formattedMessage, error, metadata || '');
+    // Console methods handle unknown values via stringification
+    consoleMethod(formattedMessage, error, metadata ?? '');
   } else if (metadata && Object.keys(metadata).length > 0) {
     consoleMethod(formattedMessage, metadata);
   } else {
