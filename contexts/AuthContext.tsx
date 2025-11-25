@@ -268,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasQueryRefreshToken: !!url.searchParams.get('refresh_token'),
             hasHashAccessToken: !!hashParams.get('access_token'),
             hasHashRefreshToken: !!hashParams.get('refresh_token'),
-            // Note: Not logging urlHash to avoid exposing OAuth tokens
+            // Note: Not logging url.hash to avoid exposing OAuth tokens
           });
 
           let access_token = url.searchParams.get('access_token');
