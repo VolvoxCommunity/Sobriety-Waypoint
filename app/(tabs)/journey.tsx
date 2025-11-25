@@ -64,7 +64,7 @@ export default function JourneyScreen() {
     daysSober,
     journeyDays,
     hasSlipUps,
-    mostRecentSlipUp,
+    // mostRecentSlipUp available for future use (e.g., slip-up details modal)
     loading: loadingDaysSober,
   } = useDaysSober();
 

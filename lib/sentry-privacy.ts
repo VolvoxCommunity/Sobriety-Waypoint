@@ -27,6 +27,25 @@ const SENSITIVE_FIELDS = [
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
 /**
+ * OAuth-sensitive parameters that should be stripped from URLs
+ * These can appear in query strings or URL fragments
+ */
+const OAUTH_PARAMS = ['access_token', 'refresh_token', 'code', 'id_token', 'state'];
+
+/**
+ * Regex to detect URLs in strings (http/https URLs)
+ * Matches URLs that may contain query strings and fragments
+ */
+const URL_IN_STRING_REGEX = /https?:\/\/[^\s'"<>]+/g;
+
+/**
+ * Regex to match OAuth token values in console output
+ * Matches patterns like "access_token: eyJ..." or "refresh_token: abc123"
+ */
+const TOKEN_VALUE_REGEX =
+  /(access_token|refresh_token|id_token|code|state):\s*['"]?([^\s'"]+)['"]?/gi;
+
+/**
  * BeforeSend hook to scrub sensitive data from events
  */
 export function privacyBeforeSend(event: Sentry.ErrorEvent): Sentry.ErrorEvent | null {
@@ -59,7 +78,16 @@ export function privacyBeforeSend(event: Sentry.ErrorEvent): Sentry.ErrorEvent |
 }
 
 /**
- * BeforeBreadcrumb hook to filter sensitive breadcrumbs
+ * BeforeBreadcrumb hook to filter sensitive breadcrumbs.
+ *
+ * This function sanitizes breadcrumbs to prevent OAuth tokens and other sensitive
+ * data from being sent to Sentry. It handles:
+ * - HTTP breadcrumbs (Supabase queries)
+ * - Navigation breadcrumbs (URL parameters)
+ * - Console/debug breadcrumbs (logged URLs and token values)
+ *
+ * @param breadcrumb - The Sentry breadcrumb to sanitize
+ * @returns The sanitized breadcrumb, or null to drop it entirely
  */
 export function privacyBeforeBreadcrumb(breadcrumb: Sentry.Breadcrumb): Sentry.Breadcrumb | null {
   // Filter Supabase query breadcrumbs
@@ -75,18 +103,112 @@ export function privacyBeforeBreadcrumb(breadcrumb: Sentry.Breadcrumb): Sentry.B
     };
   }
 
+  // Filter HTTP breadcrumbs with OAuth URLs (non-Supabase)
+  if (breadcrumb.category === 'http' && breadcrumb.data?.url) {
+    return {
+      ...breadcrumb,
+      data: {
+        ...breadcrumb.data,
+        url: sanitizeUrl(breadcrumb.data.url),
+      },
+    };
+  }
+
   // Filter navigation breadcrumbs with sensitive params
   if (breadcrumb.category === 'navigation' && breadcrumb.data) {
     return {
       ...breadcrumb,
       data: {
-        from: breadcrumb.data.from,
-        to: stripQueryParams(breadcrumb.data.to),
+        from: sanitizeUrl(breadcrumb.data.from),
+        to: sanitizeUrl(breadcrumb.data.to),
       },
     };
   }
 
+  // Filter console and debug breadcrumbs that may contain OAuth tokens
+  // These are created by console.log/debug calls and can leak sensitive URLs and token values
+  if (breadcrumb.category === 'console' || breadcrumb.category === 'debug') {
+    return sanitizeConsoleBreadcrumb(breadcrumb);
+  }
+
+  // For any other breadcrumb type, check if message contains URLs and sanitize
+  if (breadcrumb.message && typeof breadcrumb.message === 'string') {
+    const sanitizedMessage = sanitizeUrlsInString(breadcrumb.message);
+    if (sanitizedMessage !== breadcrumb.message) {
+      return {
+        ...breadcrumb,
+        message: sanitizeTokenValues(sanitizedMessage),
+      };
+    }
+  }
+
   return breadcrumb;
+}
+
+/**
+ * Sanitize a console or debug breadcrumb.
+ *
+ * Console breadcrumbs can contain:
+ * - URLs with OAuth tokens in query strings or fragments
+ * - Explicit token values like "access_token: eyJ..."
+ * - Other sensitive data logged during OAuth flows
+ *
+ * @param breadcrumb - The console/debug breadcrumb to sanitize
+ * @returns The sanitized breadcrumb
+ */
+function sanitizeConsoleBreadcrumb(breadcrumb: Sentry.Breadcrumb): Sentry.Breadcrumb {
+  const sanitized = { ...breadcrumb };
+
+  // Sanitize the message field
+  if (sanitized.message && typeof sanitized.message === 'string') {
+    // First sanitize any URLs in the message
+    let message = sanitizeUrlsInString(sanitized.message);
+    // Then sanitize any explicit token values (e.g., "access_token: xyz123")
+    message = sanitizeTokenValues(message);
+    sanitized.message = message;
+  }
+
+  // Sanitize the data field if present
+  if (sanitized.data) {
+    sanitized.data = sanitizeConsoleBreadcrumbData(sanitized.data);
+  }
+
+  return sanitized;
+}
+
+/**
+ * Sanitize the data object of a console breadcrumb.
+ *
+ * Console breadcrumb data can contain arbitrary arguments passed to console.log,
+ * which may include URLs, token values, or entire objects with sensitive fields.
+ *
+ * @param data - The breadcrumb data object to sanitize
+ * @returns The sanitized data object
+ */
+function sanitizeConsoleBreadcrumbData(data: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    // Check if key itself is a sensitive field
+    if (SENSITIVE_FIELDS.includes(key.toLowerCase())) {
+      sanitized[key] = '[Filtered]';
+      continue;
+    }
+
+    if (typeof value === 'string') {
+      // Sanitize URLs and token values in string values
+      let sanitizedValue = sanitizeUrlsInString(value);
+      sanitizedValue = sanitizeTokenValues(sanitizedValue);
+      sanitized[key] = sanitizedValue;
+    } else if (typeof value === 'object' && value !== null) {
+      // Recursively sanitize nested objects
+      sanitized[key] = sanitizeConsoleBreadcrumbData(value as Record<string, unknown>);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized;
 }
 
 /**
@@ -168,9 +290,108 @@ function extractTableName(url: string): string {
 }
 
 /**
- * Strip query parameters from URL or route
+ * Sanitize a URL by removing OAuth-sensitive parameters from query strings and fragments.
+ *
+ * This function:
+ * - Removes OAuth parameters (access_token, refresh_token, code, id_token, state) from query strings
+ * - Removes the entire fragment (portion after '#') as it often contains OAuth tokens
+ * - Preserves the base URL and non-sensitive query parameters
+ *
+ * @param urlOrRoute - The URL or route string to sanitize
+ * @returns The sanitized URL with OAuth parameters removed
+ *
+ * @example
+ * ```ts
+ * sanitizeUrl('https://app.com/callback?access_token=secret&state=abc&page=1')
+ * // Returns: 'https://app.com/callback?page=1'
+ *
+ * sanitizeUrl('https://app.com/callback#access_token=secret')
+ * // Returns: 'https://app.com/callback'
+ * ```
  */
-function stripQueryParams(urlOrRoute: string): string {
+function sanitizeUrl(urlOrRoute: string): string {
   if (!urlOrRoute) return urlOrRoute;
-  return urlOrRoute.split('?')[0];
+
+  try {
+    // Handle full URLs
+    if (urlOrRoute.startsWith('http://') || urlOrRoute.startsWith('https://')) {
+      const url = new URL(urlOrRoute);
+
+      // Remove OAuth params from query string
+      for (const param of OAUTH_PARAMS) {
+        url.searchParams.delete(param);
+      }
+
+      // Remove fragment entirely (often contains OAuth tokens in implicit flow)
+      // Fragments like #access_token=xyz&refresh_token=abc are common in OAuth
+      if (url.hash) {
+        url.hash = '';
+      }
+
+      return url.toString();
+    }
+
+    // Handle relative URLs or route paths (e.g., /callback?token=xyz)
+    const [pathAndQuery, fragment] = urlOrRoute.split('#');
+    const [path, queryString] = pathAndQuery.split('?');
+
+    if (!queryString) {
+      // No query string, just remove fragment
+      return path;
+    }
+
+    // Parse and filter query params
+    const params = new URLSearchParams(queryString);
+    for (const param of OAUTH_PARAMS) {
+      params.delete(param);
+    }
+
+    const filteredQuery = params.toString();
+    return filteredQuery ? `${path}?${filteredQuery}` : path;
+  } catch {
+    // If URL parsing fails, fall back to simple stripping
+    // Remove fragment first, then query string entirely as a safety measure
+    const withoutFragment = urlOrRoute.split('#')[0];
+    return withoutFragment.split('?')[0];
+  }
+}
+
+/**
+ * Sanitize all URLs found within a string.
+ *
+ * Useful for sanitizing console log messages that may contain URLs with OAuth tokens.
+ *
+ * @param str - The string potentially containing URLs
+ * @returns The string with all URLs sanitized
+ *
+ * @example
+ * ```ts
+ * sanitizeUrlsInString('Redirect URL: https://app.com?access_token=secret&page=1')
+ * // Returns: 'Redirect URL: https://app.com?page=1'
+ * ```
+ */
+function sanitizeUrlsInString(str: string): string {
+  if (!str || typeof str !== 'string') return str;
+
+  return str.replace(URL_IN_STRING_REGEX, (url) => sanitizeUrl(url));
+}
+
+/**
+ * Sanitize OAuth token values that appear directly in console output.
+ *
+ * Handles patterns like "access_token: eyJabc123" that are logged explicitly.
+ *
+ * @param str - The string potentially containing token values
+ * @returns The string with token values redacted
+ *
+ * @example
+ * ```ts
+ * sanitizeTokenValues('Hash access_token: eyJabc123xyz')
+ * // Returns: 'Hash access_token: [FILTERED]'
+ * ```
+ */
+function sanitizeTokenValues(str: string): string {
+  if (!str || typeof str !== 'string') return str;
+
+  return str.replace(TOKEN_VALUE_REGEX, '$1: [FILTERED]');
 }
