@@ -2,7 +2,7 @@
 // Imports
 // =============================================================================
 import React from 'react';
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 // =============================================================================
@@ -20,6 +20,7 @@ interface OnboardingStepProps {
  *
  * Provides consistent animations when transitioning between onboarding steps.
  * Uses slide-in and slide-out animations for a smooth user experience.
+ * Dynamically adjusts width based on window dimensions for responsive layouts.
  *
  * @param props - Component props
  * @param props.children - Content to display within the step
@@ -33,11 +34,13 @@ interface OnboardingStepProps {
  * ```
  */
 const OnboardingStep: React.FC<OnboardingStepProps> = ({ children }) => {
+  const { width } = useWindowDimensions();
+
   return (
     <Animated.View
       entering={FadeInRight.duration(500)}
       exiting={FadeOutLeft.duration(500)}
-      style={styles.container}
+      style={[styles.container, { width }]}
     >
       {children}
     </Animated.View>
@@ -50,7 +53,6 @@ const OnboardingStep: React.FC<OnboardingStepProps> = ({ children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: Dimensions.get('window').width,
     paddingHorizontal: 24,
   },
 });

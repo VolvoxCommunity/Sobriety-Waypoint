@@ -79,11 +79,11 @@ export default function SettingsScreen() {
           await signOut();
           router.replace('/login');
         } catch (error: unknown) {
-          logger.error('Sign out failed', error as Error, {
+          const err = error instanceof Error ? error : new Error('Unknown error');
+          logger.error('Sign out failed', err, {
             category: LogCategory.AUTH,
           });
-          const message = error instanceof Error ? error.message : 'Unknown error';
-          window.alert('Error signing out: ' + message);
+          window.alert('Error signing out: ' + err.message);
         }
       }
     } else {
@@ -97,11 +97,11 @@ export default function SettingsScreen() {
               await signOut();
               router.replace('/login');
             } catch (error: unknown) {
-              logger.error('Sign out failed', error as Error, {
+              const err = error instanceof Error ? error : new Error('Unknown error');
+              logger.error('Sign out failed', err, {
                 category: LogCategory.AUTH,
               });
-              const message = error instanceof Error ? error.message : 'Unknown error';
-              Alert.alert('Error', 'Failed to sign out: ' + message);
+              Alert.alert('Error', 'Failed to sign out: ' + err.message);
             }
           },
         },
@@ -134,11 +134,11 @@ export default function SettingsScreen() {
         window.alert('Your account has been deleted. We wish you well on your journey.');
         router.replace('/login');
       } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        logger.error('Account deletion failed in settings', error as Error, {
+        const err = error instanceof Error ? error : new Error('Unknown error occurred');
+        logger.error('Account deletion failed in settings', err, {
           category: LogCategory.AUTH,
         });
-        window.alert('Error deleting account: ' + errorMessage);
+        window.alert('Error deleting account: ' + err.message);
       } finally {
         setIsDeleting(false);
       }
@@ -172,12 +172,11 @@ export default function SettingsScreen() {
                         ]
                       );
                     } catch (error: unknown) {
-                      const errorMessage =
-                        error instanceof Error ? error.message : 'Unknown error occurred';
-                      logger.error('Account deletion failed in settings', error as Error, {
+                      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+                      logger.error('Account deletion failed in settings', err, {
                         category: LogCategory.AUTH,
                       });
-                      Alert.alert('Error', 'Failed to delete account: ' + errorMessage);
+                      Alert.alert('Error', 'Failed to delete account: ' + err.message);
                     } finally {
                       setIsDeleting(false);
                     }
@@ -506,17 +505,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.dangerLight || '#fef2f2',
+      backgroundColor: theme.dangerLight,
       padding: 16,
       borderRadius: 16,
       borderWidth: 1,
-      borderColor: theme.dangerBorder || '#fee2e2',
+      borderColor: theme.dangerBorder,
     },
     signOutText: {
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: theme.danger || '#ef4444',
+      color: theme.danger,
       marginLeft: 8,
     },
     footer: {

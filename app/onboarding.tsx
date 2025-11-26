@@ -15,11 +15,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Calendar, LogOut, ChevronRight, ChevronLeft, Info } from 'lucide-react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import ProgressBar from '@/components/onboarding/ProgressBar';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+/**
+ * Onboarding screen that collects user information for initial profile setup.
+ *
+ * Provides a two-step flow:
+ * - Step 1: Collects first name and last initial for personalization
+ * - Step 2: Collects sobriety date to track recovery progress
+ *
+ * @returns Onboarding screen with animated step transitions
+ *
+ * @example
+ * ```tsx
+ * // Automatically shown for users without complete profiles
+ * <OnboardingScreen />
+ * ```
+ */
 export default function OnboardingScreen() {
   const { theme } = useTheme();
   const { user, profile, refreshProfile, signOut } = useAuth();
@@ -99,7 +114,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
@@ -174,7 +189,7 @@ export default function OnboardingScreen() {
           disabled={!firstName || !lastInitial || lastInitial.length !== 1}
         >
           <Text style={styles.buttonText}>Continue</Text>
-          <ChevronRight size={20} color="#fff" />
+          <ChevronRight size={20} color={theme.textOnPrimary} />
         </TouchableOpacity>
       </View>
     </OnboardingStep>
@@ -265,7 +280,7 @@ export default function OnboardingScreen() {
             disabled={loading}
           >
             <Text style={styles.buttonText}>{loading ? 'Setting up...' : 'Complete Setup'}</Text>
-            {!loading && <ChevronRight size={20} color="#fff" />}
+            {!loading && <ChevronRight size={20} color={theme.textOnPrimary} />}
           </TouchableOpacity>
         </View>
       </View>
