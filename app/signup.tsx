@@ -75,11 +75,12 @@ export default function SignupScreen() {
     try {
       await signUp(email, password, firstName, lastInitial);
       router.replace('/onboarding');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to create account';
       if (Platform.OS === 'web') {
-        window.alert('Error: ' + (error.message || 'Failed to create account'));
+        window.alert('Error: ' + message);
       } else {
-        Alert.alert('Error', error.message || 'Failed to create account');
+        Alert.alert('Error', message);
       }
     } finally {
       setLoading(false);
@@ -90,11 +91,12 @@ export default function SignupScreen() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to sign in with Google';
       if (Platform.OS === 'web') {
-        window.alert('Error: ' + (error.message || 'Failed to sign in with Google'));
+        window.alert('Error: ' + message);
       } else {
-        Alert.alert('Error', error.message || 'Failed to sign in with Google');
+        Alert.alert('Error', message);
       }
     } finally {
       setGoogleLoading(false);

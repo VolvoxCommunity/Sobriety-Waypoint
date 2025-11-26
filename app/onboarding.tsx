@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,17 +21,21 @@ import OnboardingStep from '@/components/onboarding/OnboardingStep';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 /**
- * Onboarding screen that collects user information for initial profile setup.
+ * OnboardingScreen handles the initial user setup flow after authentication.
  *
- * Provides a two-step flow:
- * - Step 1: Collects first name and last initial for personalization
- * - Step 2: Collects sobriety date to track recovery progress
+ * The onboarding consists of two steps:
+ * - Step 1: Collects user's first name and last initial for personalization
+ * - Step 2: Collects the user's sobriety date to track their recovery journey
  *
- * @returns Onboarding screen with animated step transitions
+ * Users who already have a name set will skip directly to step 2.
+ * Upon completion, the user's profile is updated and they are redirected to the main app.
+ *
+ * @returns The onboarding screen component with step-based navigation
  *
  * @example
  * ```tsx
- * // Automatically shown for users without complete profiles
+ * // Used as a route in Expo Router - navigated to automatically
+ * // when user is authenticated but profile is incomplete
  * <OnboardingScreen />
  * ```
  */
@@ -123,7 +127,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const renderStep1 = () => (
     <OnboardingStep>

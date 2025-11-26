@@ -26,6 +26,7 @@ import {
   FileText,
   Github,
   Trash2,
+  X,
 } from 'lucide-react-native';
 import { logger, LogCategory } from '@/lib/logger';
 import packageJson from '../package.json';
@@ -172,7 +173,8 @@ export default function SettingsScreen() {
                         ]
                       );
                     } catch (error: unknown) {
-                      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+                      const err =
+                        error instanceof Error ? error : new Error('Unknown error occurred');
                       logger.error('Account deletion failed in settings', err, {
                         category: LogCategory.AUTH,
                       });
@@ -190,6 +192,22 @@ export default function SettingsScreen() {
     }
   };
 
+  /**
+   * Safely opens an external URL with error handling.
+   * Logs errors to Sentry if the URL fails to open.
+   */
+  const handleOpenURL = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error('Failed to open URL');
+      logger.error('Failed to open external URL', err, {
+        category: LogCategory.UI,
+        url,
+      });
+    }
+  };
+
   const styles = createStyles(theme);
 
   return (
@@ -199,10 +217,10 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
-          accessibilityLabel="Go back"
+          accessibilityLabel="Close settings"
           accessibilityRole="button"
         >
-          <ChevronLeft size={24} color={theme.text} />
+          <X size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 40 }} />
@@ -284,7 +302,7 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => Linking.openURL(EXTERNAL_LINKS.PRIVACY_POLICY)}
+              onPress={() => handleOpenURL(EXTERNAL_LINKS.PRIVACY_POLICY)}
               accessibilityRole="link"
               accessibilityLabel="View Privacy Policy"
             >
@@ -301,7 +319,7 @@ export default function SettingsScreen() {
             <View style={styles.separator} />
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => Linking.openURL(EXTERNAL_LINKS.TERMS_OF_SERVICE)}
+              onPress={() => handleOpenURL(EXTERNAL_LINKS.TERMS_OF_SERVICE)}
               accessibilityRole="link"
               accessibilityLabel="View Terms of Service"
             >
@@ -318,7 +336,7 @@ export default function SettingsScreen() {
             <View style={styles.separator} />
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => Linking.openURL(EXTERNAL_LINKS.SOURCE_CODE)}
+              onPress={() => handleOpenURL(EXTERNAL_LINKS.SOURCE_CODE)}
               accessibilityRole="link"
               accessibilityLabel="View source code on GitHub"
             >
@@ -342,7 +360,7 @@ export default function SettingsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Sign out of your account"
           >
-            <LogOut size={20} color={theme.danger} />
+            <LogOut size={20} color={theme.error} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
@@ -374,7 +392,7 @@ export default function SettingsScreen() {
           <Text style={styles.footerText}>Sobriety Waypoint v{packageJson.version}</Text>
           <Text style={styles.footerSubtext}>Supporting recovery, one day at a time</Text>
           <TouchableOpacity
-            onPress={() => Linking.openURL(EXTERNAL_LINKS.DEVELOPER)}
+            onPress={() => handleOpenURL(EXTERNAL_LINKS.DEVELOPER)}
             accessibilityRole="link"
             accessibilityLabel="Visit developer website"
           >
@@ -505,17 +523,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+<<<<<<< HEAD
       backgroundColor: theme.dangerLight,
       padding: 16,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: theme.dangerBorder,
+=======
+      backgroundColor: '#fef2f2',
+      padding: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: '#fee2e2',
+>>>>>>> 8d6f1ec (refactor: improve error handling with `unknown` and type guards, optimize sponsee task fetching, and refine sign-out logic.)
     },
     signOutText: {
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
+<<<<<<< HEAD
       color: theme.danger,
+=======
+      color: theme.error,
+>>>>>>> 8d6f1ec (refactor: improve error handling with `unknown` and type guards, optimize sponsee task fetching, and refine sign-out logic.)
       marginLeft: 8,
     },
     footer: {

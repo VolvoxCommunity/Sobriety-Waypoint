@@ -175,18 +175,31 @@ export default function ProfileScreen() {
       setSponsorRelationships(asSponsee || []);
       setSponseeRelationships(asSponsor || []);
 
+      // Batch fetch all task stats in a single query (avoids N+1 problem)
       if (asSponsor && asSponsor.length > 0) {
+        const sponseeIds = asSponsor.map((rel) => rel.sponsee_id);
+
+        const { data: allTasks } = await supabase
+          .from('tasks')
+          .select('sponsee_id, status')
+          .in('sponsee_id', sponseeIds);
+
+        // Aggregate stats client-side
         const stats: { [key: string]: { total: number; completed: number } } = {};
 
-        for (const rel of asSponsor) {
-          const { data: tasks } = await supabase
-            .from('tasks')
-            .select('status')
-            .eq('sponsee_id', rel.sponsee_id);
+        // Initialize stats for all sponsees (ensures 0/0 for sponsees with no tasks)
+        for (const id of sponseeIds) {
+          stats[id] = { total: 0, completed: 0 };
+        }
 
-          const total = tasks?.length || 0;
-          const completed = tasks?.filter((t) => t.status === 'completed').length || 0;
-          stats[rel.sponsee_id] = { total, completed };
+        // Count tasks per sponsee
+        if (allTasks) {
+          for (const task of allTasks) {
+            stats[task.sponsee_id].total++;
+            if (task.status === 'completed') {
+              stats[task.sponsee_id].completed++;
+            }
+          }
         }
 
         setSponseeTaskStats(stats);
@@ -431,14 +444,16 @@ export default function ProfileScreen() {
 
       setShowInviteInput(false);
       setInviteCode('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Join with invite code failed', error as Error, {
         category: LogCategory.DATABASE,
       });
+      const message =
+        error instanceof Error ? error.message : 'Network error. Please check your connection.';
       if (Platform.OS === 'web') {
-        window.alert('Network error. Please check your connection and try again.');
+        window.alert(message);
       } else {
-        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+        Alert.alert('Error', message);
       }
     } finally {
       setIsConnecting(false);
@@ -513,14 +528,15 @@ export default function ProfileScreen() {
       } else {
         Alert.alert('Success', 'Successfully disconnected');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Disconnect relationship failed', error as Error, {
         category: LogCategory.DATABASE,
       });
+      const message = error instanceof Error ? error.message : 'Failed to disconnect.';
       if (Platform.OS === 'web') {
-        window.alert('Failed to disconnect. Please try again.');
+        window.alert(message);
       } else {
-        Alert.alert('Error', 'Failed to disconnect. Please try again.');
+        Alert.alert('Error', message);
       }
     }
   };
@@ -582,14 +598,15 @@ export default function ProfileScreen() {
       } else {
         Alert.alert('Success', 'Sobriety date updated successfully');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Sobriety date update failed', error as Error, {
         category: LogCategory.DATABASE,
       });
+      const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
       if (Platform.OS === 'web') {
-        window.alert('Failed to update sobriety date');
+        window.alert(message);
       } else {
-        Alert.alert('Error', 'Failed to update sobriety date');
+        Alert.alert('Error', message);
       }
     }
   };
@@ -702,14 +719,15 @@ export default function ProfileScreen() {
           'Your slip up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Slip up logging failed', error as Error, {
         category: LogCategory.DATABASE,
       });
+      const message = error instanceof Error ? error.message : 'Failed to log slip up.';
       if (Platform.OS === 'web') {
-        window.alert('Failed to log slip up. Please try again.');
+        window.alert(message);
       } else {
-        Alert.alert('Error', 'Failed to log slip up. Please try again.');
+        Alert.alert('Error', message);
       }
     } finally {
       setIsLoggingSlipUp(false);
@@ -722,7 +740,12 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
+          >
             <Settings size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
@@ -1198,7 +1221,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontFamily: theme.fontRegular,
       fontWeight: '600',
       color: theme.text,
-      marginLeft: 8,
+      marginLeft: 12,
     },
     daysSober: {
       fontSize: 48,
@@ -1472,7 +1495,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       color: theme.text,
-      marginLeft: 8,
+      marginLeft: 12,
     },
     notesSection: {
       marginBottom: 20,

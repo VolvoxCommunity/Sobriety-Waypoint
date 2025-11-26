@@ -413,14 +413,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       category: LogCategory.AUTH,
     });
 
+    // Sign out first to clear session data and trigger auth state change
+    await supabase.auth.signOut();
+
     // Clear local state and Sentry user
+    // Order matters: clear user/session first so routing logic sees !user → login
     clearSentryUser();
-    setProfile(null);
     setUser(null);
     setSession(null);
-
-    // Sign out to clear any remaining session data
-    await supabase.auth.signOut();
+    setProfile(null);
   };
 
   return (

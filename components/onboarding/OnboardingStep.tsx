@@ -20,7 +20,7 @@ interface OnboardingStepProps {
  *
  * Provides consistent animations when transitioning between onboarding steps.
  * Uses slide-in and slide-out animations for a smooth user experience.
- * Dynamically adjusts width based on window dimensions for responsive layouts.
+ * Dynamically responds to window size changes for proper responsiveness.
  *
  * @param props - Component props
  * @param props.children - Content to display within the step

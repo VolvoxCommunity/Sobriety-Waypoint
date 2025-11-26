@@ -41,11 +41,12 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signIn(email, password);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to sign in';
       if (Platform.OS === 'web') {
-        window.alert('Error: ' + (error.message || 'Failed to sign in'));
+        window.alert('Error: ' + message);
       } else {
-        Alert.alert('Error', error.message || 'Failed to sign in');
+        Alert.alert('Error', message);
       }
     } finally {
       setLoading(false);
@@ -56,11 +57,12 @@ export default function LoginScreen() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to sign in with Google';
       if (Platform.OS === 'web') {
-        window.alert('Error: ' + (error.message || 'Failed to sign in with Google'));
+        window.alert('Error: ' + message);
       } else {
-        Alert.alert('Error', error.message || 'Failed to sign in with Google');
+        Alert.alert('Error', message);
       }
     } finally {
       setGoogleLoading(false);
