@@ -8,6 +8,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   Easing,
+  interpolate,
 } from 'react-native-reanimated';
 import { ThemeColors } from '@/contexts/ThemeContext';
 
@@ -52,8 +53,10 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ step, totalSteps, theme }) =>
   }, [step, totalSteps, progress]);
 
   const animatedStyle = useAnimatedStyle(() => {
+    // Use flex to animate width as a ratio of the container
+    // This is more reliable than string interpolation in worklets
     return {
-      width: `${progress.value * 100}%`,
+      flex: interpolate(progress.value, [0, 1], [0, 1]),
     };
   });
 
@@ -69,6 +72,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ step, totalSteps, theme }) =>
           marginHorizontal: 24,
           marginTop: 12,
           marginBottom: 24,
+          flexDirection: 'row',
         },
         bar: {
           height: '100%',

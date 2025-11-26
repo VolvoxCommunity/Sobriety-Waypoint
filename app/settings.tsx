@@ -377,10 +377,10 @@ export default function SettingsScreen() {
               disabled={isDeleting}
             >
               {isDeleting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={theme.white} />
               ) : (
                 <>
-                  <Trash2 size={20} color="#ffffff" />
+                  <Trash2 size={20} color={theme.white} />
                   <Text style={styles.deleteAccountText}>Delete Account</Text>
                 </>
               )}
@@ -564,23 +564,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 14,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#dc2626',
+      color: theme.danger,
       marginBottom: 12,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginLeft: 4,
     },
     dangerCard: {
-      backgroundColor: '#fef2f2',
+      backgroundColor: theme.dangerLight,
       borderRadius: 16,
       padding: 16,
       borderWidth: 1,
-      borderColor: '#fecaca',
+      borderColor: theme.dangerBorder,
     },
     dangerDescription: {
       fontSize: 14,
       fontFamily: theme.fontRegular,
-      color: '#991b1b',
+      color: theme.danger,
       marginBottom: 16,
       lineHeight: 20,
     },
@@ -588,7 +588,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#dc2626',
+      backgroundColor: theme.danger,
       padding: 14,
       borderRadius: 12,
       gap: 8,
@@ -597,7 +597,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
     buttonDisabled: {
       opacity: 0.6,
