@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Alert,
   Platform,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,9 +25,10 @@ import {
   Shield,
   FileText,
   Github,
+  Trash2,
 } from 'lucide-react-native';
-import packageJson from '../package.json';
 import { logger, LogCategory } from '@/lib/logger';
+import packageJson from '../package.json';
 
 // =============================================================================
 // Constants
@@ -49,6 +51,7 @@ const EXTERNAL_LINKS = {
  * - Access to legal documents (privacy policy, terms of service)
  * - Link to source code repository
  * - Sign out functionality
+ * - Account deletion
  *
  * @returns Settings screen component with navigation header
  *
@@ -59,9 +62,10 @@ const EXTERNAL_LINKS = {
  * ```
  */
 export default function SettingsScreen() {
-  const { signOut } = useAuth();
+  const { signOut, deleteAccount } = useAuth();
   const { theme, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   /**
    * Handles user sign out with platform-specific confirmations.
@@ -74,7 +78,7 @@ export default function SettingsScreen() {
         try {
           await signOut();
           router.replace('/login');
-        } catch (error) {
+        } catch (error: unknown) {
           logger.error('Sign out failed', error as Error, {
             category: LogCategory.AUTH,
           });
@@ -92,13 +96,95 @@ export default function SettingsScreen() {
             try {
               await signOut();
               router.replace('/login');
-            } catch (error) {
+            } catch (error: unknown) {
               logger.error('Sign out failed', error as Error, {
                 category: LogCategory.AUTH,
               });
               const message = error instanceof Error ? error.message : 'Unknown error';
               Alert.alert('Error', 'Failed to sign out: ' + message);
             }
+          },
+        },
+      ]);
+    }
+  };
+
+  /**
+   * Handles the account deletion flow with confirmation dialogs.
+   * Shows a warning about permanent data loss and requires explicit confirmation.
+   */
+  const handleDeleteAccount = async () => {
+    const warningMessage =
+      'This will permanently delete your account and all associated data including your sobriety journey, tasks, connections, and messages. This action cannot be undone.';
+
+    if (Platform.OS === 'web') {
+      const firstConfirm = window.confirm(
+        `Delete Account?\n\n${warningMessage}\n\nAre you sure you want to continue?`
+      );
+      if (!firstConfirm) return;
+
+      const secondConfirm = window.confirm(
+        'FINAL WARNING: This is your last chance to cancel. Click OK to permanently delete your account.'
+      );
+      if (!secondConfirm) return;
+
+      setIsDeleting(true);
+      try {
+        await deleteAccount();
+        window.alert('Your account has been deleted. We wish you well on your journey.');
+        router.replace('/login');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        logger.error('Account deletion failed in settings', error as Error, {
+          category: LogCategory.AUTH,
+        });
+        window.alert('Error deleting account: ' + errorMessage);
+      } finally {
+        setIsDeleting(false);
+      }
+    } else {
+      Alert.alert('Delete Account?', warningMessage + '\n\nAre you sure you want to continue?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Final Confirmation',
+              'This is your last chance to cancel. Are you absolutely sure you want to permanently delete your account?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete My Account',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setIsDeleting(true);
+                    try {
+                      await deleteAccount();
+                      Alert.alert(
+                        'Account Deleted',
+                        'Your account has been deleted. We wish you well on your journey.',
+                        [
+                          {
+                            text: 'OK',
+                            onPress: () => router.replace('/login'),
+                          },
+                        ]
+                      );
+                    } catch (error: unknown) {
+                      const errorMessage =
+                        error instanceof Error ? error.message : 'Unknown error occurred';
+                      logger.error('Account deletion failed in settings', error as Error, {
+                        category: LogCategory.AUTH,
+                      });
+                      Alert.alert('Error', 'Failed to delete account: ' + errorMessage);
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]);
@@ -260,6 +346,29 @@ export default function SettingsScreen() {
             <LogOut size={20} color={theme.danger} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.dangerSectionTitle}>Danger Zone</Text>
+          <View style={styles.dangerCard}>
+            <Text style={styles.dangerDescription}>
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </Text>
+            <TouchableOpacity
+              style={[styles.deleteAccountButton, isDeleting && styles.buttonDisabled]}
+              onPress={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Trash2 size={20} color="#ffffff" />
+                  <Text style={styles.deleteAccountText}>Delete Account</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -433,5 +542,47 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       marginTop: 12,
       fontStyle: 'italic',
       opacity: 0.7,
+    },
+    dangerSectionTitle: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: '#dc2626',
+      marginBottom: 12,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginLeft: 4,
+    },
+    dangerCard: {
+      backgroundColor: '#fef2f2',
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: '#fecaca',
+    },
+    dangerDescription: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      color: '#991b1b',
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    deleteAccountButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#dc2626',
+      padding: 14,
+      borderRadius: 12,
+      gap: 8,
+    },
+    deleteAccountText: {
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: '#ffffff',
+    },
+    buttonDisabled: {
+      opacity: 0.6,
     },
   });

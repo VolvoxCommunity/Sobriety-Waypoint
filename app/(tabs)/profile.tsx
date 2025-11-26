@@ -1399,7 +1399,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontFamily: theme.fontRegular,
       fontWeight: '600',
       color: '#ef4444',
-      marginLeft: 8,
+      marginLeft: 12,
     },
     emptyStateText: {
       fontSize: 14,
@@ -1486,7 +1486,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       color: theme.text,
-      height: 100,
+      minHeight: 100,
     },
     privacyNote: {
       fontSize: 12,

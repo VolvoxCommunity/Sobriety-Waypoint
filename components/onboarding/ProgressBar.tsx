@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -57,22 +57,27 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ step, totalSteps, theme }) =>
     };
   });
 
-  const styles = StyleSheet.create({
-    container: {
-      height: 6,
-      backgroundColor: theme.border,
-      borderRadius: 3,
-      overflow: 'hidden',
-      marginHorizontal: 24,
-      marginTop: 12,
-      marginBottom: 24,
-    },
-    bar: {
-      height: '100%',
-      backgroundColor: theme.primary,
-      borderRadius: 3,
-    },
-  });
+  // Memoize styles to prevent recreation on every render
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          height: 6,
+          backgroundColor: theme.border,
+          borderRadius: 3,
+          overflow: 'hidden',
+          marginHorizontal: 24,
+          marginTop: 12,
+          marginBottom: 24,
+        },
+        bar: {
+          height: '100%',
+          backgroundColor: theme.primary,
+          borderRadius: 3,
+        },
+      }),
+    [theme]
+  );
 
   return (
     <View style={styles.container}>

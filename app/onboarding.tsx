@@ -189,7 +189,7 @@ export default function OnboardingScreen() {
 
       <View style={styles.card}>
         <TouchableOpacity style={styles.dateDisplay} onPress={() => setShowDatePicker(true)}>
-          <Calendar size={32} color="#007AFF" />
+          <Calendar size={32} color={theme.primary} />
           <View style={styles.dateTextContainer}>
             <Text style={styles.dateLabel}>Sobriety Date</Text>
             <Text style={styles.dateValue}>
@@ -227,7 +227,7 @@ export default function OnboardingScreen() {
                 fontSize: '16px',
                 fontFamily: theme.fontRegular,
                 borderRadius: '8px',
-                border: '2px solid #007AFF',
+                border: `2px solid ${theme.primary}`,
                 marginBottom: '16px',
                 width: '100%',
               }}
@@ -429,7 +429,7 @@ const createStyles = (theme: ThemeColors) =>
       fontSize: 48,
       fontFamily: theme.fontRegular,
       fontWeight: '700',
-      color: '#007AFF',
+      color: theme.primary,
       marginBottom: 4,
     },
     statsLabel: {
@@ -438,18 +438,19 @@ const createStyles = (theme: ThemeColors) =>
       color: theme.textSecondary,
     },
     footer: {
-      marginTop: 'auto',
+      flexGrow: 1,
+      justifyContent: 'flex-end',
       marginBottom: 24,
     },
     button: {
-      backgroundColor: '#007AFF',
+      backgroundColor: theme.primary,
       borderRadius: 16,
       padding: 18,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
-      shadowColor: '#007AFF',
+      shadowColor: theme.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 8,
@@ -460,7 +461,7 @@ const createStyles = (theme: ThemeColors) =>
       shadowOpacity: 0,
     },
     buttonText: {
-      color: '#ffffff',
+      color: theme.white,
       fontSize: 18,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
