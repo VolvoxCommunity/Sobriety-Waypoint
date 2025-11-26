@@ -79,9 +79,9 @@ describe('useDaysSober', () => {
     });
 
     it('calculates daysSober from recovery restart date when slip-up exists', async () => {
-      // Set to April 10, 2024 at noon UTC (which is April 10 morning in PST)
+      // Set to April 10, 2024 at 19:00 UTC (which is April 10 at noon PDT)
       // This ensures we're clearly on April 10 in the profile timezone
-      jest.setSystemTime(new Date('2024-04-10T19:00:00Z')); // 12:00 noon PST (UTC-7 for PDT)
+      jest.setSystemTime(new Date('2024-04-10T19:00:00Z')); // 12:00 noon PDT (UTC-7)
 
       const mockSlipUp = {
         id: 'slip-1',

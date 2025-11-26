@@ -4,7 +4,7 @@ import { getDateDiffInDays } from '@/lib/date';
 import { useAuth } from '@/contexts/AuthContext';
 import type { SlipUp, Profile } from '@/types/database';
 import type { PostgrestError } from '@supabase/supabase-js';
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { toZonedTime, formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { addDays } from 'date-fns';
 
 // =============================================================================
@@ -58,39 +58,20 @@ function getMillisecondsUntilMidnight(
   // Get current time in the target timezone
   const zonedNow = toZonedTime(now, timezone);
   
-  // Calculate time until midnight in the target timezone
-  const hoursUntilMidnight = 24 - zonedNow.getHours();
-  const minutesUntilMidnight = 60 - zonedNow.getMinutes();
-  const secondsUntilMidnight = 60 - zonedNow.getSeconds();
-  const msUntilMidnight = 1000 - zonedNow.getMilliseconds();
-  
-  // Total milliseconds until midnight in timezone
-  const msInTz = 
-    (hoursUntilMidnight - 1) * 3600000 +
-    (minutesUntilMidnight - 1) * 60000 +
-    (secondsUntilMidnight - 1) * 1000 +
-    msUntilMidnight;
-  
-  // We need to convert this to UTC time for setTimeout
-  // Calculate what UTC time corresponds to midnight in the timezone
+  // Calculate tomorrow at midnight in the target timezone
   const tomorrowZoned = addDays(zonedNow, 1);
   tomorrowZoned.setHours(0, 0, 0, 0);
   
-  // Get tomorrow's date string to calculate the offset for that date
+  // Get tomorrow's date string in the timezone
   const tomorrowDateStr = formatInTimeZone(tomorrowZoned, timezone, 'yyyy-MM-dd');
   const [year, month, day] = tomorrowDateStr.split('-').map(Number);
   
-  // Create a test UTC time for tomorrow noon to get accurate offset
-  const testUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-  const testZoned = toZonedTime(testUtc, timezone);
-  const offsetForTomorrow = testUtc.getTime() - testZoned.getTime();
+  // Create midnight in the timezone, then convert to UTC
+  // This correctly handles all timezones including UTC+12/+13
+  const midnightInTz = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const midnightUtc = fromZonedTime(midnightInTz, timezone);
   
-  // Create a UTC date representing midnight in the timezone
-  // by taking midnight UTC and adjusting by the offset
-  const midnightUtc = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-  const midnightUtcForTz = new Date(midnightUtc.getTime() - offsetForTomorrow);
-  
-  return Math.max(1000, midnightUtcForTz.getTime() - now.getTime());
+  return Math.max(1000, midnightUtc.getTime() - now.getTime());
 }
 
 // =============================================================================
@@ -231,20 +212,18 @@ export function useDaysSober(userId?: string): DaysSoberResult {
       streakStartDate = sobrietyDate;
     }
 
-    // Get timezone for calculations (use profile timezone or device default)
-    const calcTimezone = targetProfile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-
     // Calculate days in current streak
     // Pass date strings directly so they're parsed as midnight in the user's timezone
+    // Use the memoized timezone from the outer scope
     let daysSober = 0;
     if (streakStartDate) {
-      daysSober = getDateDiffInDays(streakStartDate, new Date(), calcTimezone);
+      daysSober = getDateDiffInDays(streakStartDate, new Date(), timezone);
     }
 
     // Calculate total journey days from original sobriety date
     let journeyDays = 0;
     if (sobrietyDate) {
-      journeyDays = getDateDiffInDays(sobrietyDate, new Date(), calcTimezone);
+      journeyDays = getDateDiffInDays(sobrietyDate, new Date(), timezone);
     }
 
     return {
@@ -257,7 +236,7 @@ export function useDaysSober(userId?: string): DaysSoberResult {
       loading,
       error,
     };
-  }, [mostRecentSlipUp, targetProfile, loading, error, currentDate]);
+  }, [mostRecentSlipUp, targetProfile, loading, error, currentDate, timezone]);
 
   return result;
 }

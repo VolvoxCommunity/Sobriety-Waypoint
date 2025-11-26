@@ -2,7 +2,7 @@
  * Shared date utility functions
  */
 
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { differenceInCalendarDays } from 'date-fns';
 
 /**
@@ -12,35 +12,24 @@ import { differenceInCalendarDays } from 'date-fns';
  * in their timezone, not UTC. This function creates a UTC Date that
  * represents midnight in the specified timezone.
  *
+ * Uses fromZonedTime to correctly handle all timezones, including UTC+12/+13
+ * where the date can change when converting from UTC.
+ *
  * @param dateString - Date string in YYYY-MM-DD format
  * @param timezone - IANA timezone string
  * @returns Date object (in UTC) that represents midnight in the specified timezone
  */
 function parseDateInTimezone(dateString: string, timezone: string): Date {
+  // Parse the date string
   const [year, month, day] = dateString.split('-').map(Number);
   
-  // Use Intl to find what UTC time corresponds to midnight in the timezone
-  // We'll test with noon UTC to get a stable offset (avoiding DST edge cases)
-  const testUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  // Create a date representing midnight on this day in the timezone
+  // This is a "naive" date - it doesn't know about timezones yet
+  const zonedMidnight = new Date(year, month - 1, day, 0, 0, 0, 0);
   
-  // Get what hour noon UTC is in the timezone
-  const tzTimeStr = formatter.format(testUtc);
-  const [tzHour] = tzTimeStr.split(':').map(Number);
-  
-  // Calculate offset: if UTC noon is hour X in timezone, offset is (12 - X) hours
-  // Example: UTC noon = 4am PST (UTC-8), so offset is +8 hours
-  const offsetHours = 12 - tzHour;
-  
-  // Create UTC midnight, then adjust by offset to get what UTC time
-  // corresponds to midnight in the timezone
-  const utcMidnight = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-  return new Date(utcMidnight.getTime() + offsetHours * 3600000);
+  // Convert from the "zoned" representation (midnight in the timezone) to UTC
+  // This correctly handles all timezones including UTC+12/+13
+  return fromZonedTime(zonedMidnight, timezone);
 }
 
 /**
