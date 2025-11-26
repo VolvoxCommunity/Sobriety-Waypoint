@@ -111,7 +111,7 @@ export default function OnboardingScreen() {
   const styles = createStyles(theme);
 
   const renderStep1 = () => (
-    <OnboardingStep theme={theme}>
+    <OnboardingStep>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Welcome to Sobriety Waypoint</Text>
         <Text style={styles.subtitle}>Let&apos;s get to know you better.</Text>
@@ -181,7 +181,7 @@ export default function OnboardingScreen() {
   );
 
   const renderStep2 = () => (
-    <OnboardingStep theme={theme}>
+    <OnboardingStep>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Your Sobriety Date</Text>
         <Text style={styles.subtitle}>When did your journey begin?</Text>

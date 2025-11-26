@@ -1,3 +1,6 @@
+// =============================================================================
+// Imports
+// =============================================================================
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
@@ -8,21 +11,35 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ThemeColors } from '@/contexts/ThemeContext';
 
+// =============================================================================
+// Types & Interfaces
+// =============================================================================
 interface ProgressBarProps {
   step: number;
   totalSteps: number;
   theme: ThemeColors;
 }
 
+// =============================================================================
+// Component
+// =============================================================================
 /**
  * Animated progress bar component for multi-step flows.
+ *
+ * Displays a horizontal progress bar that animates smoothly as the user
+ * advances through steps. Uses react-native-reanimated for performant
+ * animations on both iOS and Android.
+ *
  * @param props - Component props
  * @param props.step - Current step number (1-indexed)
- * @param props.totalSteps - Total number of steps
+ * @param props.totalSteps - Total number of steps in the flow
  * @param props.theme - Theme colors from ThemeContext
  * @returns Animated progress bar view
+ *
  * @example
- * <ProgressBar step={1} totalSteps={3} theme={theme} />
+ * ```tsx
+ * <ProgressBar step={2} totalSteps={3} theme={theme} />
+ * ```
  */
 const ProgressBar: React.FC<ProgressBarProps> = ({ step, totalSteps, theme }) => {
   const progress = useSharedValue(0);
@@ -52,7 +69,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ step, totalSteps, theme }) =>
     },
     bar: {
       height: '100%',
-      backgroundColor: '#007AFF',
+      backgroundColor: theme.primary,
       borderRadius: 3,
     },
   });
