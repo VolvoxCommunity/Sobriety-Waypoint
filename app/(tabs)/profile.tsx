@@ -69,7 +69,7 @@ function SponseeDaysDisplay({
           )}
           {taskStats && (
             <View style={createStyles(theme).taskStatsInfo}>
-              <CheckCircle size={14} color="#10b981" />
+              <CheckCircle size={14} color={theme.success} />
               <Text style={createStyles(theme).taskStatsText}>
                 {taskStats.completed}/{taskStats.total} tasks completed
               </Text>
@@ -78,7 +78,7 @@ function SponseeDaysDisplay({
         </View>
       </View>
       <TouchableOpacity style={createStyles(theme).disconnectButton} onPress={onDisconnect}>
-        <UserMinus size={18} color="#ef4444" />
+        <UserMinus size={18} color={theme.danger} />
         <Text style={createStyles(theme).disconnectText}>Disconnect</Text>
       </TouchableOpacity>
     </View>
@@ -121,7 +121,7 @@ function SponsorDaysDisplay({
         </View>
       </View>
       <TouchableOpacity style={createStyles(theme).disconnectButton} onPress={onDisconnect}>
-        <UserMinus size={18} color="#ef4444" />
+        <UserMinus size={18} color={theme.danger} />
         <Text style={createStyles(theme).disconnectText}>Disconnect</Text>
       </TouchableOpacity>
     </View>
@@ -790,7 +790,7 @@ export default function ProfileScreen() {
           </Text>
         )}
         <TouchableOpacity style={styles.slipUpButton} onPress={handleLogSlipUp}>
-          <AlertCircle size={18} color="#ffffff" />
+          <AlertCircle size={18} color={theme.white} />
           <Text style={styles.slipUpButtonText}>Log a Slip Up</Text>
         </TouchableOpacity>
       </View>
@@ -888,7 +888,7 @@ export default function ProfileScreen() {
                   disabled={isConnecting}
                 >
                   {isConnecting ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={theme.white} />
                   ) : (
                     <Text style={styles.inviteSubmitText}>Connect</Text>
                   )}
@@ -932,7 +932,7 @@ export default function ProfileScreen() {
                   padding: 12,
                   fontSize: 16,
                   borderRadius: 8,
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${theme.border}`,
                   marginTop: 16,
                   marginBottom: 16,
                   width: '100%',
@@ -1017,7 +1017,7 @@ export default function ProfileScreen() {
                     padding: 12,
                     fontSize: 16,
                     borderRadius: 8,
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${theme.border}`,
                     width: '100%',
                   }}
                 />
@@ -1064,7 +1064,7 @@ export default function ProfileScreen() {
                     padding: 12,
                     fontSize: 16,
                     borderRadius: 8,
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${theme.border}`,
                     width: '100%',
                   }}
                 />
@@ -1135,7 +1135,7 @@ export default function ProfileScreen() {
                 disabled={isLoggingSlipUp}
               >
                 {isLoggingSlipUp ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={theme.white} />
                 ) : (
                   <Text style={styles.modalConfirmText}>Log Slip Up</Text>
                 )}
@@ -1184,7 +1184,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 32,
       fontFamily: theme.fontRegular,
       fontWeight: '700',
-      color: '#ffffff',
+      color: theme.white,
     },
     name: {
       fontSize: 24,
@@ -1262,7 +1262,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#ef4444',
+      backgroundColor: theme.danger,
       paddingHorizontal: 20,
       paddingVertical: 12,
       borderRadius: 8,
@@ -1273,7 +1273,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 14,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
     section: {
       padding: 16,
@@ -1334,7 +1334,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
     inviteCancelButton: {
       padding: 12,
@@ -1403,7 +1403,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
     taskStatsText: {
       fontSize: 12,
       fontFamily: theme.fontRegular,
-      color: '#10b981',
+      color: theme.success,
       fontWeight: '600',
     },
     disconnectButton: {
@@ -1414,14 +1414,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       paddingHorizontal: 12,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: '#fee2e2',
-      backgroundColor: '#fef2f2',
+      borderColor: theme.dangerBorder,
+      backgroundColor: theme.dangerLight,
     },
     disconnectText: {
       fontSize: 14,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ef4444',
+      color: theme.danger,
       marginLeft: 12,
     },
     emptyStateText: {
@@ -1545,12 +1545,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       alignItems: 'center',
     },
     slipUpConfirmButton: {
-      backgroundColor: '#ef4444',
+      backgroundColor: theme.danger,
     },
     modalConfirmText: {
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
   });
