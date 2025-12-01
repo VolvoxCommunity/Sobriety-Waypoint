@@ -19,7 +19,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import ProgressBar from '@/components/onboarding/ProgressBar';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { getDateDiffInDays, formatLocalDate } from '@/lib/date';
+import { getDateDiffInDays, formatLocalDate, parseDateAsLocal } from '@/lib/date';
 
 /**
  * OnboardingScreen handles the initial user setup flow after authentication.
@@ -59,7 +59,7 @@ export default function OnboardingScreen() {
     profile?.last_initial !== 'U' ? profile?.last_initial || '' : ''
   );
   const [sobrietyDate, setSobrietyDate] = useState(
-    profile?.sobriety_date ? new Date(profile.sobriety_date) : new Date()
+    profile?.sobriety_date ? parseDateAsLocal(profile.sobriety_date) : new Date()
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -239,7 +239,7 @@ export default function OnboardingScreen() {
               value={formatLocalDate(sobrietyDate)}
               max={formatLocalDate(new Date())}
               onChange={(e) => {
-                setSobrietyDate(new Date(e.target.value));
+                setSobrietyDate(parseDateAsLocal(e.target.value));
                 setShowDatePicker(false);
               }}
               style={{

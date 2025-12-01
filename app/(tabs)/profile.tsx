@@ -30,7 +30,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
-import { formatLocalDate } from '@/lib/date';
+import { formatLocalDate, parseDateAsLocal } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
 // Component for displaying sponsee days sober using the hook
@@ -544,7 +544,7 @@ export default function ProfileScreen() {
 
   const handleEditSobrietyDate = () => {
     if (profile?.sobriety_date) {
-      setSelectedSobrietyDate(new Date(profile.sobriety_date));
+      setSelectedSobrietyDate(parseDateAsLocal(profile.sobriety_date));
     }
     setShowSobrietyDatePicker(true);
   };
@@ -928,7 +928,7 @@ export default function ProfileScreen() {
                 type="date"
                 value={formatLocalDate(selectedSobrietyDate)}
                 max={formatLocalDate(new Date())}
-                onChange={(e) => setSelectedSobrietyDate(new Date(e.target.value))}
+                onChange={(e) => setSelectedSobrietyDate(parseDateAsLocal(e.target.value))}
                 style={{
                   padding: 12,
                   fontSize: 16,

@@ -54,6 +54,29 @@ export function formatLocalDate(date: Date): string {
 }
 
 /**
+ * Parses a YYYY-MM-DD date string as LOCAL midnight (not UTC).
+ *
+ * IMPORTANT: Use this instead of `new Date(dateString)` which interprets
+ * date-only strings as UTC midnight, causing the wrong date to display
+ * in timezones behind UTC.
+ *
+ * @param dateStr - Date string in YYYY-MM-DD format
+ * @returns Date object set to local midnight on that date
+ *
+ * @example
+ * ```ts
+ * // User in EST (UTC-5):
+ * // new Date("2025-11-01") → Nov 1 00:00 UTC → Oct 31 19:00 EST - WRONG!
+ * // parseDateAsLocal("2025-11-01") → Nov 1 00:00 EST - CORRECT!
+ * const date = parseDateAsLocal(profile.sobriety_date);
+ * ```
+ */
+export function parseDateAsLocal(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/**
  * Calculates the day difference between two YYYY-MM-DD date strings.
  *
  * Uses UTC dates to avoid any system timezone interference. This ensures
