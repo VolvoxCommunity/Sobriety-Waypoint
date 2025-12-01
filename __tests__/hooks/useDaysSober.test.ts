@@ -175,7 +175,7 @@ describe('useDaysSober', () => {
 
       const initialDaysSober = result.current.daysSober;
 
-      // Fast-forward 1 hour + 1 second (should be past midnight in PST)
+      // Fast-forward 1 hour + 1 second (should be past midnight in the system/device timezone)
       act(() => {
         jest.advanceTimersByTime(60 * 60 * 1000 + 1000);
       });
