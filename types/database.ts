@@ -31,6 +31,13 @@ export interface Profile {
   avatar_url?: string;
   sobriety_date?: string;
   bio?: string;
+  /**
+   * User's timezone as an IANA timezone identifier (e.g., "America/New_York").
+   * Used for displaying dates and times in the user's local timezone.
+   * @remarks Optional for backward compatibility with existing profiles.
+   * Should be required for new profiles.
+   */
+  timezone?: string;
   notification_preferences: {
     tasks: boolean;
     messages: boolean;

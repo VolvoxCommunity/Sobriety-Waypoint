@@ -54,6 +54,23 @@ export function formatLocalDate(date: Date): string {
 }
 
 /**
+ * Formats a Date object as YYYY-MM-DD using specified timezone.
+ *
+ * @param date - The Date object to format
+ * @param timezone - IANA timezone string (e.g., 'America/Los_Angeles'). Defaults to device timezone
+ * @returns Date string in YYYY-MM-DD format based on specified timezone
+ *
+ * @example
+ * ```ts
+ * // Format date in user's stored timezone
+ * const dateStr = formatDateWithTimezone(selectedDate, userTimezone);
+ * ```
+ */
+export function formatDateWithTimezone(date: Date, timezone: string = DEVICE_TIMEZONE): string {
+  return getDateStringInTimezone(date, timezone);
+}
+
+/**
  * Parses a YYYY-MM-DD date string as LOCAL midnight (not UTC).
  *
  * IMPORTANT: Use this instead of `new Date(dateString)` which interprets

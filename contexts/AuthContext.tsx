@@ -7,6 +7,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
 import { setSentryUser, clearSentryUser, setSentryContext } from '@/lib/sentry';
 import { logger, LogCategory } from '@/lib/logger';
+import { DEVICE_TIMEZONE } from '@/lib/date';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -85,8 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Creates a profile for a new OAuth user if one doesn't exist
-   * Extracts first name and last initial from user metadata
+   * Creates a profile for a new OAuth user if one doesn't exist.
+   * Extracts first name and last initial from user metadata and captures the device timezone.
+   *
+   * @param user - The authenticated user object from OAuth provider
+   * @throws Error if profile creation fails
    */
   const createOAuthProfileIfNeeded = async (user: User): Promise<void> => {
     const { data: existingProfile } = await supabase
@@ -105,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: user.email || '',
         first_name: firstName,
         last_initial: lastInitial.toUpperCase(),
+        timezone: DEVICE_TIMEZONE,
       });
 
       if (profileError) throw profileError;
@@ -317,12 +322,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * Signs up a new user with email/password and creates their profile.
+   * Captures the device timezone for accurate date calculations.
    * Checks if a profile already exists before attempting to create one.
    *
    * @param email - User's email address
    * @param password - User's password
    * @param firstName - User's first name
    * @param lastInitial - User's last initial
+   * @throws Error if signup or profile creation fails
    */
   const signUp = async (
     email: string,
@@ -353,12 +360,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Create new profile
+      // Create new profile with timezone
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         email: email,
         first_name: firstName,
         last_initial: lastInitial.toUpperCase(),
+        timezone: DEVICE_TIMEZONE,
       });
 
       if (profileError) {

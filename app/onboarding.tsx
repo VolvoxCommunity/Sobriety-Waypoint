@@ -19,7 +19,13 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import ProgressBar from '@/components/onboarding/ProgressBar';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { getDateDiffInDays, formatLocalDate, parseDateAsLocal } from '@/lib/date';
+import {
+  getDateDiffInDays,
+  formatLocalDate,
+  formatDateWithTimezone,
+  parseDateAsLocal,
+} from '@/lib/date';
+import type { Profile } from '@/types/database';
 
 /**
  * OnboardingScreen handles the initial user setup flow after authentication.
@@ -83,17 +89,32 @@ export default function OnboardingScreen() {
     }
   };
 
+  /**
+   * Gets the user's timezone with fallback to device timezone.
+   *
+   * @param profile - The user profile object
+   * @returns The user's stored timezone or device timezone as fallback
+   */
+  const getUserTimezone = (profile?: Profile | null): string => {
+    // Use stored timezone if available, otherwise fallback to device timezone
+    return profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  };
+
   const handleComplete = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
+      // Get the user's timezone with fallback to device timezone
+      const userTimezone = getUserTimezone(profile);
+
       const updateData: {
         sobriety_date: string;
         first_name?: string;
         last_initial?: string;
       } = {
-        sobriety_date: formatLocalDate(sobrietyDate),
+        // Format the sobriety date using the user's timezone
+        sobriety_date: formatDateWithTimezone(sobrietyDate, userTimezone),
       };
 
       if (needsName && firstName && lastInitial) {
@@ -257,11 +278,7 @@ export default function OnboardingScreen() {
 
         <View style={styles.statsContainer}>
           <Text style={styles.statsCount}>
-            {getDateDiffInDays(
-              formatLocalDate(sobrietyDate),
-              new Date(),
-              Intl.DateTimeFormat().resolvedOptions().timeZone
-            )}
+            {getDateDiffInDays(formatLocalDate(sobrietyDate), new Date(), getUserTimezone(profile))}
           </Text>
           <Text style={styles.statsLabel}>Days Sober</Text>
         </View>

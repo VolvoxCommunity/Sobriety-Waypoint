@@ -35,17 +35,17 @@ export interface DaysSoberResult {
 // =============================================================================
 
 /**
- * Calculates the number of milliseconds until the next midnight in the device's timezone.
+ * Calculates the number of milliseconds until the next midnight in the specified timezone.
  *
  * This ensures the midnight refresh timer aligns with the user's local midnight,
  * so day counts roll over when the user expects them to.
  *
  * @param timezone - IANA timezone string (e.g., 'America/Los_Angeles'). Defaults to device timezone
- * @returns Milliseconds until 00:00:00 of the next day in the specified timezone
+ * @returns Milliseconds until 00:00:00 of the next day in specified timezone
  *
  * @example
  * ```ts
- * const ms = getMillisecondsUntilMidnight();
+ * const ms = getMillisecondsUntilMidnight('America/New_York');
  * setTimeout(refresh, ms);
  * ```
  */
@@ -110,20 +110,21 @@ export function useDaysSober(userId?: string): DaysSoberResult {
   // Ref to track the active midnight refresh timer
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Use the cached device timezone constant for day calculations
-  // This ensures day counts roll over at the user's local midnight
-  // Using the module-level constant is more efficient than useMemo
-  const timezone = DEVICE_TIMEZONE;
+  // Get user's timezone with fallback to device timezone
+  // This ensures day calculations use the user's stored timezone when available
+  const userTimezone = useMemo(() => {
+    return targetProfile?.timezone || DEVICE_TIMEZONE;
+  }, [targetProfile?.timezone]);
 
   // Set up midnight refresh timer
   useEffect(() => {
     /**
-     * Schedules a state update at midnight in the device's local timezone
+     * Schedules a state update at midnight in the user's local timezone
      * to trigger day count recalculation. Reschedules itself for the following
      * midnight after each update.
      */
     function scheduleMidnightRefresh(): void {
-      const msUntilMidnight = getMillisecondsUntilMidnight(timezone);
+      const msUntilMidnight = getMillisecondsUntilMidnight(userTimezone);
 
       timerRef.current = setTimeout(() => {
         setCurrentDate(new Date().toDateString());
@@ -140,8 +141,7 @@ export function useDaysSober(userId?: string): DaysSoberResult {
         timerRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Device timezone is stable for the session
+  }, [userTimezone]);
 
   // Fetch slip-up and profile data
   useEffect(() => {
@@ -206,16 +206,16 @@ export function useDaysSober(userId?: string): DaysSoberResult {
     }
 
     // Calculate days in current streak
-    // Pass date strings directly so they're parsed as midnight in the device's timezone
+    // Pass date strings directly so they're parsed as midnight in the user's timezone
     let daysSober = 0;
     if (streakStartDate) {
-      daysSober = getDateDiffInDays(streakStartDate, new Date(), timezone);
+      daysSober = getDateDiffInDays(streakStartDate, new Date(), userTimezone);
     }
 
     // Calculate total journey days from original sobriety date
     let journeyDays = 0;
     if (sobrietyDate) {
-      journeyDays = getDateDiffInDays(sobrietyDate, new Date(), timezone);
+      journeyDays = getDateDiffInDays(sobrietyDate, new Date(), userTimezone);
     }
 
     return {
@@ -228,9 +228,7 @@ export function useDaysSober(userId?: string): DaysSoberResult {
       loading,
       error,
     };
-    // Note: timezone is stable for the session so not included in deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mostRecentSlipUp, targetProfile, loading, error, currentDate]);
+  }, [mostRecentSlipUp, targetProfile, loading, error, currentDate, userTimezone]);
 
   return result;
 }

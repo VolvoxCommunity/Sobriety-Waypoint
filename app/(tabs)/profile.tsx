@@ -30,7 +30,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
-import { formatLocalDate, parseDateAsLocal } from '@/lib/date';
+import { formatLocalDate, formatDateWithTimezone, parseDateAsLocal } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
 // Component for displaying sponsee days sober using the hook
@@ -587,7 +587,12 @@ export default function ProfileScreen() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ sobriety_date: formatLocalDate(newDate) })
+        .update({
+          sobriety_date: formatDateWithTimezone(
+            newDate,
+            profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+          ),
+        })
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -620,8 +625,15 @@ export default function ProfileScreen() {
     setShowSlipUpModal(true);
   };
 
+  /**
+   * Submits a slip up record with timezone-aware date formatting.
+   * Uses the user's stored timezone if available, otherwise falls back to device timezone.
+   */
   const submitSlipUp = async () => {
     if (!profile) return;
+
+    // Get user's timezone with fallback to device timezone
+    const userTimezone = profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const today = new Date();
     today.setHours(23, 59, 59, 999);
@@ -672,8 +684,8 @@ export default function ProfileScreen() {
     try {
       const { error: slipUpError } = await supabase.from('slip_ups').insert({
         user_id: profile.id,
-        slip_up_date: formatLocalDate(slipUpDate),
-        recovery_restart_date: formatLocalDate(recoveryDate),
+        slip_up_date: formatDateWithTimezone(slipUpDate, userTimezone),
+        recovery_restart_date: formatDateWithTimezone(recoveryDate, userTimezone),
         notes: slipUpNotes.trim() || null,
       });
 
@@ -681,7 +693,7 @@ export default function ProfileScreen() {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ sobriety_date: formatLocalDate(recoveryDate) })
+        .update({ sobriety_date: formatDateWithTimezone(recoveryDate, userTimezone) })
         .eq('id', profile.id);
 
       if (updateError) throw updateError;
@@ -926,8 +938,8 @@ export default function ProfileScreen() {
               <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
               <input
                 type="date"
-                value={formatLocalDate(selectedSobrietyDate)}
-                max={formatLocalDate(new Date())}
+                value={formatDateWithTimezone(selectedSobrietyDate, profile?.timezone)}
+                max={formatDateWithTimezone(new Date(), profile?.timezone)}
                 onChange={(e) => setSelectedSobrietyDate(parseDateAsLocal(e.target.value))}
                 style={{
                   padding: 12,
@@ -1011,8 +1023,8 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={formatLocalDate(slipUpDate)}
-                  max={formatLocalDate(new Date())}
+                  value={formatDateWithTimezone(slipUpDate, profile?.timezone)}
+                  max={formatDateWithTimezone(new Date(), profile?.timezone)}
                   onChange={(e) => setSlipUpDate(new Date(e.target.value))}
                   style={{
                     padding: 12,
@@ -1058,8 +1070,8 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={formatLocalDate(recoveryDate)}
-                  min={formatLocalDate(slipUpDate)}
+                  value={formatDateWithTimezone(recoveryDate, profile?.timezone)}
+                  min={formatDateWithTimezone(slipUpDate, profile?.timezone)}
                   onChange={(e) => setRecoveryDate(new Date(e.target.value))}
                   style={{
                     padding: 12,
