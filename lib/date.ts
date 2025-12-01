@@ -5,6 +5,20 @@
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { differenceInCalendarDays } from 'date-fns';
 
+// =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Device timezone, cached at module load time.
+ * This avoids creating a new DateTimeFormat instance on every function call.
+ */
+export const DEVICE_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
 /**
  * Parses a date string (YYYY-MM-DD) as midnight in a specific timezone.
  *
@@ -52,7 +66,7 @@ function parseDateInTimezone(dateString: string, timezone: string): Date {
 export function getDateDiffInDays(
   startDate: Date | string,
   endDate: Date = new Date(),
-  timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
+  timezone: string = DEVICE_TIMEZONE
 ): number {
   // If startDate is a string (YYYY-MM-DD), parse it as midnight in the timezone
   let start: Date;
