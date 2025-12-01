@@ -35,18 +35,17 @@ export interface DaysSoberResult {
 // =============================================================================
 
 /**
- * Calculates the number of milliseconds until the next midnight in a specific timezone.
+ * Calculates the number of milliseconds until the next midnight in the device's timezone.
  *
- * This ensures the midnight refresh timer aligns with the user's profile timezone,
- * not the device's local timezone. This is critical for consistent day count updates
- * when users travel or have their device in a different timezone than their profile.
+ * This ensures the midnight refresh timer aligns with the user's local midnight,
+ * so day counts roll over when the user expects them to.
  *
  * @param timezone - IANA timezone string (e.g., 'America/Los_Angeles'). Defaults to device timezone
  * @returns Milliseconds until 00:00:00 of the next day in the specified timezone
  *
  * @example
  * ```ts
- * const ms = getMillisecondsUntilMidnight('America/Los_Angeles');
+ * const ms = getMillisecondsUntilMidnight();
  * setTimeout(refresh, ms);
  * ```
  */
@@ -57,20 +56,20 @@ function getMillisecondsUntilMidnight(
 
   // Get current time in the target timezone
   const zonedNow = toZonedTime(now, timezone);
-  
+
   // Calculate tomorrow at midnight in the target timezone
   const tomorrowZoned = addDays(zonedNow, 1);
   tomorrowZoned.setHours(0, 0, 0, 0);
-  
+
   // Get tomorrow's date string in the timezone
   const tomorrowDateStr = formatInTimeZone(tomorrowZoned, timezone, 'yyyy-MM-dd');
   const [year, month, day] = tomorrowDateStr.split('-').map(Number);
-  
+
   // Create midnight in the timezone, then convert to UTC
   // This correctly handles all timezones including UTC+12/+13
   const midnightInTz = new Date(year, month - 1, day, 0, 0, 0, 0);
   const midnightUtc = fromZonedTime(midnightInTz, timezone);
-  
+
   return Math.max(1000, midnightUtc.getTime() - now.getTime());
 }
 
@@ -118,15 +117,14 @@ export function useDaysSober(userId?: string): DaysSoberResult {
   // Ref to track the active midnight refresh timer
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get the timezone to use (from profile or device default)
-  const timezone = useMemo(() => {
-    return targetProfile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  }, [targetProfile?.timezone]);
+  // Always use device timezone for day calculations
+  // This ensures day counts roll over at the user's local midnight
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Set up midnight refresh timer - reschedules when timezone changes
+  // Set up midnight refresh timer
   useEffect(() => {
     /**
-     * Schedules a state update at midnight in the user's profile timezone
+     * Schedules a state update at midnight in the device's local timezone
      * to trigger day count recalculation. Reschedules itself for the following
      * midnight after each update.
      */
@@ -148,7 +146,8 @@ export function useDaysSober(userId?: string): DaysSoberResult {
         timerRef.current = null;
       }
     };
-  }, [timezone]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Device timezone is stable for the session
 
   // Fetch slip-up and profile data
   useEffect(() => {
@@ -213,8 +212,7 @@ export function useDaysSober(userId?: string): DaysSoberResult {
     }
 
     // Calculate days in current streak
-    // Pass date strings directly so they're parsed as midnight in the user's timezone
-    // Use the memoized timezone from the outer scope
+    // Pass date strings directly so they're parsed as midnight in the device's timezone
     let daysSober = 0;
     if (streakStartDate) {
       daysSober = getDateDiffInDays(streakStartDate, new Date(), timezone);
@@ -236,7 +234,9 @@ export function useDaysSober(userId?: string): DaysSoberResult {
       loading,
       error,
     };
-  }, [mostRecentSlipUp, targetProfile, loading, error, currentDate, timezone]);
+    // Note: timezone is stable for the session so not included in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostRecentSlipUp, targetProfile, loading, error, currentDate]);
 
   return result;
 }

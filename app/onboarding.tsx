@@ -260,7 +260,7 @@ export default function OnboardingScreen() {
             {getDateDiffInDays(
               sobrietyDate,
               new Date(),
-              profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+              Intl.DateTimeFormat().resolvedOptions().timeZone
             )}
           </Text>
           <Text style={styles.statsLabel}>Days Sober</Text>

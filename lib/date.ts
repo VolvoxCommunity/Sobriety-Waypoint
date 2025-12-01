@@ -22,11 +22,11 @@ import { differenceInCalendarDays } from 'date-fns';
 function parseDateInTimezone(dateString: string, timezone: string): Date {
   // Parse the date string
   const [year, month, day] = dateString.split('-').map(Number);
-  
+
   // Create a date representing midnight on this day in the timezone
   // This is a "naive" date - it doesn't know about timezones yet
   const zonedMidnight = new Date(year, month - 1, day, 0, 0, 0, 0);
-  
+
   // Convert from the "zoned" representation (midnight in the timezone) to UTC
   // This correctly handles all timezones including UTC+12/+13
   return fromZonedTime(zonedMidnight, timezone);
