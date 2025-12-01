@@ -30,6 +30,30 @@ function getDateStringInTimezone(date: Date, timezone: string): string {
 }
 
 /**
+ * Formats a Date object as YYYY-MM-DD using the LOCAL date components.
+ *
+ * IMPORTANT: Use this instead of `date.toISOString().split('T')[0]` which uses UTC
+ * and can return the wrong date for users in timezones behind UTC.
+ *
+ * @param date - The Date object to format
+ * @returns Date string in YYYY-MM-DD format based on local time
+ *
+ * @example
+ * ```ts
+ * // User in EST (UTC-5) at 8 PM on Nov 1:
+ * // toISOString() would give "2025-11-02" (UTC date) - WRONG!
+ * // formatLocalDate() gives "2025-11-01" (local date) - CORRECT!
+ * const dateStr = formatLocalDate(selectedDate);
+ * ```
+ */
+export function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Calculates the day difference between two YYYY-MM-DD date strings.
  *
  * Uses UTC dates to avoid any system timezone interference. This ensures

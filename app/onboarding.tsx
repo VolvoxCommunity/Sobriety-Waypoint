@@ -19,7 +19,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import ProgressBar from '@/components/onboarding/ProgressBar';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { getDateDiffInDays } from '@/lib/date';
+import { getDateDiffInDays, formatLocalDate } from '@/lib/date';
 
 /**
  * OnboardingScreen handles the initial user setup flow after authentication.
@@ -93,7 +93,7 @@ export default function OnboardingScreen() {
         first_name?: string;
         last_initial?: string;
       } = {
-        sobriety_date: sobrietyDate.toISOString().split('T')[0],
+        sobriety_date: formatLocalDate(sobrietyDate),
       };
 
       if (needsName && firstName && lastInitial) {
@@ -236,8 +236,8 @@ export default function OnboardingScreen() {
           <View style={styles.webDatePicker}>
             <input
               type="date"
-              value={sobrietyDate.toISOString().split('T')[0]}
-              max={new Date().toISOString().split('T')[0]}
+              value={formatLocalDate(sobrietyDate)}
+              max={formatLocalDate(new Date())}
               onChange={(e) => {
                 setSobrietyDate(new Date(e.target.value));
                 setShowDatePicker(false);
@@ -258,7 +258,7 @@ export default function OnboardingScreen() {
         <View style={styles.statsContainer}>
           <Text style={styles.statsCount}>
             {getDateDiffInDays(
-              sobrietyDate.toISOString().split('T')[0],
+              formatLocalDate(sobrietyDate),
               new Date(),
               Intl.DateTimeFormat().resolvedOptions().timeZone
             )}

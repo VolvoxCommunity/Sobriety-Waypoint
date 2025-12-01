@@ -30,6 +30,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
+import { formatLocalDate } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
 // Component for displaying sponsee days sober using the hook
@@ -586,7 +587,7 @@ export default function ProfileScreen() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ sobriety_date: newDate.toISOString().split('T')[0] })
+        .update({ sobriety_date: formatLocalDate(newDate) })
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -671,8 +672,8 @@ export default function ProfileScreen() {
     try {
       const { error: slipUpError } = await supabase.from('slip_ups').insert({
         user_id: profile.id,
-        slip_up_date: slipUpDate.toISOString().split('T')[0],
-        recovery_restart_date: recoveryDate.toISOString().split('T')[0],
+        slip_up_date: formatLocalDate(slipUpDate),
+        recovery_restart_date: formatLocalDate(recoveryDate),
         notes: slipUpNotes.trim() || null,
       });
 
@@ -680,7 +681,7 @@ export default function ProfileScreen() {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ sobriety_date: recoveryDate.toISOString().split('T')[0] })
+        .update({ sobriety_date: formatLocalDate(recoveryDate) })
         .eq('id', profile.id);
 
       if (updateError) throw updateError;
@@ -925,8 +926,8 @@ export default function ProfileScreen() {
               <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
               <input
                 type="date"
-                value={selectedSobrietyDate.toISOString().split('T')[0]}
-                max={new Date().toISOString().split('T')[0]}
+                value={formatLocalDate(selectedSobrietyDate)}
+                max={formatLocalDate(new Date())}
                 onChange={(e) => setSelectedSobrietyDate(new Date(e.target.value))}
                 style={{
                   padding: 12,
@@ -1010,8 +1011,8 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={slipUpDate.toISOString().split('T')[0]}
-                  max={new Date().toISOString().split('T')[0]}
+                  value={formatLocalDate(slipUpDate)}
+                  max={formatLocalDate(new Date())}
                   onChange={(e) => setSlipUpDate(new Date(e.target.value))}
                   style={{
                     padding: 12,
@@ -1057,8 +1058,8 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={recoveryDate.toISOString().split('T')[0]}
-                  min={slipUpDate.toISOString().split('T')[0]}
+                  value={formatLocalDate(recoveryDate)}
+                  min={formatLocalDate(slipUpDate)}
                   onChange={(e) => setRecoveryDate(new Date(e.target.value))}
                   style={{
                     padding: 12,
