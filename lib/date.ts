@@ -20,16 +20,14 @@ import { differenceInCalendarDays } from 'date-fns';
  * @returns Date object (in UTC) that represents midnight in the specified timezone
  */
 function parseDateInTimezone(dateString: string, timezone: string): Date {
-  // Parse the date string
-  const [year, month, day] = dateString.split('-').map(Number);
-
-  // Create a date representing midnight on this day in the timezone
-  // This is a "naive" date - it doesn't know about timezones yet
-  const zonedMidnight = new Date(year, month - 1, day, 0, 0, 0, 0);
+  // Pass the date string directly to fromZonedTime as an ISO string
+  // This avoids the Date constructor's system timezone interpretation
+  // The string is treated as a timezone-agnostic datetime to be interpreted in the target timezone
+  const midnightIsoString = `${dateString}T00:00:00`;
 
   // Convert from the "zoned" representation (midnight in the timezone) to UTC
   // This correctly handles all timezones including UTC+12/+13
-  return fromZonedTime(zonedMidnight, timezone);
+  return fromZonedTime(midnightIsoString, timezone);
 }
 
 /**
