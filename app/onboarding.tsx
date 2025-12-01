@@ -258,7 +258,7 @@ export default function OnboardingScreen() {
         <View style={styles.statsContainer}>
           <Text style={styles.statsCount}>
             {getDateDiffInDays(
-              sobrietyDate,
+              sobrietyDate.toISOString().split('T')[0],
               new Date(),
               Intl.DateTimeFormat().resolvedOptions().timeZone
             )}
