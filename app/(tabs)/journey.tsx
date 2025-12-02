@@ -239,6 +239,7 @@ export default function JourneyScreen() {
       const streakStartDate = parseDateAsLocal(currentStreakStartDate);
 
       const milestones = [
+        { days: 7, label: '1 Week Sober' },
         { days: 30, label: '30 Days Sober' },
         { days: 60, label: '60 Days Sober' },
         { days: 90, label: '90 Days Sober' },
