@@ -2,6 +2,7 @@
   "name": "sobriety-waypoint",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
     "start": "expo start",
     "start:clean": "pnpm clean:metro && expo start --clear",
