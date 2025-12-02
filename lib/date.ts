@@ -158,35 +158,3 @@ export function getDateDiffInDays(
   return Math.max(0, diffDays);
 }
 
-/**
- * Parses a YYYY-MM-DD date string from HTML date input as LOCAL midnight in specified timezone.
- *
- * HTML date inputs provide values in YYYY-MM-DD format but when converted to Date objects
- * using `new Date(dateString)`, they're interpreted as UTC midnight. This causes
- * incorrect dates for users in timezones behind UTC.
- *
- * This function ensures the date is interpreted as midnight in the user's timezone,
- * not UTC midnight.
- *
- * @param dateStr - Date string in YYYY-MM-DD format from HTML date input
- * @param timezone - IANA timezone string (e.g., 'America/Los_Angeles'). Defaults to device timezone
- * @returns Date object set to midnight in the specified timezone
- *
- * @example
- * ```ts
- * // User in EST (UTC-5) selects "2025-11-01" in date input:
- * // parseHTMLDateAsLocal("2025-11-01", "America/New_York") → Nov 1 00:00 EST - CORRECT!
- * // new Date("2025-11-01") → Nov 1 00:00 UTC → Oct 31 19:00 EST - WRONG!
- * const date = parseHTMLDateAsLocal(e.target.value, userTimezone);
- * ```
- */
-export function parseHTMLDateAsLocal(dateStr: string, timezone: string = DEVICE_TIMEZONE): Date {
-  const [year, month, day] = dateStr.split('-').map(Number);
-
-  // Create date in user's timezone by using timezone-aware formatting
-  // We use the same approach as formatDateWithTimezone but in reverse
-  const dateInTimezone = new TZDate(year, month - 1, day, 0, 0, 0, timezone);
-
-  // Convert back to a regular Date object for React state
-  return new Date(dateInTimezone);
-}
