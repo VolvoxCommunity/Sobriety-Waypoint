@@ -18,6 +18,12 @@ import { addDays, format } from 'date-fns';
  */
 const MINIMUM_TIMER_MS = 1000;
 
+/**
+ * Fallback delay (1 hour) when midnight calculation fails or produces unexpected results.
+ * This prevents rapid re-firing loops while allowing reasonable retry frequency.
+ */
+const FALLBACK_TIMER_MS = 60 * 60 * 1000;
+
 // =============================================================================
 // Types & Interfaces
 // =============================================================================
@@ -51,6 +57,11 @@ export interface DaysSoberResult {
  * This ensures the midnight refresh timer aligns with the user's local midnight,
  * so day counts roll over when the user expects them to.
  *
+ * Includes protection against clock skew, timezone changes, and DST transitions:
+ * - If calculated time is <= 0, recalculates with fresh timestamp
+ * - If still negative after recalculation, falls back to 1 hour delay
+ * - Always returns at least MINIMUM_TIMER_MS to prevent rapid re-firing
+ *
  * @param timezone - IANA timezone string (e.g., 'America/Los_Angeles'). Defaults to device timezone
  * @returns Milliseconds until 00:00:00 of the next day in specified timezone
  *
@@ -72,7 +83,26 @@ function getMillisecondsUntilMidnight(timezone: string = DEVICE_TIMEZONE): numbe
   const midnightIsoString = `${tomorrowDateStr}T00:00:00`;
   const midnightUtc = new TZDate(midnightIsoString, timezone);
 
-  return Math.max(MINIMUM_TIMER_MS, midnightUtc.getTime() - now.getTime());
+  let msUntilMidnight = midnightUtc.getTime() - now.getTime();
+
+  // Handle clock skew or timezone change: if negative or very small, recalculate
+  if (msUntilMidnight < MINIMUM_TIMER_MS) {
+    // Recalculate with fresh timestamp to handle potential clock/timezone drift
+    const freshNow = new Date();
+    const recalculatedTomorrowDateStr = format(
+      addDays(new TZDate(freshNow, timezone), 1),
+      'yyyy-MM-dd'
+    );
+    const recalculatedMidnightUtc = new TZDate(`${recalculatedTomorrowDateStr}T00:00:00`, timezone);
+    msUntilMidnight = recalculatedMidnightUtc.getTime() - freshNow.getTime();
+
+    // If still negative after recalculation, use fallback to prevent rapid re-firing
+    if (msUntilMidnight < MINIMUM_TIMER_MS) {
+      return FALLBACK_TIMER_MS;
+    }
+  }
+
+  return msUntilMidnight;
 }
 
 // =============================================================================
