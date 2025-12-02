@@ -352,9 +352,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           try {
-            await createOAuthProfileIfNeeded(session.user);
-            // Check mount status after async operation to avoid state updates on unmounted component
-            if (!isMountedRef.current) return;
+            // Only create profile on sign-in events, not token refresh.
+            // createOAuthProfileIfNeeded is idempotent (checks existence first),
+            // but calling it on every TOKEN_REFRESHED event adds unnecessary DB queries.
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+              await createOAuthProfileIfNeeded(session.user);
+              // Check mount status after async operation to avoid state updates on unmounted component
+              if (!isMountedRef.current) return;
+            }
 
             await fetchProfile(session.user.id);
           } catch (error) {
