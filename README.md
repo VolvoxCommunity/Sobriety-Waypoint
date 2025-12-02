@@ -1,7 +1,8 @@
 # Sobriety Waypoint
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Expo](https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white)](https://expo.dev/accounts/BillChirico/projects/sobriety-waypoint)
+[![Expo](https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white)](https://expo.dev/accounts/volvox-llc/projects/sobriety-waypoint)
+[![CI](https://github.com/VolvoxCommunity/Sobriety-Waypoint/actions/workflows/ci.yml/badge.svg)](https://github.com/VolvoxCommunity/Sobriety-Waypoint/actions/workflows/ci.yml)
 
 A cross-platform companion app that helps sponsors and sponsees stay connected, complete recovery program work, and celebrate sobriety milestones together. Think of it as Jira for your sobriety!
 
@@ -39,27 +40,41 @@ Sobriety Waypoint helps people in recovery stay connected and accountable throug
 - **Backend**: Supabase (Postgres + RLS) with typed client access
 - **Auth**: Supabase Auth (email/password, Google OAuth, Apple Sign In design ready)
 - **Storage**: SecureStore (native) / localStorage (web) via platform-aware adapter
-- **Language / Tooling**: TypeScript (strict), pnpm, ESLint, Prettier, Husky + lint-staged
+- **Language / Tooling**: TypeScript 5.9 (strict), pnpm, ESLint 9, Prettier, Husky + lint-staged
 - **Icons & UI**: lucide-react-native, custom theme context
-- **Observability**: Sentry (prod only, auto source maps, privacy scrubbing)
+- **Observability**: Sentry (all environments, auto source maps, privacy scrubbing)
+- **Performance**: React Compiler enabled, New Architecture enabled
 
 ## Architecture Snapshot
 
 - `app/`: Expo Router entry point + grouped routes (`(tabs)` for the authenticated experience)
 - `contexts/`: Auth and Theme providers (root layout enforces auth/onboarding flow)
 - `lib/supabase.ts`: typed Supabase client + platform storage adapter + session refresh
+- `lib/logger.ts`: centralized logging with Sentry breadcrumbs integration
 - `supabase/migrations/`: canonical schema, policies, and seed data
 - `types/database.ts`: fully generated database types used throughout the app
 
 ```
 Sobriety-Waypoint/
-├── app/ (router, screens, layouts)
-├── components/ (shared UI)
-├── contexts/ (AuthContext, ThemeContext)
-├── lib/ (Supabase client, utilities)
-├── types/ (database + domain models)
-├── supabase/ (SQL migrations, RLS policies)
-└── docs/ (testing, CI/CD, feature plans)
+├── app/                    # Router, screens, layouts
+│   ├── _layout.tsx         # Root layout with auth guards
+│   ├── login.tsx           # Email/password + social sign in
+│   ├── signup.tsx          # Registration flow
+│   ├── onboarding.tsx      # Profile setup
+│   ├── settings.tsx        # App settings
+│   └── (tabs)/             # Authenticated tab navigation
+│       ├── index.tsx       # Dashboard/home
+│       ├── tasks.tsx       # Task list for sponsees
+│       ├── manage-tasks.tsx# Task assignment for sponsors
+│       ├── journey.tsx     # Timeline/milestone view
+│       ├── steps.tsx       # 12-step program content
+│       └── profile.tsx     # User profile
+├── components/             # Shared UI components
+├── contexts/               # AuthContext, ThemeContext
+├── lib/                    # Supabase client, logger, utilities
+├── types/                  # Database + domain models
+├── supabase/               # SQL migrations, RLS policies
+└── docs/                   # Testing, CI/CD, feature plans
 ```
 
 ## Getting Started
@@ -92,21 +107,26 @@ Sobriety-Waypoint/
 ### Run the App
 
 ```bash
-pnpm dev        # Expo dev server (web + native)
-pnpm ios        # Launch iOS simulator (macOS only)
-pnpm android    # Launch Android emulator/device
-pnpm build:web  # Static web build → dist/
+pnpm start       # Expo dev server (web + native)
+pnpm ios         # Launch iOS simulator (macOS only)
+pnpm android     # Launch Android emulator/device
+pnpm web         # Launch web version
+pnpm build:web   # Static web build → dist/
 ```
 
 ## Common Development Commands
 
-| Command                                                   | Description                                     |
-| --------------------------------------------------------- | ----------------------------------------------- |
-| `pnpm typecheck`                                          | TypeScript in no-emit mode (run before pushing) |
-| `pnpm lint`                                               | ESLint with Expo config                         |
-| `pnpm format` / `pnpm format:check`                       | Prettier format or dry-run                      |
-| `pnpm maestro`                                            | Run all Maestro E2E flows                       |
-| `pnpm test`, `pnpm test:watch`, `pnpm test -- --coverage` | Jest test runners                               |
+| Command                             | Description                                     |
+| ----------------------------------- | ----------------------------------------------- |
+| `pnpm typecheck`                    | TypeScript in no-emit mode (run before pushing) |
+| `pnpm lint`                         | ESLint with Expo config                         |
+| `pnpm format` / `pnpm format:check` | Prettier format or dry-run                      |
+| `pnpm test`                         | Run all Jest tests                              |
+| `pnpm test:watch`                   | Run tests in watch mode                         |
+| `pnpm test:ci`                      | Run tests with coverage report                  |
+| `pnpm start:clean`                  | Start with cleared Metro cache                  |
+| `pnpm clean:metro`                  | Clear Metro bundler cache                       |
+| `pnpm clean:all`                    | Nuclear option: clear everything and reinstall  |
 
 > Husky + lint-staged run on every commit, formatting all staged files and linting TypeScript/JavaScript sources automatically. Skip only via `git commit -n`.
 
@@ -114,17 +134,19 @@ pnpm build:web  # Static web build → dist/
 
 - **Supabase Auth** powers all providers
 - Email/password ready out of the box
-- Google OAuth setup documented in `GOOGLE_OAUTH_SETUP.md`
-- Apple Sign In design lives in `docs/plans/2025-11-12-apple-signin-design.md`
+- Google OAuth configured - see `docs/GOOGLE_OAUTH_SETUP.md` for setup guide
+- Apple Sign In (iOS) - see `docs/APPLE_SIGNIN_SETUP.md` for setup guide
 - Deep link scheme: `sobrietywaypoint://`
 - Bundle IDs: `com.volvox.sobrietywaypoint` (iOS) / `com.volvox.sobrietywaypoint` (Android)
 - Root layout enforces the flow: login → onboarding (profile + role) → authenticated tabs
 
 ## Observability & Privacy
 
-- Sentry runs in production builds only (disabled in dev)
+- Sentry runs in all environments (development, preview, production)
+- Environment tags help filter errors in Sentry dashboard
 - Automatically scrubs sobriety dates, messages, and other sensitive data
 - Source maps uploaded via EAS for readable native stack traces
+- Centralized logger (`lib/logger.ts`) integrates with Sentry breadcrumbs
 - Env vars required for production:
   ```
   EXPO_PUBLIC_SENTRY_DSN=<dsn>
@@ -141,19 +163,16 @@ The project enforces **80% minimum coverage** across statements, branches, funct
 - **Unit & Integration**: Jest + React Native Testing Library + custom `renderWithProviders`
 - **API mocking**: MSW handlers under `mocks/`
 - **Fixtures**: `test-utils/fixtures/`
-- **E2E**: Maestro flows stored in `.maestro/`
 
 ### Test Commands
 
 ```bash
-pnpm test               # all tests
-pnpm test:watch         # watch mode
-pnpm test -- --coverage # coverage report
-pnpm maestro            # run Maestro flows
-pnpm maestro:record     # record new flow
+pnpm test          # Run all tests
+pnpm test:watch    # Watch mode
+pnpm test:ci       # Run with coverage report
 ```
 
-Templates live in `docs/templates/` for components, hooks, integration tests, and Maestro flows.
+Templates live in `docs/templates/` for components, hooks, and integration tests.
 
 ## CI/CD & Release Flow
 
@@ -166,19 +185,22 @@ Templates live in `docs/templates/` for components, hooks, integration tests, an
   - `development`: Dev client for local testing
   - `preview`: CI/CD + QA (Release config, OTA channel `preview`)
   - `production`: Production-ready builds with auto version bump
+- EAS Update enabled for over-the-air updates
 - Secrets required in GitHub:
   - `EXPO_PUBLIC_SUPABASE_URL`
   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
   - `EXPO_TOKEN` (create via `expo.dev` → Access Tokens)
-- Monitor native builds at [Expo builds dashboard](https://expo.dev/accounts/BillChirico/projects/sobriety-waypoint/builds)
+- Monitor native builds at [Expo builds dashboard](https://expo.dev/accounts/volvox-llc/projects/sobriety-waypoint/builds)
 
 ## Documentation & Helpful Links
 
 - `CLAUDE.md` – architecture guidance + MCP usage expectations
 - `docs/TESTING.md` – testing strategies, coverage targets, MSW patterns
+- `docs/logger.md` – universal logger API reference and best practices
+- `docs/GOOGLE_OAUTH_SETUP.md` – Google OAuth configuration guide
+- `docs/APPLE_SIGNIN_SETUP.md` – Apple Sign In configuration guide
 - `.github/CICD.md` – CI/CD deep dive + Claude review notes
 - `.github/GIT_HOOKS.md` – Husky/lint-staged troubleshooting
-- `GOOGLE_OAUTH_SETUP.md`, `docs/plans/2025-11-12-apple-signin-design.md`
 - `supabase/migrations/` – schema + RLS source of truth
 
 ## License
