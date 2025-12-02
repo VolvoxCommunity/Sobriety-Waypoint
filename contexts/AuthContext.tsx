@@ -185,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Extracts first name and last initial from user metadata and captures the device timezone.
    *
    * @param user - The authenticated user object from OAuth provider
-   * @throws Error if profile creation fails
+   * @throws Error if profile creation fails (but not if profile check fails - auth continues)
    */
   const createOAuthProfileIfNeeded = async (user: User): Promise<void> => {
     const { data: existingProfile, error: queryError } = await supabase
