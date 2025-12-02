@@ -24,6 +24,7 @@ import {
   formatLocalDate,
   formatDateWithTimezone,
   parseDateAsLocal,
+  DEVICE_TIMEZONE,
 } from '@/lib/date';
 import type { Profile } from '@/types/database';
 
@@ -87,7 +88,7 @@ export default function OnboardingScreen() {
    */
   const getUserTimezone = (profile?: Profile | null): string => {
     // Use stored timezone if available, otherwise fallback to device timezone
-    return profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return profile?.timezone || DEVICE_TIMEZONE;
   };
 
   const handleComplete = async () => {
