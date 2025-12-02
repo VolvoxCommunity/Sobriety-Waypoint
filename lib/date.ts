@@ -67,7 +67,9 @@ export function getUserTimezone(profile?: Profile | null): string {
  * ```
  */
 function getDateStringInTimezone(date: Date, timezone: string): string {
-  return format(new TZDate(date, timezone), 'yyyy-MM-dd');
+  // TZDate constructor accepts: timestamp (number), ISO string, or date components
+  // It does NOT accept a Date object directly - use getTime() to get the timestamp
+  return format(new TZDate(date.getTime(), timezone), 'yyyy-MM-dd');
 }
 
 /**

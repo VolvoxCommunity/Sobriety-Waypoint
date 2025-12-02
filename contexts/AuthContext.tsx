@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types/database';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
 import { setSentryUser, clearSentryUser, setSentryContext } from '@/lib/sentry';
@@ -53,6 +54,131 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Ref to track component mount status across re-renders (avoids closure issues)
   const isMountedRef = useRef(true);
+
+  // Track processed URLs to avoid duplicate session creation
+  const processedUrlsRef = useRef<Set<string>>(new Set());
+
+  // Track if OAuth is currently being processed to prevent race conditions
+  const isProcessingOAuthRef = useRef(false);
+
+  /**
+   * Extracts OAuth tokens from a URL's hash fragment or query params.
+   * Supabase sends tokens in the hash (e.g., #access_token=...&refresh_token=...).
+   *
+   * @param url - The OAuth callback URL
+   * @returns Object containing access_token and refresh_token, or nulls if not found
+   */
+  const extractTokensFromUrl = (
+    url: string
+  ): { access_token: string | null; refresh_token: string | null } => {
+    try {
+      const parsedUrl = new URL(url);
+
+      // First try hash fragment (Supabase's default for implicit grant)
+      if (parsedUrl.hash) {
+        const hashParams = new URLSearchParams(parsedUrl.hash.substring(1));
+        const hashAccessToken = hashParams.get('access_token');
+        const hashRefreshToken = hashParams.get('refresh_token');
+        if (hashAccessToken && hashRefreshToken) {
+          return { access_token: hashAccessToken, refresh_token: hashRefreshToken };
+        }
+      }
+
+      // Fallback to query params (for PKCE flow)
+      const queryAccessToken = parsedUrl.searchParams.get('access_token');
+      const queryRefreshToken = parsedUrl.searchParams.get('refresh_token');
+      if (queryAccessToken && queryRefreshToken) {
+        return { access_token: queryAccessToken, refresh_token: queryRefreshToken };
+      }
+
+      return { access_token: null, refresh_token: null };
+    } catch {
+      return { access_token: null, refresh_token: null };
+    }
+  };
+
+  /**
+   * Extracts OAuth tokens from a deep link URL and creates a Supabase session.
+   * This handles the case where iOS delivers the OAuth redirect via Linking
+   * instead of through WebBrowser.openAuthSessionAsync.
+   *
+   * @param url - The deep link URL containing OAuth tokens in hash or query params
+   * @returns The created session, or null if tokens weren't found
+   */
+  const createSessionFromUrl = async (url: string): Promise<Session | null> => {
+    // Skip if we've already processed this URL
+    if (processedUrlsRef.current.has(url)) {
+      logger.debug('Skipping already processed OAuth URL', {
+        category: LogCategory.AUTH,
+      });
+      return null;
+    }
+
+    // Skip if another OAuth flow is already processing
+    if (isProcessingOAuthRef.current) {
+      logger.debug('Skipping deep link - OAuth already being processed', {
+        category: LogCategory.AUTH,
+      });
+      return null;
+    }
+
+    try {
+      isProcessingOAuthRef.current = true;
+
+      logger.debug('Attempting to extract tokens from deep link', {
+        category: LogCategory.AUTH,
+        urlScheme: url.split('://')[0],
+        hasHash: url.includes('#'),
+        hasQueryParams: url.includes('?'),
+      });
+
+      const { access_token, refresh_token } = extractTokensFromUrl(url);
+
+      if (!access_token || !refresh_token) {
+        logger.debug('No OAuth tokens found in URL', {
+          category: LogCategory.AUTH,
+          hasAccessToken: !!access_token,
+          hasRefreshToken: !!refresh_token,
+        });
+        return null;
+      }
+
+      // Mark this URL as processed before creating session
+      processedUrlsRef.current.add(url);
+
+      logger.info('Creating session from deep link URL', {
+        category: LogCategory.AUTH,
+      });
+
+      const { data, error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+
+      if (error) {
+        logger.error('Failed to create session from deep link', error, {
+          category: LogCategory.AUTH,
+        });
+        // Remove from processed so it can be retried
+        processedUrlsRef.current.delete(url);
+        return null;
+      }
+
+      logger.info('Session created successfully from deep link', {
+        category: LogCategory.AUTH,
+      });
+
+      // Note: Profile creation is handled by onAuthStateChange listener
+      return data.session;
+    } catch (error) {
+      logger.error('Error processing OAuth deep link', error as Error, {
+        category: LogCategory.AUTH,
+      });
+      return null;
+    } finally {
+      isProcessingOAuthRef.current = false;
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -117,6 +243,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileError) throw profileError;
     }
   };
+
+  /**
+   * Handle OAuth deep links when the app receives them via Linking.
+   * This is critical for iOS where the OAuth redirect may arrive via deep link
+   * instead of through WebBrowser.openAuthSessionAsync return value.
+   *
+   * Uses addEventListener for more reliable real-time event handling.
+   */
+  useEffect(() => {
+    /**
+     * Handles incoming deep link URLs containing OAuth tokens.
+     */
+    const handleDeepLink = async (event: { url: string }) => {
+      const incomingUrl = event.url;
+
+      // Only process URLs that look like OAuth callbacks
+      if (
+        !incomingUrl.includes('access_token') &&
+        !incomingUrl.includes('refresh_token') &&
+        !incomingUrl.includes('error')
+      ) {
+        return;
+      }
+
+      logger.info('OAuth deep link received', {
+        category: LogCategory.AUTH,
+        urlScheme: incomingUrl.split('://')[0],
+      });
+
+      await createSessionFromUrl(incomingUrl);
+    };
+
+    // Listen for deep links while app is running
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Also check for initial URL (cold start case)
+    Linking.getInitialURL().then((initialUrl) => {
+      if (initialUrl) {
+        handleDeepLink({ url: initialUrl });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     // Reset mount status on effect run
@@ -253,12 +425,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           category: LogCategory.AUTH,
           // Note: Not logging data.url to avoid exposing OAuth state parameters
         });
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl, {
+          // showInRecents keeps the browser session visible in recent apps on iOS,
+          // which helps ensure the OAuth redirect is properly captured
+          showInRecents: true,
+        });
 
         logger.debug('Google Auth browser result received', {
           category: LogCategory.AUTH,
           resultType: result.type,
         });
+
+        // Check if the deep link handler already created a session
+        // This can happen on iOS when the redirect arrives via Linking
+        const { data: existingSession } = await supabase.auth.getSession();
+        if (existingSession?.session) {
+          logger.info('Session already exists (likely from deep link handler)', {
+            category: LogCategory.AUTH,
+          });
+          return; // Session was created by deep link handler, we're done
+        }
 
         if (result.type === 'success' && result.url) {
           logger.debug('Google Auth redirect received', {
