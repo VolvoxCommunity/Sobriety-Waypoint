@@ -113,21 +113,35 @@ describe('useDaysSober', () => {
       expect(result.current.hasSlipUps).toBe(true);
     });
 
-    it('returns 0 for negative day calculations (future dates are prevented)', async () => {
-      // The hook uses Math.max(0, days) to prevent negative values
-      // This test verifies the daysSober is always >= 0
-      jest.setSystemTime(new Date('2024-04-10T12:00:00Z'));
+    describe('with future sobriety date', () => {
+      const originalSobrietyDate = mockProfile.sobriety_date;
 
-      const { result } = renderHook(() => useDaysSober());
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      beforeEach(() => {
+        // Set sobriety date to a future date to test Math.max(0, days) guard
+        mockProfile.sobriety_date = '2025-06-01';
       });
 
-      // With sobriety date of 2024-01-01 and current date 2024-04-10, expect 100 days
-      // This also validates that the Math.max(0, days) guard works correctly
-      expect(result.current.daysSober).toBe(100);
-      expect(result.current.journeyDays).toBe(100);
+      afterEach(() => {
+        // Restore original sobriety date for other tests
+        mockProfile.sobriety_date = originalSobrietyDate;
+      });
+
+      it('returns 0 for negative day calculations (future sobriety date)', async () => {
+        // Set current time to April 10, 2024 - BEFORE the sobriety date of June 1, 2025
+        // Without the Math.max(0, days) guard, this would return a negative number
+        jest.setSystemTime(new Date('2024-04-10T12:00:00Z'));
+
+        const { result } = renderHook(() => useDaysSober());
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        });
+
+        // The hook should return 0 (not negative) due to Math.max(0, days) guard
+        // Raw calculation would be: Apr 10, 2024 - Jun 1, 2025 = -417 days
+        expect(result.current.daysSober).toBe(0);
+        expect(result.current.journeyDays).toBe(0);
+      });
     });
 
     it('uses calendar days in device timezone, not UTC', async () => {
