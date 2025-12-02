@@ -8,6 +8,7 @@ import {
   useSegments,
   SplashScreen,
   useNavigationContainerRef,
+  useRootNavigationState,
 } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -64,6 +65,11 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   const navigationRef = useNavigationContainerRef();
+  const rootNavigationState = useRootNavigationState();
+
+  // Check if the navigator is ready before attempting navigation
+  // This prevents "action was not handled by any navigator" warnings
+  const navigatorReady = rootNavigationState?.key != null;
 
   // Register navigation container with Sentry
   useEffect(() => {
@@ -73,7 +79,8 @@ function RootLayoutNav() {
   }, [navigationRef]);
 
   useEffect(() => {
-    if (loading) return;
+    // Wait for both auth loading to complete AND navigator to be ready
+    if (loading || !navigatorReady) return;
 
     const inAuthGroup = segments[0] === '(tabs)';
     const inOnboarding = segments[0] === 'onboarding';
@@ -99,7 +106,7 @@ function RootLayoutNav() {
     } else if (user && !profile && !inOnboarding) {
       router.replace('/onboarding');
     }
-  }, [user, profile, segments, loading, router]);
+  }, [user, profile, segments, loading, router, navigatorReady]);
 
   if (loading) {
     return (
