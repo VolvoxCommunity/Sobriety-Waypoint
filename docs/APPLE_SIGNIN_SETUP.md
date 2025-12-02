@@ -41,13 +41,9 @@ We chose iOS-only support for simplicity:
 6. Scroll to **Capabilities** and enable **Sign in with Apple**
 7. Click **Continue** → **Register**
 
-### Gather Required Information
+### Required Information
 
-For Supabase configuration, you'll need:
-
-| Value         | Where to Find                                              |
-| ------------- | ---------------------------------------------------------- |
-| **Bundle ID** | Your iOS bundle ID: `com.volvox.sobrietywaypoint`          |
+For Supabase configuration, you'll need your iOS **Bundle ID**: `com.volvox.sobrietywaypoint`
 
 > **Note**: For native iOS-only sign-in, you do NOT need:
 >
@@ -226,7 +222,7 @@ To get the name prompt again for testing:
 
 ### "Apple Sign In is not available"
 
-- This can happen on Simulator—test on a real device
+- Apple Sign In does not work reliably in the Simulator—always test on a real device
 - Ensure `usesAppleSignIn: true` is in app.config.ts
 - Verify `expo-apple-authentication` plugin is included
 
