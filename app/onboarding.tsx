@@ -77,8 +77,8 @@ export default function OnboardingScreen() {
       router.replace('/(tabs)');
     }
     // Note: router is intentionally excluded from deps because:
-    // 1. It may not be referentially stable across renders
-    // 2. We only want to navigate when awaitingProfileUpdate or profile changes
+    // We only want navigation to trigger when awaitingProfileUpdate or profile changes,
+    // not when the router object changes (which is referentially stable in Expo Router).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingProfileUpdate, profile]);
 
