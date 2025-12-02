@@ -93,7 +93,7 @@ export default function OnboardingScreen() {
     return () => clearTimeout(timeout);
     // Note: router is intentionally excluded from deps because:
     // We only want navigation to trigger when awaitingProfileUpdate or profile changes,
-    // not when the router object changes (which is referentially stable in Expo Router).
+    // not when the router object changes (which is assumed to be referentially stable in Expo Router based on current behavior, but this is not a guaranteed invariant).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingProfileUpdate, profile]);
 
