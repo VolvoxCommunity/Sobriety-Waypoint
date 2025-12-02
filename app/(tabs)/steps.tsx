@@ -7,6 +7,13 @@ import { StepContent, UserStepProgress } from '@/types/database';
 import { X, CheckCircle, Circle } from 'lucide-react-native';
 import { logger, LogCategory } from '@/lib/logger';
 
+/**
+ * Screen that displays the 12 steps, the current user's completion progress, and a modal with step details and reflection prompts.
+ *
+ * Fetches steps content and the user's progress from the database, shows loading/error/empty states, lets the user open a step to view detailed content and reflection questions, and toggle completion for a step.
+ *
+ * @returns The component's rendered React element for the Steps screen.
+ */
 export default function StepsScreen() {
   const { theme } = useTheme();
   const { profile } = useAuth();
@@ -186,8 +193,8 @@ export default function StepsScreen() {
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderContent}>
               <Text style={styles.modalStepNumber}>Step {selectedStep?.step_number}</Text>
-              <TouchableOpacity onPress={() => setSelectedStep(null)}>
-                <X size={24} color={theme.text} />
+              <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedStep(null)}>
+                <X size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -195,30 +202,6 @@ export default function StepsScreen() {
           <ScrollView style={styles.modalContent}>
             <Text style={styles.modalTitle}>{selectedStep?.title}</Text>
             <Text style={styles.modalDescription}>{selectedStep?.description}</Text>
-
-            {selectedStep && (
-              <TouchableOpacity
-                style={[
-                  styles.completeButton,
-                  progress[selectedStep.step_number] && styles.completeButtonActive,
-                ]}
-                onPress={() => {
-                  toggleStepCompletion(selectedStep.step_number);
-                }}
-              >
-                {progress[selectedStep.step_number] ? (
-                  <>
-                    <CheckCircle size={20} color="#ffffff" />
-                    <Text style={styles.completeButtonText}>Marked as Complete</Text>
-                  </>
-                ) : (
-                  <>
-                    <Circle size={20} color="#ffffff" />
-                    <Text style={styles.completeButtonText}>Mark as Complete</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            )}
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Understanding This Step</Text>
@@ -237,6 +220,28 @@ export default function StepsScreen() {
               </View>
             )}
           </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[
+                styles.completeButton,
+                selectedStep && progress[selectedStep.step_number] && styles.completeButtonActive,
+              ]}
+              onPress={() => selectedStep && toggleStepCompletion(selectedStep.step_number)}
+            >
+              {selectedStep && progress[selectedStep.step_number] ? (
+                <>
+                  <CheckCircle size={20} color="#ffffff" />
+                  <Text style={styles.completeButtonText}>Marked as Complete</Text>
+                </>
+              ) : (
+                <>
+                  <Circle size={20} color="#ffffff" />
+                  <Text style={styles.completeButtonText}>Mark as Complete</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -336,6 +341,9 @@ const createStyles = (theme: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+    },
+    closeButton: {
+      padding: 4,
     },
     modalStepNumber: {
       fontSize: 20,
@@ -445,6 +453,12 @@ const createStyles = (theme: ThemeColors) =>
       color: '#10b981',
       fontWeight: '600',
     },
+    modalFooter: {
+      padding: 20,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+      backgroundColor: theme.card,
+    },
     completeButton: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -453,8 +467,6 @@ const createStyles = (theme: ThemeColors) =>
       paddingVertical: 14,
       paddingHorizontal: 20,
       borderRadius: 12,
-      marginTop: 16,
-      marginBottom: 24,
       gap: 8,
     },
     completeButtonActive: {

@@ -27,6 +27,7 @@ import {
 import { useRouter } from 'expo-router';
 import TaskCreationModal from '@/components/TaskCreationModal';
 import { logger, LogCategory } from '@/lib/logger';
+import { parseDateAsLocal } from '@/lib/date';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
@@ -200,7 +201,7 @@ export default function HomeScreen() {
             <Text style={styles.sobrietyDate}>
               Since{' '}
               {currentStreakStartDate
-                ? new Date(currentStreakStartDate).toLocaleDateString('en-US', {
+                ? parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
@@ -356,7 +357,7 @@ export default function HomeScreen() {
           <Text style={styles.actionTitle}>12 Steps</Text>
           <Text style={styles.actionSubtitle}>Learn & Reflect</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/manage-tasks')}>
+        <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/tasks')}>
           <ClipboardList size={32} color={theme.primary} />
           <Text style={styles.actionTitle}>Manage Tasks</Text>
           <Text style={styles.actionSubtitle}>Guide Progress</Text>
