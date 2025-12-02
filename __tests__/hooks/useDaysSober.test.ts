@@ -319,7 +319,6 @@ describe('useDaysSober', () => {
       // Due to Jest timer limitations, we verify the timer was set up and the value
       // is still valid (didn't break from the timer logic)
       expect(result.current.daysSober).toBeGreaterThanOrEqual(initialDaysSober);
-      expect(result.current.daysSober).toBeDefined();
     });
   });
 });

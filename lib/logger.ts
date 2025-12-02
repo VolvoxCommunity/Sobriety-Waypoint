@@ -81,6 +81,9 @@ function captureErrorToSentry(message: string, error: Error, metadata?: LogMetad
     });
   } catch {
     // Silently fail if Sentry not initialized
+    if (__DEV__) {
+      console.debug('[Logger] Sentry not initialized, error not captured');
+    }
   }
 }
 

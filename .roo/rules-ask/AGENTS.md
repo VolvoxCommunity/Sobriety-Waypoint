@@ -8,7 +8,7 @@
 - All logs route through universal logger to Sentry breadcrumbs (see `lib/logger.ts`)
 - Privacy scrubbing configured in `lib/sentry-privacy.ts` for PII protection
 - Testing requires `renderWithProviders` wrapper for AuthContext/ThemeContext
-- File organization requires section comments: `// =============================================================================
+- File organization requires section comments: `// ============================================================================= // SECTION NAME // =============================================================================`
 - Project uses pnpm package manager (not npm/yarn)
 - Expo Router v6 with typed routes (file-based routing in `app/`)
 - Sentry integration wraps entire app for crash reporting in all environments

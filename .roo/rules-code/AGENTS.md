@@ -3,7 +3,7 @@
 - Always use the universal logger from `lib/logger.ts` instead of console methods (ESLint enforces this)
 - Database operations must use the typed Supabase client with types from `types/database.ts`
 - All imports must use the `@/` path alias (configured in tsconfig.json)
-- File organization requires section comments: `// =============================================================================
+- File organization requires section comments:
 - Components must use `StyleSheet.create()` for styles (no inline style objects)
 - Supabase client is a singleton Proxy that lazy-initializes to prevent SSR issues
 - Auth state changes must be handled through AuthContext, not direct Supabase auth calls
