@@ -72,7 +72,7 @@ function captureErrorToSentry(message: string, error: Error, metadata?: LogMetad
 
     Sentry.captureException(error, {
       tags: {
-        category: typeof category === 'string' ? category : 'error',
+        category: typeof category === 'string' ? category : 'uncategorized',
       },
       extra: {
         message,
