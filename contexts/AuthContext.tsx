@@ -433,17 +433,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (result.type === 'success' && result.url) {
-          const url = new URL(result.url);
-
-          let access_token = url.searchParams.get('access_token');
-          let refresh_token = url.searchParams.get('refresh_token');
-
-          // Fallback to hash fragment (Supabase's default for implicit grant)
-          if (!access_token || !refresh_token) {
-            const hashParams = new URLSearchParams(url.hash.substring(1));
-            access_token = hashParams.get('access_token');
-            refresh_token = hashParams.get('refresh_token');
-          }
+          // Use the helper function to extract tokens consistently
+          const { access_token, refresh_token } = extractTokensFromUrl(result.url);
 
           if (access_token && refresh_token) {
             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
