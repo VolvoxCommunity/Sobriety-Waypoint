@@ -202,6 +202,7 @@ export default function ProfileScreen() {
         const { data: allTasks } = await supabase
           .from('tasks')
           .select('sponsee_id, status')
+          .eq('sponsor_id', profile.id)
           .in('sponsee_id', sponseeIds);
 
         // Aggregate stats client-side
