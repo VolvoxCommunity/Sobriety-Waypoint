@@ -449,9 +449,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               throw sessionError;
             }
 
-            if (sessionData.user) {
-              await createOAuthProfileIfNeeded(sessionData.user);
-            }
+            // Profile creation is handled by onAuthStateChange listener (line 350).
+            // Calling it here would cause a race condition and potential deadlock
+            // since setSession() hasn't fully completed yet.
           } else {
             logger.warn('Google Auth tokens not found in redirect', {
               category: LogCategory.AUTH,
