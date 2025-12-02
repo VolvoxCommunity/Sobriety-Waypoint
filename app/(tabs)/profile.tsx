@@ -33,7 +33,7 @@ import { logger, LogCategory } from '@/lib/logger';
 import { formatDateWithTimezone, parseDateAsLocal, DEVICE_TIMEZONE } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
-// Component for displaying sponsee days sober using the hook
+// Component for displaying sponsee days sober using hook
 function SponseeDaysDisplay({
   relationship,
   theme,
@@ -86,7 +86,7 @@ function SponseeDaysDisplay({
   );
 }
 
-// Component for displaying sponsor days sober using the hook
+// Component for displaying sponsor days sober using hook
 function SponsorDaysDisplay({
   relationship,
   theme,
@@ -564,7 +564,7 @@ export default function ProfileScreen() {
       if (Platform.OS === 'web') {
         window.alert('Sobriety date cannot be in the future');
       } else {
-        Alert.alert('Invalid Date', 'Sobriety date cannot be in the future');
+        Alert.alert('Invalid Date', 'Sobriety date cannot be in future');
       }
       return;
     }
@@ -631,9 +631,6 @@ export default function ProfileScreen() {
    */
   const submitSlipUp = async () => {
     if (!profile) return;
-
-    // Get user's timezone with fallback to device timezone
-    const userTimezone = profile.timezone || DEVICE_TIMEZONE;
 
     const today = new Date();
     today.setHours(23, 59, 59, 999);
