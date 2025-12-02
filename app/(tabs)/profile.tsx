@@ -656,13 +656,13 @@ export default function ProfileScreen() {
     }
 
     const confirmMessage =
-      'This will log your slip up and restart your current streak. Your sponsor will be notified. Continue?';
+      'This will log your slip-up and restart your current streak. Your sponsor will be notified. Continue?';
 
     const confirmed =
       Platform.OS === 'web'
         ? window.confirm(confirmMessage)
         : await new Promise<boolean>((resolve) => {
-            Alert.alert('Confirm Slip Up Log', confirmMessage, [
+            Alert.alert('Confirm Slip-Up Log', confirmMessage, [
               {
                 text: 'Cancel',
                 style: 'cancel',
