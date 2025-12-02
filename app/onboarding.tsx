@@ -25,7 +25,6 @@ import {
   parseDateAsLocal,
   getUserTimezone,
 } from '@/lib/date';
-import { logger, LogCategory } from '@/lib/logger';
 
 /**
  * Renders the two-step onboarding flow used after authentication to collect the user's name and sobriety date.
@@ -148,15 +147,9 @@ export default function OnboardingScreen() {
       // profile state contains the expected fields.
       await refreshProfile();
 
-      // Log a warning if profile is still incomplete after refresh - helps diagnose timeout issues
-      if (!profile?.sobriety_date || !profile?.first_name || !profile?.last_initial) {
-        logger.warn('Profile incomplete after refresh - may timeout', {
-          category: LogCategory.UI,
-          hasSobrietyDate: !!profile?.sobriety_date,
-          hasFirstName: !!profile?.first_name,
-          hasLastInitial: !!profile?.last_initial,
-        });
-      }
+      // Note: We can't check profile state here due to React's async state updates.
+      // The profile variable in this closure still holds the old value - the actual
+      // completeness check happens in the useEffect that watches awaitingProfileUpdate.
 
       // Signal that we're ready to navigate once React processes the profile update
       // The useEffect watching awaitingProfileUpdate will handle the actual navigation
