@@ -71,10 +71,13 @@ function RootLayoutNav() {
 
     // Profile is complete when user has provided their name and sobriety date during onboarding
     // Check for non-null values (null indicates user hasn't completed onboarding).
-    // Note: Validation against placeholder values ('User', 'U') was removed,
-    // as OAuth profiles are now assumed to never set these placeholders.
+    // Also validate against placeholder values ('User', 'U') to catch legacy data or edge cases.
     const hasName =
-      profile !== null && profile.first_name !== null && profile.last_initial !== null;
+      profile !== null &&
+      profile.first_name !== null &&
+      profile.last_initial !== null &&
+      profile.first_name !== 'User' &&
+      profile.last_initial !== 'U';
     const hasSobrietyDate = !!profile?.sobriety_date;
     const isProfileComplete = hasName && hasSobrietyDate;
 
