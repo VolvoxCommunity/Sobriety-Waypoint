@@ -97,9 +97,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!existingProfile) {
       // Extract name from OAuth metadata if available, otherwise leave null for onboarding
       const fullName = user.user_metadata?.full_name;
-      const nameParts = fullName?.split(' ');
+      const nameParts = fullName?.split(' ').filter(Boolean);
       const firstName = nameParts?.[0] || null;
-      const lastInitial = nameParts?.[nameParts.length - 1]?.[0]?.toUpperCase() || null;
+      // For single-word names (e.g., "Madonna"), use the first letter as last initial
+      // For multi-word names, use the first letter of the last word
+      const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
+      const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
 
       const { error: profileError } = await supabase.from('profiles').insert({
         id: user.id,

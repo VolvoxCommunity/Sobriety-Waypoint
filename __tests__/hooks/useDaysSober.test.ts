@@ -124,9 +124,10 @@ describe('useDaysSober', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      // Should always be >= 0 due to Math.max guard
-      expect(result.current.daysSober).toBeGreaterThanOrEqual(0);
-      expect(result.current.journeyDays).toBeGreaterThanOrEqual(0);
+      // With sobriety date of 2024-01-01 and current date 2024-04-10, expect 100 days
+      // This also validates that the Math.max(0, days) guard works correctly
+      expect(result.current.daysSober).toBe(100);
+      expect(result.current.journeyDays).toBe(100);
     });
 
     it('uses calendar days in device timezone, not UTC', async () => {
@@ -162,7 +163,7 @@ describe('useDaysSober', () => {
       });
 
       // Should be exactly 100 days (Jan 1 to Apr 10 = 100 calendar days)
-      // Jan 2-31: 30 days + Feb: 29 days (leap year) + Mar: 31 days + Apr 1-10: 10 days = 100
+      // Breakdown: Jan 2-31 (30 days) + Feb 1-29 (29 days, leap year) + Mar 1-31 (31 days) + Apr 1-10 (10 days) = 100
       expect(result.current.daysSober).toBe(100);
       expect(result.current.journeyDays).toBe(100);
     });
@@ -258,8 +259,8 @@ describe('useDaysSober', () => {
     // need to create separate test files or use a different mocking strategy.
     //
     // The current mockProfile (America/New_York) provides adequate coverage for
-    // timezone-aware calculations, as the core logic in lib/date.ts is tested
-    // separately with different timezone inputs.
+    // timezone-aware calculations. Additional timezone unit tests for lib/date.ts
+    // functions could be added in a separate __tests__/lib/date.test.ts file.
 
     it('uses profile timezone for calculations (currently America/New_York)', async () => {
       // Set current date to test timezone-specific behavior
@@ -289,16 +290,19 @@ describe('useDaysSober', () => {
         expect(result.current.loading).toBe(false);
       });
 
+      // At April 11 03:00 UTC = April 10 23:00 EDT, days since Jan 1 = 100
+      expect(result.current.daysSober).toBe(100);
       const initialDaysSober = result.current.daysSober;
 
       // Fast-forward 2 hours - should cross midnight in America/New_York
+      // April 11 05:00 UTC = April 11 01:00 EDT (past midnight)
       act(() => {
         jest.advanceTimersByTime(2 * 60 * 60 * 1000);
       });
 
-      // Should have triggered recalculation at local midnight
-      expect(result.current.daysSober).toBeDefined();
-      expect(result.current.daysSober).toBeGreaterThanOrEqual(initialDaysSober);
+      // After crossing midnight, day count should increment to 101
+      // The hook should have triggered a recalculation at local midnight
+      expect(result.current.daysSober).toBe(initialDaysSober + 1);
     });
   });
 });

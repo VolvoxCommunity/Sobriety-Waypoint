@@ -626,7 +626,7 @@ export default function ProfileScreen() {
   };
 
   /**
-   * Submits a slip up record with timezone-aware date formatting.
+   * Submits a slip-up record with timezone-aware date formatting.
    * Uses the user's stored timezone if available, otherwise falls back to device timezone.
    */
   const submitSlipUp = async () => {
@@ -637,18 +637,18 @@ export default function ProfileScreen() {
 
     if (slipUpDate > today) {
       if (Platform.OS === 'web') {
-        window.alert('Slip up date cannot be in the future');
+        window.alert('Slip-up date cannot be in the future');
       } else {
-        Alert.alert('Invalid Date', 'Slip up date cannot be in the future');
+        Alert.alert('Invalid Date', 'Slip-up date cannot be in the future');
       }
       return;
     }
 
     if (recoveryDate < slipUpDate) {
       if (Platform.OS === 'web') {
-        window.alert('Recovery restart date must be on or after the slip up date');
+        window.alert('Recovery restart date must be on or after the slip-up date');
       } else {
-        Alert.alert('Invalid Date', 'Recovery restart date must be on or after the slip up date');
+        Alert.alert('Invalid Date', 'Recovery restart date must be on or after the slip-up date');
       }
       return;
     }
@@ -704,7 +704,7 @@ export default function ProfileScreen() {
           user_id: rel.sponsor_id,
           type: 'milestone',
           title: 'Sponsee Slip Up',
-          content: `${profile.first_name} ${profile.last_initial}. has logged a slip up and restarted their recovery journey.`,
+          content: `${profile.first_name} ${profile.last_initial}. has logged a slip-up and restarted their recovery journey.`,
           data: {
             sponsee_id: profile.id,
             slip_up_date: slipUpDate.toISOString(),
@@ -719,19 +719,19 @@ export default function ProfileScreen() {
 
       if (Platform.OS === 'web') {
         window.alert(
-          'Your slip up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
+          'Your slip-up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
         );
       } else {
         Alert.alert(
-          'Slip Up Logged',
-          'Your slip up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
+          'Slip-Up Logged',
+          'Your slip-up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
         );
       }
     } catch (error: unknown) {
-      logger.error('Slip up logging failed', error as Error, {
+      logger.error('Slip-up logging failed', error as Error, {
         category: LogCategory.DATABASE,
       });
-      const message = error instanceof Error ? error.message : 'Failed to log slip up.';
+      const message = error instanceof Error ? error.message : 'Failed to log slip-up.';
       if (Platform.OS === 'web') {
         window.alert(message);
       } else {
