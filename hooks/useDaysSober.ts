@@ -52,11 +52,9 @@ export interface DaysSoberResult {
 function getMillisecondsUntilMidnight(timezone: string = DEVICE_TIMEZONE): number {
   const now = new Date();
 
-  // Get current time in the target timezone
-  const zonedNow = new TZDate(now, timezone);
-
-  // Calculate tomorrow's date string in the target timezone (immutable approach)
-  const tomorrowDateStr = format(addDays(zonedNow, 1), 'yyyy-MM-dd');
+  // Calculate tomorrow's date string in the target timezone directly
+  // This avoids the double timezone conversion issue by using format with the TZDate
+  const tomorrowDateStr = format(new TZDate(addDays(now, 1), timezone), 'yyyy-MM-dd');
 
   // Create midnight in the timezone as an ISO string, then convert to UTC
   // This avoids the Date constructor's system timezone interpretation

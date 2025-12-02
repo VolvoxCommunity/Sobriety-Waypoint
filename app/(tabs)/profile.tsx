@@ -657,7 +657,7 @@ export default function ProfileScreen() {
     }
 
     const confirmMessage =
-      'This will log your slip up and update your sobriety date. Your sponsor will be notified. Continue?';
+      'This will log your slip up and restart your current streak. Your sponsor will be notified. Continue?';
 
     const confirmed =
       Platform.OS === 'web'
@@ -691,12 +691,10 @@ export default function ProfileScreen() {
 
       if (slipUpError) throw slipUpError;
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ sobriety_date: formatDateWithTimezone(recoveryDate, userTimezone) })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
+      // NOTE: We intentionally do NOT update profile.sobriety_date here.
+      // The original sobriety_date represents when the user's recovery journey began
+      // and should remain unchanged. The slip_ups table stores recovery_restart_date
+      // which useDaysSober uses to calculate the current streak.
 
       const { data: sponsors } = await supabase
         .from('sponsor_sponsee_relationships')
@@ -1023,9 +1021,9 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={formatDateWithTimezone(slipUpDate, profile?.timezone)}
-                  max={formatDateWithTimezone(new Date(), profile?.timezone)}
-                  onChange={(e) => setSlipUpDate(new Date(e.target.value))}
+                  value={formatLocalDate(slipUpDate)}
+                  max={formatLocalDate(new Date())}
+                  onChange={(e) => setSlipUpDate(parseDateAsLocal(e.target.value))}
                   style={{
                     padding: 12,
                     fontSize: 16,
@@ -1070,9 +1068,9 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={formatDateWithTimezone(recoveryDate, profile?.timezone)}
-                  min={formatDateWithTimezone(slipUpDate, profile?.timezone)}
-                  onChange={(e) => setRecoveryDate(new Date(e.target.value))}
+                  value={formatLocalDate(recoveryDate)}
+                  min={formatLocalDate(slipUpDate)}
+                  onChange={(e) => setRecoveryDate(parseDateAsLocal(e.target.value))}
                   style={{
                     padding: 12,
                     fontSize: 16,
