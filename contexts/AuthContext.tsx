@@ -194,20 +194,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq('id', user.id)
       .maybeSingle();
 
+    // Track whether we should attempt profile creation
+    let shouldCreateProfile = false;
+    let queryFailed = false;
+
     if (queryError) {
       logger.error('Failed to check for existing profile', queryError as Error, {
         category: LogCategory.DATABASE,
         userId: user.id,
       });
-      // Query failed - attempt upsert anyway to avoid leaving user without profile.
-      // If profile already exists, the conflict on 'id' primary key will be ignored.
-      // This prevents the "infinite onboarding loop" where users are authenticated
-      // but have no profile row, causing UPDATE operations to affect zero rows.
+      // Query failed (possibly RLS or network) - attempt INSERT anyway.
+      // We'll handle duplicate key errors explicitly below.
+      queryFailed = true;
+      shouldCreateProfile = true;
+    } else if (!existingProfile) {
+      // Query succeeded and profile doesn't exist - create it
+      shouldCreateProfile = true;
     }
 
-    // Create profile if we confirmed it doesn't exist, OR if the query failed
-    // (in which case we attempt insert and rely on conflict handling)
-    if (!existingProfile) {
+    if (shouldCreateProfile) {
       // Extract name from OAuth metadata if available, otherwise leave null for onboarding
       const fullName = user.user_metadata?.full_name;
       const nameParts = fullName?.split(' ').filter(Boolean);
@@ -219,26 +224,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
       const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
 
-      const { error: profileError } = await supabase.from('profiles').upsert(
-        {
-          id: user.id,
-          email: user.email || '',
-          first_name: firstName,
-          last_initial: lastInitial,
-          timezone: DEVICE_TIMEZONE,
-        },
-        {
-          // Only insert if row doesn't exist; don't update existing profiles
-          // This preserves any user-entered data from onboarding
-          onConflict: 'id',
-          ignoreDuplicates: true,
-        }
-      );
+      // Use plain INSERT instead of upsert. This avoids RLS issues where
+      // ignoreDuplicates: true requires SELECT permission to detect conflicts.
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: user.id,
+        email: user.email || '',
+        first_name: firstName,
+        last_initial: lastInitial,
+        timezone: DEVICE_TIMEZONE,
+      });
 
       if (profileError) {
+        // PostgreSQL error code 23505 = unique_violation (profile already exists)
+        // This is expected when query failed but profile actually exists.
+        // Treat as success since the goal is "ensure profile exists".
+        const isUniqueViolation = profileError.code === '23505';
+
+        if (isUniqueViolation && queryFailed) {
+          // Query failed but profile exists - this is fine, profile creation not needed
+          logger.info('Profile already exists (detected via unique constraint)', {
+            category: LogCategory.DATABASE,
+            userId: user.id,
+          });
+          return;
+        }
+
+        // Actual error - log and throw
         logger.error('Failed to create OAuth profile', profileError as Error, {
           category: LogCategory.DATABASE,
           userId: user.id,
+          errorCode: profileError.code,
         });
         throw profileError;
       }

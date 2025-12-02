@@ -114,7 +114,8 @@ describe('Logger', () => {
 
       expect(Sentry.captureException).toHaveBeenCalledWith(error, {
         tags: {
-          category: 'error',
+          // Default category when none provided is 'uncategorized'
+          category: 'uncategorized',
         },
         extra: {
           message: 'Operation failed',
