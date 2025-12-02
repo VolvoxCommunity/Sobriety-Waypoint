@@ -352,10 +352,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           try {
-            // Only create profile on sign-in events, not token refresh.
-            // createOAuthProfileIfNeeded is idempotent (checks existence first),
-            // but calling it on every TOKEN_REFRESHED event adds unnecessary DB queries.
-            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+            // Create profile on sign-in and session recovery events, but not token refresh.
+            // INITIAL_SESSION fires on app restart when recovering a stored session - we must
+            // handle this case because profile creation could have been interrupted on a previous
+            // sign-in (e.g., app crash, network failure). Without this, users would be stuck
+            // on onboarding since update() on a non-existent profile affects zero rows.
+            // createOAuthProfileIfNeeded is idempotent (checks existence first).
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
               await createOAuthProfileIfNeeded(session.user);
               // Check mount status after async operation to avoid state updates on unmounted component
               if (!isMountedRef.current) return;
