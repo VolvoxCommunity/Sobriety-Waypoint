@@ -23,9 +23,8 @@ import {
   getDateDiffInDays,
   formatDateWithTimezone,
   parseDateAsLocal,
-  DEVICE_TIMEZONE,
+  getUserTimezone,
 } from '@/lib/date';
-import type { Profile } from '@/types/database';
 
 /**
  * OnboardingScreen handles the initial user setup flow after authentication.
@@ -58,7 +57,7 @@ export default function OnboardingScreen() {
   const [sobrietyDate, setSobrietyDate] = useState(
     // Parse stored date in user's timezone (or device timezone as fallback)
     profile?.sobriety_date
-      ? parseDateAsLocal(profile.sobriety_date, profile?.timezone ?? DEVICE_TIMEZONE)
+      ? parseDateAsLocal(profile.sobriety_date, getUserTimezone(profile))
       : new Date()
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -83,23 +82,11 @@ export default function OnboardingScreen() {
     }
   };
 
-  /**
-   * Gets the user's timezone with fallback to device timezone.
-   *
-   * @param profile - The user profile object
-   * @returns The user's stored timezone or device timezone as fallback
-   */
-  const getUserTimezone = (profile?: Profile | null): string => {
-    // Use stored timezone if available, otherwise fallback to device timezone
-    return profile?.timezone || DEVICE_TIMEZONE;
-  };
-
   const handleComplete = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      // Get the user's timezone with fallback to device timezone
       const userTimezone = getUserTimezone(profile);
 
       const updateData: {

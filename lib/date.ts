@@ -4,10 +4,17 @@
 
 import { TZDate } from '@date-fns/tz';
 import { format } from 'date-fns';
+import type { Profile } from '@/types/database';
 
 // =============================================================================
 // Constants
 // =============================================================================
+
+/**
+ * Number of milliseconds in one day.
+ * Used for converting between millisecond timestamps and day counts.
+ */
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Device timezone, cached at module load time for performance.
@@ -27,11 +34,37 @@ export const DEVICE_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // =============================================================================
 
 /**
+ * Gets the user's timezone with fallback to device timezone.
+ *
+ * This is a centralized helper to ensure consistent timezone fallback behavior
+ * across the application. Use this instead of manually checking `profile?.timezone || DEVICE_TIMEZONE`.
+ *
+ * @param profile - The user profile object (can be null/undefined)
+ * @returns The user's stored timezone or device timezone as fallback
+ *
+ * @example
+ * ```ts
+ * const timezone = getUserTimezone(profile);
+ * const dateStr = formatDateWithTimezone(date, timezone);
+ * ```
+ */
+export function getUserTimezone(profile?: Profile | null): string {
+  return profile?.timezone ?? DEVICE_TIMEZONE;
+}
+
+/**
  * Extracts the date portion (YYYY-MM-DD) from a Date object in a specific timezone.
  *
  * @param date - The Date object to extract from
  * @param timezone - IANA timezone string (e.g., 'America/Los_Angeles')
  * @returns Date string in YYYY-MM-DD format
+ *
+ * @example
+ * ```ts
+ * const date = new Date('2024-01-01T23:00:00Z'); // 11 PM UTC
+ * const dateStr = getDateStringInTimezone(date, 'America/Los_Angeles');
+ * // Returns: "2024-01-01" (3 PM PST)
+ * ```
  */
 function getDateStringInTimezone(date: Date, timezone: string): string {
   return format(new TZDate(date, timezone), 'yyyy-MM-dd');
@@ -93,8 +126,9 @@ export function formatDateWithTimezone(date: Date, timezone: string = DEVICE_TIM
  * ```
  */
 export function parseDateAsLocal(dateStr: string, timezone: string = DEVICE_TIMEZONE): Date {
-  // Create a TZDate at midnight in the specified timezone, then convert to regular Date
-  return new TZDate(`${dateStr}T00:00:00`, timezone);
+  // Create a TZDate at midnight in the specified timezone
+  // Note: TZDate extends Date, so it's compatible with Date interfaces
+  return new Date(new TZDate(`${dateStr}T00:00:00`, timezone).getTime());
 }
 
 /**
@@ -123,9 +157,9 @@ function daysBetweenDateStrings(startDateStr: string, endDateStr: string): numbe
   const endUtc = Date.UTC(endYear, endMonth - 1, endDay);
 
   // Calculate difference in days
-  // Math.round handles potential floating-point precision issues in division
-  const msPerDay = 1000 * 60 * 60 * 24;
-  return Math.round((endUtc - startUtc) / msPerDay);
+  // Use Math.floor to explicitly truncate; division should yield an integer for UTC midnight dates.
+  // Any floating-point precision issues are handled by the floor operation.
+  return Math.floor((endUtc - startUtc) / MS_PER_DAY);
 }
 
 /**

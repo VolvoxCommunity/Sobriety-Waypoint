@@ -105,8 +105,8 @@ describe('useDaysSober', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      // 39 days from March 2 to April 10 (inclusive of both start and end days)
-      // March 2 to April 10 = 39 calendar days
+      // 39 days elapsed from March 2 to April 10 (difference between dates, not inclusive of both endpoints)
+      // March: 31 - 2 = 29 days remaining + April 1-10 = 10 days = 39 days elapsed
       expect(result.current.daysSober).toBe(39);
       // Journey days still from original date (100 days)
       expect(result.current.journeyDays).toBe(100);
@@ -176,8 +176,9 @@ describe('useDaysSober', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      // Should be exactly 100 days (Jan 1 to Apr 10 = 100 calendar days)
-      // Breakdown: Jan 2-31 (30 days) + Feb 1-29 (29 days, leap year) + Mar 1-31 (31 days) + Apr 1-10 (10 days) = 100
+      // Should be exactly 100 days elapsed (Jan 1 to Apr 10 = 100 calendar days, exclusive of start date)
+      // Breakdown: Jan (31 days) + Feb (29 days, leap year) + Mar (31 days) + Apr 1-10 (9 days to reach Apr 10) = 100
+      // Note: This is the difference between dates, not counting Jan 1 itself
       expect(result.current.daysSober).toBe(100);
       expect(result.current.journeyDays).toBe(100);
     });

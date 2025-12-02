@@ -64,8 +64,8 @@ function getMillisecondsUntilMidnight(timezone: string = DEVICE_TIMEZONE): numbe
   const now = new Date();
 
   // Calculate tomorrow's date string in the target timezone directly
-  // This avoids the double timezone conversion issue by using format with the TZDate
-  const tomorrowDateStr = format(new TZDate(addDays(now, 1), timezone), 'yyyy-MM-dd');
+  // Create TZDate first, then add days to ensure timezone-aware date arithmetic
+  const tomorrowDateStr = format(addDays(new TZDate(now, timezone), 1), 'yyyy-MM-dd');
 
   // Create midnight in the timezone as an ISO string, then convert to UTC
   // This avoids the Date constructor's system timezone interpretation

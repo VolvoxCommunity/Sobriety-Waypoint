@@ -31,6 +31,18 @@ export interface Profile {
   last_initial: string | null;
   phone?: string;
   avatar_url?: string;
+  /**
+   * The date when the user's recovery journey began (YYYY-MM-DD format).
+   *
+   * @remarks
+   * **IMPORTANT**: This field represents the original journey start date and is
+   * NEVER updated when a slip-up occurs. Slip-ups are tracked separately in the
+   * `slip_ups` table with their own `recovery_restart_date`. The `useDaysSober`
+   * hook uses both fields to calculate journey duration and current streak.
+   *
+   * - `sobriety_date`: Original journey start (immutable after onboarding)
+   * - `slip_ups.recovery_restart_date`: Current streak start (when slip-up exists)
+   */
   sobriety_date?: string;
   bio?: string;
   /**

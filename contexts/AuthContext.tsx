@@ -99,8 +99,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const fullName = user.user_metadata?.full_name;
       const nameParts = fullName?.split(' ').filter(Boolean);
       const firstName = nameParts?.[0] || null;
-      // For single-word names (e.g., "Madonna"), use the first letter as last initial
-      // For multi-word names, use the first letter of the last word
+      // Determine last initial:
+      // - Multi-word names (e.g., "John Doe"): use first letter of last word → "D"
+      // - Single-word names (e.g., "Madonna"): use first letter of first name → "M"
+      // - No name: null (collected during onboarding)
       const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
       const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
 

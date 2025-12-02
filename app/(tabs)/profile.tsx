@@ -30,7 +30,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
-import { formatDateWithTimezone, parseDateAsLocal, DEVICE_TIMEZONE } from '@/lib/date';
+import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
 // Component for displaying sponsee days sober using hook
@@ -157,7 +157,7 @@ export default function ProfileScreen() {
   }>({});
 
   // User's timezone (stored in profile) with device timezone as fallback
-  const userTimezone = profile?.timezone ?? DEVICE_TIMEZONE;
+  const userTimezone = getUserTimezone(profile);
 
   const fetchRelationships = useCallback(async () => {
     if (!profile) return;
@@ -566,7 +566,7 @@ export default function ProfileScreen() {
       if (Platform.OS === 'web') {
         window.alert('Sobriety date cannot be in the future');
       } else {
-        Alert.alert('Invalid Date', 'Sobriety date cannot be in future');
+        Alert.alert('Invalid Date', 'Sobriety date cannot be in the future');
       }
       return;
     }
@@ -593,7 +593,7 @@ export default function ProfileScreen() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          sobriety_date: formatDateWithTimezone(newDate, profile.timezone || DEVICE_TIMEZONE),
+          sobriety_date: formatDateWithTimezone(newDate, userTimezone),
         })
         .eq('id', profile.id);
 
@@ -656,7 +656,7 @@ export default function ProfileScreen() {
     }
 
     const confirmMessage =
-      'This will log your slip-up and restart your current streak. Your sponsor will be notified. Continue?';
+      'This will log your slip up and restart your current streak. Your sponsor will be notified. Continue?';
 
     const confirmed =
       Platform.OS === 'web'
@@ -690,10 +690,12 @@ export default function ProfileScreen() {
 
       if (slipUpError) throw slipUpError;
 
-      // NOTE: We intentionally do NOT update profile.sobriety_date here.
-      // The original sobriety_date represents when the user's recovery journey began
-      // and should remain unchanged. The slip_ups table stores recovery_restart_date
-      // which useDaysSober uses to calculate the current streak.
+      // IMPORTANT BEHAVIORAL CHANGE:
+      // We intentionally do NOT update profile.sobriety_date here.
+      // Previously, sobriety_date was updated on slip-ups to track 'current streak start'.
+      // Now, sobriety_date represents when the user's recovery journey began (immutable).
+      // The slip_ups table stores recovery_restart_date which useDaysSober uses to
+      // calculate the current streak. See Profile.sobriety_date in types/database.ts.
 
       const { data: sponsors } = await supabase
         .from('sponsor_sponsee_relationships')
