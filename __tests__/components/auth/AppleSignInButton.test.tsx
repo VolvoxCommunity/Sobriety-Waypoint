@@ -391,9 +391,14 @@ describe('AppleSignInButton', () => {
 
       fireEvent.press(screen.getByTestId('apple-sign-in-button'));
 
-      // Wait a bit to ensure no error callback
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for cancellation to be logged (proves the async operation completed)
+      await waitFor(() => {
+        expect(mockLoggerInfo).toHaveBeenCalledWith('Apple Sign In cancelled by user', {
+          category: 'auth',
+        });
+      });
 
+      // Now verify onError was not called
       expect(onError).not.toHaveBeenCalled();
     });
 
@@ -406,9 +411,14 @@ describe('AppleSignInButton', () => {
 
       fireEvent.press(screen.getByTestId('apple-sign-in-button'));
 
-      // Wait a bit to ensure no success callback
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for cancellation to be logged (proves the async operation completed)
+      await waitFor(() => {
+        expect(mockLoggerInfo).toHaveBeenCalledWith('Apple Sign In cancelled by user', {
+          category: 'auth',
+        });
+      });
 
+      // Now verify onSuccess was not called
       expect(onSuccess).not.toHaveBeenCalled();
     });
 

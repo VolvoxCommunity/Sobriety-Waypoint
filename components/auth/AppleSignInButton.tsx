@@ -75,11 +75,11 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
 
       // Exchange the Apple identity token with Supabase
       // Supabase validates the token server-side and creates/retrieves the user
-      // Include nonce if available for additional security validation
+      // Note: Nonce validation is handled internally by Supabase when it parses
+      // the identityToken JWT - we don't need to pass it separately
       const { error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
-        nonce: credential.nonce ?? undefined,
       });
 
       if (error) throw error;

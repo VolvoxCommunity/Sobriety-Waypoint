@@ -149,6 +149,8 @@ export default function LoginScreen() {
           {/* Apple Sign In - only renders on iOS */}
           <AppleSignInButton
             onError={(error) => {
+              logger.error('Apple sign in failed', error, { category: LogCategory.AUTH });
+              // AppleSignInButton only renders on iOS, so Alert.alert is safe here
               Alert.alert('Error', error.message);
             }}
           />
