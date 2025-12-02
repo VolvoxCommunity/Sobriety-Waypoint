@@ -22,11 +22,14 @@ import {
   Sun,
   Monitor,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Shield,
   FileText,
   Github,
   Trash2,
   X,
+  AlertTriangle,
 } from 'lucide-react-native';
 import { logger, LogCategory } from '@/lib/logger';
 import packageJson from '../package.json';
@@ -67,6 +70,7 @@ export default function SettingsScreen() {
   const { theme, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDangerZoneExpanded, setIsDangerZoneExpanded] = useState(false);
 
   /**
    * Handles user sign out with platform-specific confirmations.
@@ -366,29 +370,49 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.dangerSectionTitle}>Danger Zone</Text>
-          <View style={styles.dangerCard}>
-            <Text style={styles.dangerDescription}>
-              Permanently delete your account and all associated data. This action cannot be undone.
-            </Text>
-            <TouchableOpacity
-              style={[styles.deleteAccountButton, isDeleting && styles.buttonDisabled]}
-              onPress={handleDeleteAccount}
-              disabled={isDeleting}
-              accessibilityRole="button"
-              accessibilityLabel="Delete your account permanently"
-              accessibilityState={{ disabled: isDeleting }}
-            >
-              {isDeleting ? (
-                <ActivityIndicator size="small" color={theme.white} />
-              ) : (
-                <>
-                  <Trash2 size={20} color={theme.white} />
-                  <Text style={styles.deleteAccountText}>Delete Account</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.dangerZoneHeader,
+              isDangerZoneExpanded && styles.dangerZoneHeaderExpanded,
+            ]}
+            onPress={() => setIsDangerZoneExpanded(!isDangerZoneExpanded)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: isDangerZoneExpanded }}
+            accessibilityLabel="Danger Zone section"
+            accessibilityHint="Double tap to expand or collapse"
+          >
+            <View style={styles.dangerZoneHeaderLeft}>
+              <AlertTriangle size={18} color={theme.danger} />
+              <Text style={styles.dangerSectionTitle}>DANGER ZONE</Text>
+            </View>
+            {isDangerZoneExpanded ? (
+              <ChevronUp size={20} color={theme.danger} />
+            ) : (
+              <ChevronDown size={20} color={theme.danger} />
+            )}
+          </TouchableOpacity>
+          {isDangerZoneExpanded && (
+            <View style={styles.dangerCard}>
+              <Text style={styles.dangerDescription}>
+                Permanently delete your account and all associated data. This action cannot be
+                undone.
+              </Text>
+              <TouchableOpacity
+                style={[styles.deleteAccountButton, isDeleting && styles.buttonDisabled]}
+                onPress={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color={theme.white} />
+                ) : (
+                  <>
+                    <Trash2 size={20} color={theme.white} />
+                    <Text style={styles.deleteAccountText}>Delete Account</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -563,22 +587,45 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontStyle: 'italic',
       opacity: 0.7,
     },
-    dangerSectionTitle: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.danger,
-      marginBottom: 12,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      marginLeft: 4,
-    },
-    dangerCard: {
+    dangerZoneHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       backgroundColor: theme.dangerLight,
       borderRadius: 16,
       padding: 16,
       borderWidth: 1,
       borderColor: theme.dangerBorder,
+    },
+    dangerZoneHeaderExpanded: {
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
+    },
+    dangerZoneHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    dangerSectionTitle: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: theme.danger,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    dangerCard: {
+      backgroundColor: theme.dangerLight,
+      borderBottomLeftRadius: 16,
+      borderBottomRightRadius: 16,
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
+      padding: 16,
+      paddingTop: 12,
+      borderWidth: 1,
+      borderTopWidth: 0,
+      borderColor: theme.dangerBorder,
+      marginTop: -1,
     },
     dangerDescription: {
       fontSize: 14,
