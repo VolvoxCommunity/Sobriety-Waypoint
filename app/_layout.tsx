@@ -71,7 +71,8 @@ function RootLayoutNav() {
     const inAuthScreen = segments[0] === 'login' || segments[0] === 'signup';
 
     // Profile is complete when user has provided their name and sobriety date during onboarding
-    const hasName = profile?.first_name !== null && profile?.last_initial !== null;
+    const hasName =
+      profile !== null && profile.first_name !== null && profile.last_initial !== null;
     const hasSobrietyDate = !!profile?.sobriety_date;
     const isProfileComplete = hasName && hasSobrietyDate;
 
