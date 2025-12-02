@@ -483,57 +483,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * Signs up a new user with email/password.
-   * Creates a basic profile with email and timezone.
+   * Profile creation is handled by onAuthStateChange listener (via createOAuthProfileIfNeeded)
+   * to avoid race conditions between signUp and the auth state change callback.
    * Name collection is handled during onboarding.
-   * Checks if a profile already exists before attempting to create one.
    *
    * @param email - User's email address
    * @param password - User's password
-   * @throws Error if signup or profile creation fails
+   * @throws Error if signup fails
    */
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
     });
     if (error) throw error;
-
-    if (data.user) {
-      // Check if profile already exists (could happen if user previously signed up)
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', data.user.id)
-        .maybeSingle();
-
-      if (existingProfile) {
-        // Profile already exists - this is OK, user might be re-signing up
-        logger.info('Profile already exists for user', {
-          category: LogCategory.AUTH,
-          userId: data.user.id,
-        });
-        return;
-      }
-
-      // Create new profile with null name fields (collected during onboarding)
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email: email,
-        first_name: null,
-        last_initial: null,
-        timezone: DEVICE_TIMEZONE,
-      });
-
-      if (profileError) {
-        // Profile creation failed - the user account exists but is incomplete
-        // Could attempt to delete the user, but auth.admin.deleteUser requires service role
-        logger.error('Profile creation failed during signup', profileError as Error, {
-          category: LogCategory.DATABASE,
-          userId: data.user.id,
-        });
-        throw new Error('Account created but profile setup failed. Please contact support.');
-      }
-    }
+    // Profile creation is handled by onAuthStateChange listener when SIGNED_IN event fires.
+    // This avoids race conditions where both signUp and onAuthStateChange try to create
+    // the profile simultaneously, causing duplicate key errors.
   };
 
   /**
