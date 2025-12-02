@@ -132,6 +132,48 @@ export function parseDateAsLocal(dateStr: string, timezone: string = DEVICE_TIME
 }
 
 /**
+ * Regex pattern to validate YYYY-MM-DD date format.
+ * Validates format only; actual date validity is checked separately.
+ */
+const DATE_STRING_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Validates a YYYY-MM-DD date string format and value.
+ *
+ * @param dateStr - Date string to validate
+ * @returns True if valid, false otherwise
+ *
+ * @example
+ * ```ts
+ * isValidDateString('2024-01-15'); // true
+ * isValidDateString('2024-13-45'); // false (invalid month/day)
+ * isValidDateString('invalid');    // false (wrong format)
+ * ```
+ */
+function isValidDateString(dateStr: string): boolean {
+  // Check format matches YYYY-MM-DD
+  if (!DATE_STRING_PATTERN.test(dateStr)) {
+    return false;
+  }
+
+  // Parse and validate the actual date values
+  const [year, month, day] = dateStr.split('-').map(Number);
+
+  // Basic range checks
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return false;
+  }
+
+  // Create a Date and verify it matches the input (handles invalid dates like Feb 30)
+  const testDate = new Date(Date.UTC(year, month - 1, day));
+  return (
+    testDate.getUTCFullYear() === year &&
+    testDate.getUTCMonth() === month - 1 &&
+    testDate.getUTCDate() === day
+  );
+}
+
+/**
  * Calculates the number of days between two YYYY-MM-DD date strings.
  *
  * Uses UTC dates to avoid any system timezone interference. This ensures
@@ -140,6 +182,7 @@ export function parseDateAsLocal(dateStr: string, timezone: string = DEVICE_TIME
  * @param startDateStr - Start date in YYYY-MM-DD format
  * @param endDateStr - End date in YYYY-MM-DD format
  * @returns Number of calendar days between the dates (can be negative if end is before start)
+ * @throws Error if either date string is malformed or invalid
  *
  * @example
  * ```ts
@@ -148,6 +191,14 @@ export function parseDateAsLocal(dateStr: string, timezone: string = DEVICE_TIME
  * ```
  */
 function daysBetweenDateStrings(startDateStr: string, endDateStr: string): number {
+  // Validate input format and values
+  if (!isValidDateString(startDateStr)) {
+    throw new Error(`Invalid start date format: "${startDateStr}". Expected YYYY-MM-DD.`);
+  }
+  if (!isValidDateString(endDateStr)) {
+    throw new Error(`Invalid end date format: "${endDateStr}". Expected YYYY-MM-DD.`);
+  }
+
   // Parse date parts directly to avoid Date constructor timezone interpretation
   const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
   const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
