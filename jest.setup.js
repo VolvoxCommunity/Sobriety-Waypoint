@@ -75,6 +75,36 @@ jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
 }));
 
+// Mock expo-apple-authentication
+jest.mock('expo-apple-authentication', () => {
+  const React = require('react');
+  const { TouchableOpacity, Text } = require('react-native');
+
+  return {
+    signInAsync: jest.fn(),
+    AppleAuthenticationScope: {
+      FULL_NAME: 0,
+      EMAIL: 1,
+    },
+    AppleAuthenticationButtonType: {
+      SIGN_IN: 0,
+      CONTINUE: 1,
+      SIGN_UP: 2,
+    },
+    AppleAuthenticationButtonStyle: {
+      WHITE: 0,
+      WHITE_OUTLINE: 1,
+      BLACK: 2,
+    },
+    AppleAuthenticationButton: ({ onPress, ...props }) =>
+      React.createElement(
+        TouchableOpacity,
+        { testID: 'apple-auth-button', onPress, ...props },
+        React.createElement(Text, null, 'Sign in with Apple')
+      ),
+  };
+});
+
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

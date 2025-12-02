@@ -21,6 +21,24 @@ module.exports = defineConfig([
     },
   },
   {
+    files: ['jest.setup.js', '__tests__/**/*.{js,jsx,ts,tsx}', '**/*.test.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        test: 'readonly',
+        global: 'writable',
+        require: 'readonly',
+      },
+    },
+  },
+  {
     files: ['scripts/**/*.js'],
     languageOptions: {
       globals: {
