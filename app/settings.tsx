@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,10 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -46,6 +48,11 @@ import * as Application from 'expo-application';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { logger, LogCategory } from '@/lib/logger';
 import packageJson from '../package.json';
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // =============================================================================
 // Types
@@ -243,6 +250,21 @@ export default function SettingsScreen() {
     applyUpdate,
     isSupported: updatesSupported,
   } = useAppUpdates();
+  const insets = useSafeAreaInsets();
+
+  // Scroll position management for expand/collapse
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollPositionRef = useRef(0);
+
+  const toggleBuildInfo = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsBuildInfoExpanded((prev) => !prev);
+  }, []);
+
+  const toggleDangerZone = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsDangerZoneExpanded((prev) => !prev);
+  }, []);
 
   /**
    * Handles user sign out with platform-specific confirmations.
@@ -406,12 +428,12 @@ export default function SettingsScreen() {
     }
   };
 
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.outerContainer}>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <View style={styles.headerSpacer} accessibilityElementsHidden={true} />
           <Text style={styles.headerTitle}>Settings</Text>
@@ -425,7 +447,17 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 8 }]}
+          keyboardShouldPersistTaps="handled"
+          removeClippedSubviews={false}
+          scrollEventThrottle={16}
+          onScroll={(e) => {
+            scrollPositionRef.current = e.nativeEvent.contentOffset.y;
+          }}
+        >
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Appearance</Text>
             <View style={styles.card}>
@@ -635,11 +667,72 @@ export default function SettingsScreen() {
 
           <View style={styles.section}>
             <TouchableOpacity
+              style={styles.signOutButton}
+              onPress={handleSignOut}
+              accessibilityRole="button"
+              accessibilityLabel="Sign out of your account"
+            >
+              <LogOut size={20} color={theme.error} />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={[
+                styles.dangerZoneHeader,
+                isDangerZoneExpanded && styles.dangerZoneHeaderExpanded,
+              ]}
+              onPress={toggleDangerZone}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isDangerZoneExpanded }}
+              accessibilityLabel="Danger Zone section"
+              accessibilityHint="Double tap to expand or collapse"
+            >
+              <View style={styles.dangerZoneHeaderLeft}>
+                <AlertTriangle size={18} color={theme.danger} />
+                <Text style={styles.dangerSectionTitle}>DANGER ZONE</Text>
+              </View>
+              {isDangerZoneExpanded ? (
+                <ChevronUp size={20} color={theme.danger} />
+              ) : (
+                <ChevronDown size={20} color={theme.danger} />
+              )}
+            </TouchableOpacity>
+            <View style={{ maxHeight: isDangerZoneExpanded ? undefined : 0, overflow: 'hidden' }}>
+              <View style={styles.dangerCard}>
+                <Text style={styles.dangerDescription}>
+                  Permanently delete your account and all associated data. This action cannot be
+                  undone.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.deleteAccountButton, isDeleting && styles.buttonDisabled]}
+                  onPress={handleDeleteAccount}
+                  disabled={isDeleting}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete your account permanently"
+                  accessibilityState={{ disabled: isDeleting }}
+                >
+                  {isDeleting ? (
+                    <ActivityIndicator size="small" color={theme.white} />
+                  ) : (
+                    <>
+                      <Trash2 size={20} color={theme.white} />
+                      <Text style={styles.deleteAccountText}>Delete Account</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
               style={[
                 styles.buildInfoHeader,
                 isBuildInfoExpanded && styles.buildInfoHeaderExpanded,
               ]}
-              onPress={() => setIsBuildInfoExpanded(!isBuildInfoExpanded)}
+              onPress={toggleBuildInfo}
               accessibilityRole="button"
               accessibilityState={{ expanded: isBuildInfoExpanded }}
               accessibilityLabel="Build Information section"
@@ -655,7 +748,7 @@ export default function SettingsScreen() {
                 <ChevronDown size={20} color={theme.primary} />
               )}
             </TouchableOpacity>
-            {isBuildInfoExpanded && (
+            <View style={{ maxHeight: isBuildInfoExpanded ? undefined : 0, overflow: 'hidden' }}>
               <View style={styles.buildInfoCard}>
                 {/* App Version & Build Number */}
                 <View style={styles.buildInfoRow}>
@@ -834,68 +927,7 @@ export default function SettingsScreen() {
                   )}
                 </TouchableOpacity>
               </View>
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.signOutButton}
-              onPress={handleSignOut}
-              accessibilityRole="button"
-              accessibilityLabel="Sign out of your account"
-            >
-              <LogOut size={20} color={theme.error} />
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={[
-                styles.dangerZoneHeader,
-                isDangerZoneExpanded && styles.dangerZoneHeaderExpanded,
-              ]}
-              onPress={() => setIsDangerZoneExpanded(!isDangerZoneExpanded)}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: isDangerZoneExpanded }}
-              accessibilityLabel="Danger Zone section"
-              accessibilityHint="Double tap to expand or collapse"
-            >
-              <View style={styles.dangerZoneHeaderLeft}>
-                <AlertTriangle size={18} color={theme.danger} />
-                <Text style={styles.dangerSectionTitle}>DANGER ZONE</Text>
-              </View>
-              {isDangerZoneExpanded ? (
-                <ChevronUp size={20} color={theme.danger} />
-              ) : (
-                <ChevronDown size={20} color={theme.danger} />
-              )}
-            </TouchableOpacity>
-            {isDangerZoneExpanded && (
-              <View style={styles.dangerCard}>
-                <Text style={styles.dangerDescription}>
-                  Permanently delete your account and all associated data. This action cannot be
-                  undone.
-                </Text>
-                <TouchableOpacity
-                  style={[styles.deleteAccountButton, isDeleting && styles.buttonDisabled]}
-                  onPress={handleDeleteAccount}
-                  disabled={isDeleting}
-                  accessibilityRole="button"
-                  accessibilityLabel="Delete your account permanently"
-                  accessibilityState={{ disabled: isDeleting }}
-                >
-                  {isDeleting ? (
-                    <ActivityIndicator size="small" color={theme.white} />
-                  ) : (
-                    <>
-                      <Trash2 size={20} color={theme.white} />
-                      <Text style={styles.deleteAccountText}>Delete Account</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -910,7 +942,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -960,7 +992,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       backgroundColor: theme.background,
     },
     content: {
-      flexGrow: 1,
       padding: 20,
     },
     section: {

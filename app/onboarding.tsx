@@ -9,12 +9,21 @@ import {
   Platform,
   TextInput,
   KeyboardAvoidingView,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
-import { Calendar, LogOut, ChevronRight, ChevronLeft, Info } from 'lucide-react-native';
+import {
+  Calendar,
+  LogOut,
+  ChevronRight,
+  ChevronLeft,
+  Info,
+  Square,
+  CheckSquare,
+} from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import ProgressBar from '@/components/onboarding/ProgressBar';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
@@ -62,6 +71,7 @@ export default function OnboardingScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   // Track when we're waiting for profile to update after form submission
   const [awaitingProfileUpdate, setAwaitingProfileUpdate] = useState(false);
 
@@ -124,11 +134,14 @@ export default function OnboardingScreen() {
 
       const updateData: {
         sobriety_date: string;
+        terms_accepted_at: string;
         first_name?: string;
         last_initial?: string;
       } = {
         // Format the sobriety date using the user's timezone
         sobriety_date: formatDateWithTimezone(sobrietyDate, userTimezone),
+        // Record when the user accepted the Privacy Policy and Terms of Service
+        terms_accepted_at: new Date().toISOString(),
       };
 
       if (firstName && lastInitial) {
@@ -175,6 +188,20 @@ export default function OnboardingScreen() {
     if (selectedDate) {
       setSobrietyDate(selectedDate);
     }
+  };
+
+  /**
+   * Opens the privacy policy URL in the default browser.
+   */
+  const openPrivacyPolicy = () => {
+    Linking.openURL('https://www.volvoxdev.com/privacy');
+  };
+
+  /**
+   * Opens the terms of service URL in the default browser.
+   */
+  const openTermsOfService = () => {
+    Linking.openURL('https://www.volvoxdev.com/terms');
   };
 
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -312,6 +339,28 @@ export default function OnboardingScreen() {
         </View>
       </View>
 
+      <TouchableOpacity
+        style={styles.termsContainer}
+        onPress={() => setTermsAccepted(!termsAccepted)}
+        activeOpacity={0.7}
+      >
+        {termsAccepted ? (
+          <CheckSquare size={24} color={theme.primary} />
+        ) : (
+          <Square size={24} color={theme.textSecondary} />
+        )}
+        <Text style={styles.termsText}>
+          I agree to the{' '}
+          <Text style={styles.termsLink} onPress={openPrivacyPolicy}>
+            Privacy Policy
+          </Text>{' '}
+          and{' '}
+          <Text style={styles.termsLink} onPress={openTermsOfService}>
+            Terms of Service
+          </Text>
+        </Text>
+      </TouchableOpacity>
+
       <View style={styles.footer}>
         <View style={styles.buttonGroup}>
           {step === 2 && (
@@ -326,9 +375,13 @@ export default function OnboardingScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.button, styles.flexButton, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              styles.flexButton,
+              (loading || !termsAccepted) && styles.buttonDisabled,
+            ]}
             onPress={handleComplete}
-            disabled={loading}
+            disabled={loading || !termsAccepted}
           >
             <Text style={styles.buttonText}>{loading ? 'Setting up...' : 'Complete Setup'}</Text>
             {!loading && <ChevronRight size={20} color={theme.textOnPrimary} />}
@@ -570,5 +623,24 @@ const createStyles = (theme: ThemeColors) =>
       fontFamily: theme.fontRegular,
       color: theme.textSecondary,
       fontWeight: '500',
+    },
+    termsContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 12,
+      marginBottom: 16,
+      paddingHorizontal: 4,
+    },
+    termsText: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      color: theme.textSecondary,
+      lineHeight: 22,
+    },
+    termsLink: {
+      color: theme.primary,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
     },
   });

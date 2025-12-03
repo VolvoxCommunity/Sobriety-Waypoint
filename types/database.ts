@@ -52,6 +52,12 @@ export interface Profile {
    * Should be required for new profiles.
    */
   timezone?: string;
+  /**
+   * Timestamp when the user accepted the Privacy Policy and Terms of Service.
+   * Null until accepted during onboarding.
+   * @remarks Stored as ISO 8601 timestamp for legal audit trail.
+   */
+  terms_accepted_at?: string;
   notification_preferences: {
     tasks: boolean;
     messages: boolean;
