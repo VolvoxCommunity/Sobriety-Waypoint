@@ -114,13 +114,9 @@ describe('SegmentedControl', () => {
     it('sets button accessibilityRole on segments', () => {
       render(<SegmentedControl {...defaultProps} />);
 
-      // The TouchableOpacity has accessibilityRole="button"
-      // Verify segments are touchable
-      const firstSegment = screen.getByText('My Tasks');
-      const secondSegment = screen.getByText('Manage');
-
-      expect(firstSegment).toBeTruthy();
-      expect(secondSegment).toBeTruthy();
+      // Verify segments have button role using getAllByRole
+      const buttons = screen.getAllByRole('button');
+      expect(buttons).toHaveLength(2);
     });
 
     it('marks active segment as selected in accessibility state', () => {
@@ -128,13 +124,10 @@ describe('SegmentedControl', () => {
         <SegmentedControl segments={['Tab A', 'Tab B']} activeIndex={0} onChange={jest.fn()} />
       );
 
-      // Get the text nodes and check their parent touchable's props
-      const tabA = screen.getByText('Tab A');
-      const tabB = screen.getByText('Tab B');
-
-      // Verify both segments render correctly (active state styling verified by pressing)
-      expect(tabA).toBeTruthy();
-      expect(tabB).toBeTruthy();
+      // Verify active segment has selected state
+      const buttons = screen.getAllByRole('button');
+      expect(buttons[0].props.accessibilityState).toEqual({ selected: true });
+      expect(buttons[1].props.accessibilityState).toEqual({ selected: false });
     });
   });
 });
