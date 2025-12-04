@@ -17,9 +17,9 @@ End-to-end testing for iOS and Android using Maestro. Tests run locally with a p
 
 ## Test User
 
-```
+```text
 Email: e2e-test@sobrietywaypoint.com
-Password: Abc123!! (stored in .env.local)
+Password: (stored in .env.local - see team password manager)
 ```
 
 Pre-configured in Supabase with:
@@ -75,7 +75,7 @@ Pre-configured in Supabase with:
 
 ## Directory Structure
 
-```
+```text
 maestro/
 ├── flows/
 │   ├── auth/
@@ -107,7 +107,7 @@ Add to `.env.local`:
 
 ```bash
 MAESTRO_E2E_EMAIL=e2e-test@sobrietywaypoint.com
-MAESTRO_E2E_PASSWORD=Abc123!!
+MAESTRO_E2E_PASSWORD=<see team password manager>
 ```
 
 Add to `.env.example`:
@@ -159,17 +159,24 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "main" ] || [ "$branch" = "develop" ]; then
   echo "🧪 Running E2E tests for $branch branch..."
 
-  # Check if simulator/emulator is running
+  # Run E2E tests on iOS (primary) and Android if emulator is available
   if ! pnpm maestro test maestro/flows --platform ios 2>/dev/null; then
-    echo "⚠️  E2E tests failed or no simulator running. Push blocked."
+    echo "⚠️  iOS E2E tests failed or no simulator running. Push blocked."
     exit 1
+  fi
+
+  # Optional: Run Android tests if emulator is running
+  if pnpm maestro test maestro/flows --platform android 2>/dev/null; then
+    echo "✅ Android E2E tests passed"
+  else
+    echo "ℹ️  Android emulator not running, skipping Android E2E tests"
   fi
 fi
 ```
 
 ## .gitignore Additions
 
-```
+```text
 # Maestro
 maestro/.maestro/
 maestro/screenshots/
