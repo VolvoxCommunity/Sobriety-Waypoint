@@ -8,21 +8,28 @@ appId: com.volvox.sobrietywaypoint
 
 # Wait for login screen to load
 - assertVisible: "Sobriety Waypoint"
+- assertVisible: "Your journey to recovery"
 
-# Enter credentials
-- tapOn: "your@email.com"
+# Enter email - tap below "Email" label
+- tapOn:
+    text: "Email"
+    index: 0
+- tapOn:
+    below: "Email"
 - inputText: ${E2E_EMAIL}
 
-- tapOn: "••••••••"
+# Enter password - tap below "Password" label
+- tapOn:
+    below: "Password"
 - inputText: ${E2E_PASSWORD}
 
 # Submit login
 - tapOn: "Sign In"
 
 # Wait for dashboard to load (shows greeting with user's name)
-- assertVisible:
-    text: "Hello,"
-    timeout: 10000
+- extendedWaitUntil:
+    visible: "Hello,"
+    timeout: 15000
 
 # Verify dashboard elements
 - assertVisible: "Days Sober"
