@@ -1,0 +1,13 @@
+# Maestro E2E Test Configuration
+# https://maestro.mobile.dev/
+
+appId: com.volvox.sobrietywaypoint
+
+# Environment variables (loaded from shell or .env.local)
+env:
+  E2E_EMAIL: ${MAESTRO_E2E_EMAIL}
+  E2E_PASSWORD: ${MAESTRO_E2E_PASSWORD}
+
+# Default settings
+onFlowStart:
+  - clearState
