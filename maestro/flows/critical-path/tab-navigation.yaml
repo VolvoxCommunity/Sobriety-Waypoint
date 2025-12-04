@@ -1,0 +1,38 @@
+# Tab Navigation Flow
+# Smoke test verifying all tabs are accessible
+appId: com.volvox.sobrietywaypoint
+
+---
+# Login first
+- runFlow: auth/login.yaml
+
+# Verify we're on Home tab (default)
+- assertVisible: "Your Sobriety Journey"
+
+# Navigate to Steps tab
+- tapOn: "Steps"
+- assertVisible:
+    text: "The 12 Steps"
+    timeout: 5000
+
+# Navigate to Journey tab
+- tapOn: "Journey"
+- assertVisible:
+    text: "Your Recovery Journey"
+    timeout: 5000
+
+# Navigate to Tasks tab
+- tapOn: "Tasks"
+- assertVisible:
+    text: "My Tasks"
+    timeout: 5000
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+- assertVisible:
+    text: "Settings"
+    timeout: 5000
+
+# Return to Home tab
+- tapOn: "Home"
+- assertVisible: "Your Sobriety Journey"
