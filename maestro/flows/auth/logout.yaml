@@ -1,0 +1,41 @@
+# Logout Flow
+# Verifies user can log out and return to login screen
+appId: com.volvox.sobrietywaypoint
+
+---
+# First, run login flow to get authenticated
+- runFlow: auth/login.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+
+# Wait for profile screen
+- assertVisible:
+    text: "Settings"
+    timeout: 5000
+
+# Tap Settings button (gear icon in header)
+- tapOn:
+    id: "settings-button"
+
+# Wait for settings screen
+- assertVisible: "Account"
+
+# Scroll down to find Sign Out
+- scrollUntilVisible:
+    element: "Sign Out"
+    direction: DOWN
+
+# Tap Sign Out
+- tapOn: "Sign Out"
+
+# Confirm logout if dialog appears
+- tapOn:
+    text: "Sign Out"
+    optional: true
+
+# Verify we're back at login screen
+- assertVisible:
+    text: "Sobriety Waypoint"
+    timeout: 5000
+- assertVisible: "Sign In"
