@@ -113,3 +113,7 @@ docs/plans
 
 # Test credentials (sensitive information)
 .agent/rules/login-information.md
+
+# Maestro E2E Testing
+maestro/.maestro/
+maestro/screenshots/

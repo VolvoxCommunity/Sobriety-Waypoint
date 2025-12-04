@@ -23,6 +23,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:ci": "jest --coverage",
+    "maestro": "maestro test maestro/flows",
+    "maestro:ios": "maestro test maestro/flows --platform ios",
+    "maestro:android": "maestro test maestro/flows --platform android",
+    "maestro:flow": "maestro test",
     "prepare": "husky"
   },
   "dependencies": {
