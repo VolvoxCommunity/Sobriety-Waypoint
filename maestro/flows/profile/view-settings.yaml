@@ -1,0 +1,81 @@
+# View Settings Flow
+# Verifies settings screen displays all sections and user can navigate through them
+appId: com.volvox.sobrietywaypoint
+
+---
+# Login first
+- runFlow: auth/login.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+- waitForAnimationToEnd
+
+# Verify profile screen loaded
+- assertVisible:
+    text: "Sobriety Journey"
+    timeout: 5000
+
+# Open settings
+- tapOn:
+    id: "Open settings"
+- waitForAnimationToEnd
+
+# Verify settings screen loaded
+- assertVisible:
+    text: "Settings"
+    timeout: 5000
+
+# Verify Appearance section
+- assertVisible: "Appearance"
+- assertVisible: "Light"
+- assertVisible: "Dark"
+- assertVisible: "System"
+
+# Verify About section
+- assertVisible: "About"
+- assertVisible: "Privacy Policy"
+- assertVisible: "Terms of Service"
+- assertVisible: "Source Code"
+
+# Scroll down to see more sections
+- scroll
+
+# Verify Sign Out section
+- assertVisible: "Sign Out"
+
+# Verify Danger Zone section (collapsed by default)
+- assertVisible: "DANGER ZONE"
+
+# Expand Danger Zone to verify it works
+- tapOn: "DANGER ZONE"
+- waitForAnimationToEnd
+
+# Verify danger zone expanded and delete account visible
+- assertVisible: "Delete Account"
+- assertVisible: "Permanently delete your account"
+
+# Collapse Danger Zone again
+- tapOn: "DANGER ZONE"
+- waitForAnimationToEnd
+
+# Scroll down further to see Build Info
+- scroll
+
+# Verify Build Info section (collapsed by default)
+- assertVisible: "BUILD INFO"
+
+# Expand Build Info to verify it works
+- tapOn: "BUILD INFO"
+- waitForAnimationToEnd
+
+# Verify build info displays version details
+- assertVisible: "App Version"
+- assertVisible: "Device"
+
+# Close settings and return to profile
+- tapOn:
+    id: "Close settings"
+- waitForAnimationToEnd
+
+# Verify we're back at profile screen
+- assertVisible: "Sobriety Journey"

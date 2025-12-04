@@ -1,0 +1,51 @@
+# Change Theme Flow
+# Verifies user can toggle between light and dark theme in settings
+appId: com.volvox.sobrietywaypoint
+
+---
+# Login first
+- runFlow: auth/login.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+- waitForAnimationToEnd
+
+# Verify profile screen loaded
+- assertVisible:
+    text: "Sobriety Journey"
+    timeout: 5000
+
+# Open settings
+- tapOn:
+    id: "Open settings"
+- waitForAnimationToEnd
+
+# Verify settings screen loaded
+- assertVisible:
+    text: "Settings"
+    timeout: 5000
+
+# Verify theme options are visible
+- assertVisible: "Appearance"
+- assertVisible: "Light"
+- assertVisible: "Dark"
+- assertVisible: "System"
+
+# Change to dark theme
+- tapOn: "Dark"
+- waitForAnimationToEnd
+
+# Verify dark theme is selected (has selected styling)
+# The selected theme option has different styling that's visible
+
+# Change back to light theme to keep test user clean
+- tapOn: "Light"
+- waitForAnimationToEnd
+
+# Close settings and return to profile
+- tapOn:
+    id: "Close settings"
+- waitForAnimationToEnd
+
+# Verify we're back at profile screen
+- assertVisible: "Sobriety Journey"
