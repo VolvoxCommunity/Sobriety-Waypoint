@@ -172,4 +172,163 @@ describe('Logger', () => {
       });
     });
   });
+
+  describe('development mode console output', () => {
+    const originalDev = (global as any).__DEV__;
+
+    beforeEach(() => {
+      (global as any).__DEV__ = true;
+    });
+
+    afterEach(() => {
+      (global as any).__DEV__ = originalDev;
+    });
+
+    it('logs to console.info in development mode', () => {
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
+
+      logger.info('Info message');
+
+      expect(consoleSpy).toHaveBeenCalledWith('[INFO] Info message');
+      consoleSpy.mockRestore();
+    });
+
+    it('logs to console.warn in development mode', () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      logger.warn('Warning message');
+
+      expect(consoleSpy).toHaveBeenCalledWith('[WARN] Warning message');
+      consoleSpy.mockRestore();
+    });
+
+    it('logs to console.error in development mode', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      logger.error('Error message');
+
+      expect(consoleSpy).toHaveBeenCalledWith('[ERROR] Error message');
+      consoleSpy.mockRestore();
+    });
+
+    it('logs to console.debug in development mode', () => {
+      const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
+
+      logger.debug('Debug message');
+
+      expect(consoleSpy).toHaveBeenCalledWith('[DEBUG] Debug message');
+      consoleSpy.mockRestore();
+    });
+
+    it('logs to console.trace in development mode', () => {
+      const consoleSpy = jest.spyOn(console, 'trace').mockImplementation();
+
+      logger.trace('Trace message');
+
+      expect(consoleSpy).toHaveBeenCalledWith('[TRACE] Trace message');
+      consoleSpy.mockRestore();
+    });
+
+    it('includes error object in console output', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const error = new Error('Test error');
+
+      logger.error('Operation failed', error);
+
+      expect(consoleSpy).toHaveBeenCalledWith('[ERROR] Operation failed', error);
+      consoleSpy.mockRestore();
+    });
+
+    it('includes metadata in console output', () => {
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
+
+      logger.info('User action', { userId: '123', action: 'click' });
+
+      expect(consoleSpy).toHaveBeenCalledWith('[INFO] User action', {
+        userId: '123',
+        action: 'click',
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('includes both error and metadata in console output', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const error = new Error('Test error');
+
+      logger.error('Operation failed', error, { userId: '456' });
+
+      expect(consoleSpy).toHaveBeenCalledWith('[ERROR] Operation failed', error, {
+        userId: '456',
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('warns when metadata contains reserved keys', () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      logger.info('Test message', { error_message: 'should warn', userId: '123' });
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        '[Logger] Metadata contains reserved keys that will be overwritten: error_message'
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('warns for multiple reserved keys', () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      logger.info('Test message', {
+        error_message: 'msg',
+        error_stack: 'stack',
+        error_name: 'name',
+      });
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        '[Logger] Metadata contains reserved keys that will be overwritten: error_message, error_stack, error_name'
+      );
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe('Sentry error handling', () => {
+    const originalDev = (global as any).__DEV__;
+
+    beforeEach(() => {
+      (global as any).__DEV__ = true;
+    });
+
+    afterEach(() => {
+      (global as any).__DEV__ = originalDev;
+    });
+
+    it('silently catches Sentry captureException errors in development', () => {
+      const consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      // Make captureException throw
+      (Sentry.captureException as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Sentry not initialized');
+      });
+
+      const error = new Error('Test error');
+      logger.error('Operation failed', error);
+
+      expect(consoleDebugSpy).toHaveBeenCalledWith(
+        '[Logger] Sentry not initialized, error not captured'
+      );
+
+      consoleDebugSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('silently catches Sentry addBreadcrumb errors', () => {
+      // Make addBreadcrumb throw
+      (Sentry.addBreadcrumb as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Sentry not initialized');
+      });
+
+      // Should not throw even when Sentry fails
+      expect(() => logger.info('Test message')).not.toThrow();
+    });
+  });
 });

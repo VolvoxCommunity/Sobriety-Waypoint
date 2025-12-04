@@ -177,6 +177,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
+      testID="home-scroll-view"
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
@@ -245,6 +246,7 @@ export default function HomeScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.disconnectButton}
+                  accessibilityLabel={`Disconnect from ${rel.sponsor?.first_name} ${rel.sponsor?.last_initial}.`}
                   onPress={() =>
                     handleDisconnect(
                       rel.id,
@@ -296,6 +298,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.disconnectButton}
+                  accessibilityLabel={`Disconnect from ${rel.sponsee?.first_name} ${rel.sponsee?.last_initial}.`}
                   onPress={() =>
                     handleDisconnect(
                       rel.id,
