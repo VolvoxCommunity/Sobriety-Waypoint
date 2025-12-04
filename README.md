@@ -209,10 +209,6 @@ pnpm maestro:android      # Run on Android emulator only
 pnpm maestro:flow <path>  # Run a single test flow
 ```
 
-#### Pre-push Hook
-
-E2E tests run automatically when pushing to `main` or `develop` branches. Ensure your simulator is running before pushing to these branches. To skip, use `git push --no-verify`.
-
 See `maestro/README.md` for detailed flow documentation.
 
 ## CI/CD & Release Flow
