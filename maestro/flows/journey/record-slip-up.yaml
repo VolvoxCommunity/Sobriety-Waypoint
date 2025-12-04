@@ -1,0 +1,42 @@
+# Record Slip-Up Flow
+# Verifies user can log a slip-up event from profile screen
+appId: com.volvox.sobrietywaypoint
+
+---
+# Login first
+- runFlow: auth/login.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+- waitForAnimationToEnd
+
+# Verify profile screen loaded
+- assertVisible:
+    text: "Sobriety Journey"
+    timeout: 5000
+
+# Find and tap the "Log a Slip Up" button
+- tapOn: "Log a Slip Up"
+- waitForAnimationToEnd
+
+# Verify slip-up modal opened
+- assertVisible:
+    text: "Log a Slip Up"
+    timeout: 5000
+
+- assertVisible: "Recovery is a journey, not a destination"
+
+# Verify form fields are present
+- assertVisible: "Slip Up Date"
+- assertVisible: "Recovery Restart Date"
+- assertVisible: "Notes (Optional)"
+
+# Verify privacy notice
+- assertVisible: "This information will be visible to you and your sponsor"
+
+# Cancel instead of submitting (to avoid modifying test user data)
+- tapOn: "Cancel"
+- waitForAnimationToEnd
+
+# Verify we're back on profile screen
+- assertVisible: "Sobriety Journey"

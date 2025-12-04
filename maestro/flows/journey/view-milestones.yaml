@@ -1,0 +1,39 @@
+# View Milestones Flow
+# Verifies journey/milestones screen displays timeline and sobriety information
+appId: com.volvox.sobrietywaypoint
+
+---
+# Login first
+- runFlow: auth/login.yaml
+
+# Navigate to Journey tab
+- tapOn: "Journey"
+- waitForAnimationToEnd
+
+# Verify journey screen header
+- assertVisible:
+    text: "Your Journey"
+    timeout: 5000
+
+- assertVisible: "Every day is a victory"
+
+# Verify stats card is present (sobriety metrics)
+- assertVisible: "Days Sober"
+
+# Verify journey statistics are visible
+- assertVisible: "Steps Completed"
+- assertVisible: "Tasks Completed"
+- assertVisible: "Milestones"
+
+# Scroll down to see timeline events
+- scroll
+
+# Verify timeline content is present
+# Timeline may show various events depending on user data:
+# - Sobriety start
+# - Slip-ups
+# - Step completions
+# - Task completions
+# - Milestones
+# We verify at least the journey start event is visible
+- assertVisible: "Recovery Journey Began"
