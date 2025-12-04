@@ -110,6 +110,9 @@ describe('Sentry Module', () => {
       const originalDev = global.__DEV__;
       (global as unknown as { __DEV__: boolean }).__DEV__ = true;
 
+      // Reset modules AFTER setting __DEV__ so the module evaluates with correct value
+      jest.resetModules();
+
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { initializeSentry } = require('@/lib/sentry');
       initializeSentry();
