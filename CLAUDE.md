@@ -30,7 +30,9 @@ pnpm test                     # Run all Jest tests
 pnpm test:watch              # Run tests in watch mode
 pnpm test -- --coverage      # Run tests with coverage report (80% minimum required)
 pnpm maestro                 # Run all Maestro E2E flows
-pnpm maestro:record          # Record new Maestro flow
+pnpm maestro:ios             # Run E2E on iOS simulator only
+pnpm maestro:android         # Run E2E on Android emulator only
+pnpm maestro:flow <path>     # Run a single Maestro flow
 ```
 
 **Build & Deploy:**

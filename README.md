@@ -161,6 +161,7 @@ The project enforces **80% minimum coverage** across statements, branches, funct
 
 - **Unit & Integration**: Jest + React Native Testing Library
 - **API mocking**: MSW (Mock Service Worker)
+- **E2E Testing**: Maestro for iOS and Android
 
 ### Test Commands
 
@@ -169,6 +170,50 @@ pnpm test          # Run all tests
 pnpm test:watch    # Watch mode
 pnpm test:ci       # Run with coverage report
 ```
+
+### E2E Testing with Maestro
+
+End-to-end tests run on iOS Simulator and Android Emulator using [Maestro](https://maestro.mobile.dev/).
+
+#### Prerequisites
+
+1. Install Maestro CLI:
+
+   ```bash
+   curl -Ls "https://get.maestro.mobile.dev" | bash
+   ```
+
+2. Ensure iOS Simulator or Android Emulator is running
+
+#### Setup
+
+1. Copy test credentials to your local environment:
+
+   ```bash
+   cp .env.example .env.local
+   # Update MAESTRO_E2E_PASSWORD with the actual test password
+   ```
+
+2. Build and run the development client:
+   ```bash
+   pnpm ios      # for iOS
+   pnpm android  # for Android
+   ```
+
+#### Running E2E Tests
+
+```bash
+pnpm maestro              # Run all E2E tests
+pnpm maestro:ios          # Run on iOS simulator only
+pnpm maestro:android      # Run on Android emulator only
+pnpm maestro:flow <path>  # Run a single test flow
+```
+
+#### Pre-push Hook
+
+E2E tests run automatically when pushing to `main` or `develop` branches. Ensure your simulator is running before pushing to these branches. To skip, use `git push --no-verify`.
+
+See `maestro/README.md` for detailed flow documentation.
 
 ## CI/CD & Release Flow
 
