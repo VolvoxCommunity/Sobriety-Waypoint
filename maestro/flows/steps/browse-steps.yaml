@@ -1,0 +1,38 @@
+# Browse Steps Flow
+# Verifies user can browse the 12-step list
+appId: com.volvox.sobrietywaypoint
+
+---
+- runFlow: auth/login.yaml
+
+# Navigate to Steps tab
+- tapOn: "Steps"
+
+# Wait for steps screen
+- assertVisible:
+    text: "The 12 Steps"
+    timeout: 5000
+
+# Verify subtitle is visible
+- assertVisible: "Your path to recovery"
+
+# Verify at least Step 1 is visible
+- assertVisible:
+    text: "1"
+    timeout: 3000
+
+# Verify step content exists (should show at least one step card)
+- assertVisible:
+    text: "We admitted we were powerless"
+    timeout: 3000
+
+# Scroll down to see more steps
+- scrollUntilVisible:
+    element:
+      text: "2"
+    direction: DOWN
+    timeout: 5000
+
+# Verify another step is now visible
+- assertVisible:
+    text: "Came to believe"

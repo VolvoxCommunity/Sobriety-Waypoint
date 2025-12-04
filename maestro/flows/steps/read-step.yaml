@@ -1,0 +1,54 @@
+# Read Step Flow
+# Verifies user can expand and read a step's content
+appId: com.volvox.sobrietywaypoint
+
+---
+- runFlow: auth/login.yaml
+
+# Navigate to Steps tab
+- tapOn: "Steps"
+
+# Wait for steps screen
+- assertVisible:
+    text: "The 12 Steps"
+    timeout: 5000
+
+# Tap on Step 1 to expand it
+- tapOn: "We admitted we were powerless"
+
+# Wait for modal to open
+- waitForAnimationToEnd
+
+# Verify modal header shows step number
+- assertVisible:
+    text: "Step 1"
+    timeout: 5000
+
+# Verify step title in modal
+- assertVisible: "We admitted we were powerless"
+
+# Verify detailed content section is visible
+- assertVisible: "Understanding This Step"
+
+# Verify reflection questions section is visible
+- assertVisible: "Reflection Questions"
+
+# Scroll down in modal to see more content
+- scrollUntilVisible:
+    element:
+      text: "Mark as Complete"
+    direction: DOWN
+    timeout: 5000
+
+# Verify complete button is visible
+- assertVisible: "Mark as Complete"
+
+# Close the modal by tapping the X button
+- tapOn:
+    point: "95%,10%"
+
+# Wait for modal to close
+- waitForAnimationToEnd
+
+# Verify we're back on steps list
+- assertVisible: "The 12 Steps"
