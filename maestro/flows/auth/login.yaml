@@ -1,0 +1,29 @@
+# Login Flow
+# Verifies existing user can log in and reach dashboard
+appId: com.volvox.sobrietywaypoint
+
+---
+- launchApp:
+    clearState: true
+
+# Wait for login screen to load
+- assertVisible: "Sobriety Waypoint"
+
+# Enter credentials
+- tapOn: "your@email.com"
+- inputText: ${E2E_EMAIL}
+
+- tapOn: "••••••••"
+- inputText: ${E2E_PASSWORD}
+
+# Submit login
+- tapOn: "Sign In"
+
+# Wait for dashboard to load (shows greeting with user's name)
+- assertVisible:
+    text: "Hello,"
+    timeout: 10000
+
+# Verify dashboard elements
+- assertVisible: "Days Sober"
+- assertVisible: "Your Sobriety Journey"
