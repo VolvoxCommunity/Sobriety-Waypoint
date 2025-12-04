@@ -1,0 +1,69 @@
+# Signup to Dashboard Flow
+# Verifies new user can sign up, complete onboarding, and reach dashboard
+# NOTE: Creates a new user each run - consider cleanup strategy
+appId: com.volvox.sobrietywaypoint
+
+---
+- launchApp:
+    clearState: true
+
+# Wait for login screen
+- assertVisible: "Sobriety Waypoint"
+
+# Navigate to signup
+- tapOn: "Create New Account"
+
+# Wait for signup screen
+- assertVisible:
+    text: "Create Account"
+    timeout: 5000
+
+# Generate unique email using timestamp
+- inputText: ${output.e2e_email}
+  into: "your@email.com"
+
+# Fill signup form
+- tapOn: "your@email.com"
+- inputText: "e2e-signup-${maestro.copiedText}@test.com"
+
+- tapOn:
+    text: "Password"
+    index: 0
+- inputText: "TestPass123!"
+
+- tapOn:
+    text: "Confirm Password"
+- inputText: "TestPass123!"
+
+# Submit signup
+- tapOn: "Create Account"
+
+# Wait for onboarding screen
+- assertVisible:
+    text: "Welcome"
+    timeout: 10000
+
+# Complete onboarding - Step 1: Name
+- tapOn: "First Name"
+- inputText: "E2E Test"
+
+- tapOn: "Last Initial"
+- inputText: "U"
+
+- tapOn: "Continue"
+
+# Step 2: Sobriety Date (use today)
+- assertVisible: "sobriety date"
+
+# Accept terms
+- tapOn:
+    text: "I accept"
+    optional: true
+
+- tapOn: "Complete Setup"
+
+# Verify dashboard loads
+- assertVisible:
+    text: "Hello,"
+    timeout: 10000
+- assertVisible: "Days Sober"
