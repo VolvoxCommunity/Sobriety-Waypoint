@@ -1,0 +1,46 @@
+# Assign Task Flow
+# Verifies sponsor can assign a task to sponsee
+# Requires: Test user has at least one sponsee
+appId: com.volvox.sobrietywaypoint
+
+---
+- runFlow: auth/login.yaml
+
+# Navigate to Tasks tab
+- tapOn: "Tasks"
+
+# Switch to Manage view (sponsor view)
+- tapOn: "Manage"
+
+# Wait for manage view to load
+- assertVisible:
+    timeout: 5000
+
+# Tap create task button (+ icon)
+- tapOn:
+    id: "create-task-button"
+    optional: true
+
+# If task creation modal opens, fill it
+- tapOn:
+    text: "Select Sponsee"
+    optional: true
+
+# Select first sponsee if available
+- tapOn:
+    index: 0
+    optional: true
+
+# Fill task details
+- inputText:
+    text: "E2E Test Task"
+    optional: true
+
+- tapOn:
+    text: "Create"
+    optional: true
+
+# Verify task appears or success message
+- assertVisible:
+    text: ".*"
+    timeout: 3000

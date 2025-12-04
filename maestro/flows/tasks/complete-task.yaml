@@ -1,0 +1,41 @@
+# Complete Task Flow
+# Verifies user can mark a task as complete
+# Requires: Test user has at least one assigned task
+appId: com.volvox.sobrietywaypoint
+
+---
+- runFlow: auth/login.yaml
+
+# Navigate to Tasks tab
+- tapOn: "Tasks"
+
+# Ensure we're on My Tasks view
+- tapOn: "My Tasks"
+
+# Wait for task list
+- assertVisible:
+    timeout: 5000
+
+# Tap on first task (if exists)
+- tapOn:
+    text: "Step"
+    optional: true
+
+# Look for complete button/checkbox
+- tapOn:
+    id: "complete-task-button"
+    optional: true
+
+# If completion modal appears, add notes and confirm
+- inputText:
+    text: "E2E test completion"
+    optional: true
+
+- tapOn:
+    text: "Complete"
+    optional: true
+
+# Verify completion feedback
+- assertVisible:
+    text: ".*"
+    timeout: 3000

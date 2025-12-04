@@ -1,0 +1,22 @@
+# View Task List Flow
+# Verifies user can view their assigned tasks
+appId: com.volvox.sobrietywaypoint
+
+---
+- runFlow: auth/login.yaml
+
+# Navigate to Tasks tab
+- tapOn: "Tasks"
+
+# Wait for tasks screen
+- assertVisible:
+    text: "My Tasks"
+    timeout: 5000
+
+# Verify segmented control exists
+- assertVisible: "Manage"
+
+# Verify task list area is visible (may show tasks or empty state)
+- assertVisible:
+    text: ".*"
+    timeout: 3000
