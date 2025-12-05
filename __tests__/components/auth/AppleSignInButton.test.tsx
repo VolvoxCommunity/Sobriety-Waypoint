@@ -729,5 +729,49 @@ describe('AppleSignInButton', () => {
         });
       });
     });
+
+    it('uses empty string fallback when getUser returns null user', async () => {
+      mockSignInAsync.mockResolvedValueOnce({
+        identityToken: 'mock-identity-token',
+        fullName: {
+          givenName: 'John',
+          familyName: 'Doe',
+        },
+      });
+      mockSignInWithIdToken.mockResolvedValueOnce({ error: null });
+      // Simulate getUser returning null user (edge case)
+      mockGetUser.mockResolvedValueOnce({ data: { user: null } });
+
+      render(<AppleSignInButton />);
+
+      fireEvent.press(screen.getByTestId('apple-sign-in-button'));
+
+      await waitFor(() => {
+        // Should use empty string as fallback when user is null
+        expect(mockProfileUpdateEq).toHaveBeenCalledWith('id', '');
+      });
+    });
+
+    it('uses empty string fallback when getUser returns undefined user', async () => {
+      mockSignInAsync.mockResolvedValueOnce({
+        identityToken: 'mock-identity-token',
+        fullName: {
+          givenName: 'Jane',
+          familyName: 'Smith',
+        },
+      });
+      mockSignInWithIdToken.mockResolvedValueOnce({ error: null });
+      // Simulate getUser returning undefined user
+      mockGetUser.mockResolvedValueOnce({ data: {} });
+
+      render(<AppleSignInButton />);
+
+      fireEvent.press(screen.getByTestId('apple-sign-in-button'));
+
+      await waitFor(() => {
+        // Should use empty string as fallback when user is undefined
+        expect(mockProfileUpdateEq).toHaveBeenCalledWith('id', '');
+      });
+    });
   });
 });
