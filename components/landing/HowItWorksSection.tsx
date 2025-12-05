@@ -199,10 +199,10 @@ const createStyles = (theme: ThemeColors, width: number) => {
       borderRadius: 2,
       ...Platform.select({
         web: {
-          backgroundImage: 'linear-gradient(to bottom, #007AFF, #3b82f6)',
+          backgroundImage: `linear-gradient(to bottom, ${theme.primary}, ${theme.primaryLight})`,
         },
         default: {
-          backgroundColor: '#007AFF',
+          backgroundColor: theme.primary,
         },
       }),
     },
@@ -235,8 +235,11 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
     stepNumber: {
       fontSize: 50,
       fontFamily: theme.fontBold, // font-serif equivalent
-      // Using rgba with primary color RGB values (0, 122, 255) at 12% opacity
-      color: 'rgba(0, 122, 255, 0.12)', // text-primary/12
+      // Using primary color with low opacity for subtle background number
+      color: Platform.select({
+        web: theme.primary + '1F', // Add 1F hex for ~12% opacity
+        default: theme.primaryLight, // Fallback to primaryLight on native
+      }),
       lineHeight: 50,
       marginBottom: 16,
     },

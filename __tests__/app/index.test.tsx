@@ -4,19 +4,26 @@ import Index from '../../app/index';
 import { renderWithProviders } from '../test-utils';
 
 // Mock expo-router
-jest.mock('expo-router', () => ({
-  Redirect: ({ href }: { href: string }) => <Text>Redirected to {href}</Text>,
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-  })),
-}));
+jest.mock('expo-router', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    Redirect: ({ href }: { href: string }) =>
+      React.createElement(Text, null, `Redirected to ${href}`),
+    useRouter: jest.fn(() => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+    })),
+  };
+});
 
 // Mock landing page component
 jest.mock('@/components/landing/LandingPage', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
   const MockLandingPage = () => {
-    return <Text>Landing Page</Text>;
+    return React.createElement(Text, null, 'Landing Page');
   };
   return MockLandingPage;
 });

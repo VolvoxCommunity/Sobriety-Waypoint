@@ -19,7 +19,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { useFonts } from 'expo-font';
 import {
   JetBrainsMono_400Regular,
@@ -64,10 +64,14 @@ function RootLayoutNav() {
     // Wait for both auth loading to complete AND navigator to be ready
     if (loading || !navigatorReady) return;
 
-    const inAuthGroup = segments[0] === '(tabs)';
-    const inOnboarding = segments[0] === 'onboarding';
-    const inAuthScreen = segments[0] === 'login' || segments[0] === 'signup';
-    const inLanding = segments[0] === 'index';
+    const isWeb = Platform.OS === 'web';
+    const firstSegment = segments[0];
+    const hasSegments = segments.length > 0;
+
+    const inAuthGroup = firstSegment === '(tabs)';
+    const inOnboarding = firstSegment === 'onboarding';
+    const inAuthScreen = firstSegment === 'login' || firstSegment === 'signup';
+    const inLanding = firstSegment === 'index';
 
     // Profile is complete when user has provided their name and sobriety date during onboarding
     // Check for non-null values (null indicates user hasn't completed onboarding).
@@ -81,18 +85,28 @@ function RootLayoutNav() {
     const hasSobrietyDate = !!profile?.sobriety_date;
     const isProfileComplete = hasName && hasSobrietyDate;
 
+    // On web, if no segments (initial load at root), allow landing page to show for unauthenticated users
+    if (isWeb && !hasSegments && !user) {
+      // Allow landing page to render on initial web load - don't redirect
+      return;
+    }
+
+    // Redirect unauthenticated users trying to access protected routes
     if (!user && inAuthGroup) {
       router.replace('/login');
-    } else if (!user && !inAuthScreen && !inLanding) {
-      // Allow unauthenticated users to view landing page
+    } else if (!user && hasSegments && !inAuthScreen && !(inLanding && isWeb)) {
+      // Allow unauthenticated users to view landing page ONLY on web
+      // On native, redirect to login (landing page is web-only)
       router.replace('/login');
     } else if (
       user &&
       profile &&
       isProfileComplete &&
-      (inAuthScreen || inOnboarding || inLanding)
+      hasSegments &&
+      (inAuthScreen || inOnboarding || (inLanding && isWeb))
     ) {
-      // Redirect authenticated users with complete profiles to main app
+      // Redirect authenticated users with complete profiles away from landing/auth screens
+      // Landing page is web-only, so only redirect if on web
       router.replace('/(tabs)');
     } else if (user && profile && !isProfileComplete && !inOnboarding) {
       router.replace('/onboarding');

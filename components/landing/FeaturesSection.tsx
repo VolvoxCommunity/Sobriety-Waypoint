@@ -37,32 +37,32 @@ export default function FeaturesSection() {
 
   const features: Feature[] = [
     {
-      icon: <Calendar size={iconSize} color="#007AFF" />,
+      icon: <Calendar size={iconSize} color={theme.primary} />,
       title: 'Sobriety Tracking',
       description:
         'Keep track of your journey day by day. Watch your progress grow and celebrate every single day of sobriety.',
-      color: '#007AFF',
+      color: theme.primary,
     },
     {
-      icon: <Users size={iconSize} color="#007AFF" />,
+      icon: <Users size={iconSize} color={theme.primary} />,
       title: 'Sponsor Connections',
       description:
         'Connect and communicate with your support network. Share tasks, check-ins, and stay accountable together.',
-      color: '#007AFF',
+      color: theme.primary,
     },
     {
-      icon: <CheckSquare size={iconSize} color="#007AFF" />,
+      icon: <CheckSquare size={iconSize} color={theme.primary} />,
       title: 'Task Management',
       description:
         'Stay on top of your recovery goals with structured task management. Complete steps and track your commitments.',
-      color: '#007AFF',
+      color: theme.primary,
     },
     {
-      icon: <Award size={iconSize} color="#007AFF" />,
+      icon: <Award size={iconSize} color={theme.primary} />,
       title: 'Milestone Celebrations',
       description:
         'Acknowledge every achievement along your journey. From your first day to years of sobriety, every milestone matters.',
-      color: '#007AFF',
+      color: theme.primary,
     },
   ];
 
@@ -120,10 +120,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
 
   return StyleSheet.create({
     container: {
-      backgroundColor: Platform.select({
-        web: 'hsla(210, 30%, 96%, 0.3)', // bg-secondary/30
-        default: theme.surface,
-      }),
+      backgroundColor: theme.background,
       paddingHorizontal: isMobile ? 24 : isTablet ? 48 : 80,
       paddingVertical: isMobile ? 96 : 120,
       alignItems: 'center',
@@ -168,7 +165,7 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
       width: isMobile ? '100%' : '48%',
       minWidth: isMobile ? undefined : 280,
       borderWidth: 1,
-      borderColor: 'rgba(0, 0, 0, 0.05)',
+      borderColor: theme.borderLight,
       ...Platform.select({
         web: {
           backgroundImage: 'linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 30% 98%) 100%)',

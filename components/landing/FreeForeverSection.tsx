@@ -44,7 +44,7 @@ export default function FreeForeverSection() {
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Logo size={isMobile ? 48 : 48} color="#007AFF" />
+          <Logo size={isMobile ? 48 : 48} color={theme.primary} />
           <Text style={styles.title}>Free Forever. No Catch.</Text>
           <Text style={styles.subtitle}>
             Recovery support should be accessible to everyone. That is why Sobriety Waypoint will
@@ -55,7 +55,7 @@ export default function FreeForeverSection() {
         <View style={styles.benefitsContainer}>
           <View style={styles.benefit}>
             <View style={styles.benefitIcon}>
-              <Shield size={iconSize} color="#007AFF" />
+              <Shield size={iconSize} color={theme.primary} />
             </View>
             <View style={styles.benefitContent}>
               <Text style={styles.benefitTitle}>No Ads, Ever</Text>
@@ -67,7 +67,7 @@ export default function FreeForeverSection() {
 
           <View style={styles.benefit}>
             <View style={styles.benefitIcon}>
-              <Zap size={iconSize} color="#007AFF" />
+              <Zap size={iconSize} color={theme.primary} />
             </View>
             <View style={styles.benefitContent}>
               <Text style={styles.benefitTitle}>All Features Unlocked</Text>
@@ -79,7 +79,7 @@ export default function FreeForeverSection() {
 
           <View style={styles.benefit}>
             <View style={styles.benefitIcon}>
-              <Target size={iconSize} color="#007AFF" />
+              <Target size={iconSize} color={theme.primary} />
             </View>
             <View style={styles.benefitContent}>
               <Text style={styles.benefitTitle}>Built for Recovery</Text>
@@ -96,7 +96,7 @@ export default function FreeForeverSection() {
           activeOpacity={0.8}
         >
           <Text style={styles.ctaButtonText}>Start Your Journey Free</Text>
-          <ArrowRight size={20} color="#ffffff" style={styles.buttonIcon} />
+          <ArrowRight size={20} color={theme.textOnPrimary} style={styles.buttonIcon} />
         </TouchableOpacity>
 
         <Text style={styles.footnote}>No credit card required · No trial period · Just free</Text>
@@ -130,8 +130,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
       bottom: 0,
       ...Platform.select({
         web: {
-          backgroundImage:
-            'linear-gradient(to bottom, hsl(var(--background)), rgba(0, 122, 255, 0.05), hsl(var(--background)))',
+          backgroundImage: `linear-gradient(to bottom, ${theme.background}, ${theme.primary}0D, ${theme.background})`,
         },
       }),
     },
@@ -173,7 +172,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
       padding: isMobile ? 20 : 20,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: 'rgba(0, 0, 0, 0.05)',
+      borderColor: theme.borderLight,
       gap: 16,
       ...Platform.select({
         web: {
@@ -222,7 +221,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
       lineHeight: isMobile ? 20 : 22,
     },
     ctaButton: {
-      backgroundColor: '#007AFF', // accent color
+      backgroundColor: theme.primary,
       borderRadius: 12,
       paddingVertical: isMobile ? 16 : 18,
       paddingHorizontal: isMobile ? 32 : 40,
@@ -237,7 +236,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
           transition: 'all 0.2s ease',
         },
         default: {
-          shadowColor: '#007AFF',
+          shadowColor: theme.primary,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 12,
@@ -246,7 +245,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
       }),
     },
     ctaButtonText: {
-      color: '#ffffff',
+      color: theme.textOnPrimary,
       fontSize: 18,
       fontFamily: theme.fontSemiBold,
     },

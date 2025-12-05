@@ -276,10 +276,7 @@ const createStyles = (theme: any, width: number) => {
       }),
     },
     noticeContainer: {
-      backgroundColor: Platform.select({
-        web: 'hsla(210, 30%, 96%, 0.5)', // bg-secondary/50
-        default: theme.surface,
-      }),
+      backgroundColor: theme.background,
       borderRadius: 8,
       padding: isMobile ? 16 : 20,
       marginTop: 16,

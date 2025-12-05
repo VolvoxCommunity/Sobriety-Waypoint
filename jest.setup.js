@@ -286,6 +286,13 @@ jest.mock('@/lib/date', () => ({
   parseDateAsLocal: jest.fn((dateString) => new Date(dateString)),
 }));
 
+// Mock image assets globally to prevent Jest from trying to parse them
+// These will be handled by moduleNameMapper, but adding explicit mocks as fallback
+jest.mock('@/assets/images/hero-forest.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-dashboard.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-sponsor.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-milestone.jpg', () => 'test-file-stub', { virtual: true });
+
 // Mock @/lib/supabase - must be after @supabase/supabase-js mock
 jest.mock('@/lib/supabase', () => {
   const { createClient } = require('@supabase/supabase-js');
@@ -345,13 +352,18 @@ jest.mock('react-native-svg', () => {
     React.createElement(View, { testID: 'svg-g', ...props }, children);
   G.displayName = 'G';
 
-  return {
+  // Support both default export (Svg) and named exports
+  const mockModule = {
+    __esModule: true,
+    default: Svg,
     Svg,
     Circle,
     Path,
     Rect,
     G,
   };
+
+  return mockModule;
 });
 
 // Mock @supabase/supabase-js with chainable query builder

@@ -131,7 +131,7 @@ function StatItem({ value, label, theme, width }: StatItemProps) {
     statValue: {
       fontSize: isMobile ? 40 : 48,
       fontFamily: theme.fontBold, // font-serif equivalent
-      color: '#007AFF',
+      color: theme.primary,
       marginBottom: 8,
       lineHeight: isMobile ? 48 : 56,
     },
@@ -162,10 +162,7 @@ const createStyles = (theme: ThemeColors, width: number) => {
 
   return StyleSheet.create({
     container: {
-      backgroundColor: Platform.select({
-        web: 'hsla(210, 30%, 96%, 0.3)', // bg-secondary/30
-        default: theme.surface,
-      }),
+      backgroundColor: theme.background,
       paddingHorizontal: isMobile ? 24 : isTablet ? 48 : 80,
       paddingVertical: isMobile ? 96 : 120,
       alignItems: 'center',
@@ -215,7 +212,7 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
       borderRadius: 16,
       padding: isMobile ? 32 : 32,
       borderWidth: 1,
-      borderColor: 'rgba(0, 0, 0, 0.05)',
+      borderColor: theme.borderLight,
       minWidth: isMobile ? undefined : 280,
       ...Platform.select({
         web: {
@@ -234,7 +231,10 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
     quoteMark: {
       fontSize: 40,
       fontFamily: theme.fontBold, // font-serif equivalent
-      color: 'rgba(0, 122, 255, 0.2)', // text-primary/20
+      color: Platform.select({
+        web: theme.primary + '33', // Add 33 hex for ~20% opacity
+        default: theme.primaryLight, // Fallback to primaryLight on native
+      }),
       lineHeight: 40,
       marginBottom: 16,
     },
@@ -263,13 +263,9 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
       marginBottom: 12,
     },
     badge: {
-      ...Platform.select({
-        web: {
-          backgroundColor: 'rgba(0, 122, 255, 0.1)',
-        },
-        default: {
-          backgroundColor: '#10b98115',
-        },
+      backgroundColor: Platform.select({
+        web: theme.primary + '1A', // Add 1A hex for ~10% opacity
+        default: theme.primaryLight, // Use primaryLight on native
       }),
       borderRadius: 9999,
       paddingVertical: 4,
@@ -279,14 +275,7 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
     badgeText: {
       fontSize: 14,
       fontFamily: theme.fontMedium,
-      ...Platform.select({
-        web: {
-          color: 'hsl(217 91% 45%)',
-        },
-        default: {
-          color: '#10b981',
-        },
-      }),
+      color: theme.primary,
     },
   });
 };

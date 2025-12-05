@@ -17,8 +17,12 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/worktrees/', '<rootDir>/.worktrees/'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    // Mock image files first (before general @/ alias)
+    '^@/assets/images/.*\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    // Mock all image files
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    // General @/ alias (must come after specific patterns)
+    '^@/(.*)$': '<rootDir>/$1',
     // Mock expo virtual modules to prevent ESM parsing errors
     '^expo/virtual/(.*)$': '<rootDir>/__mocks__/expoVirtualMock.js',
   },
