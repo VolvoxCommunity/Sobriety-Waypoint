@@ -1,7 +1,6 @@
 import React from 'react';
-import { Platform } from 'react-native';
 import Index from '@/app/index';
-import { renderWithProviders } from '@/__tests__/test-utils';
+import { renderWithProviders, setPlatformOS, restorePlatformOS } from '@/__tests__/test-utils';
 
 // Mock expo-router
 jest.mock('expo-router', () => {
@@ -32,36 +31,29 @@ jest.mock('@/components/landing/LandingPage', () => {
 // Tests
 // =============================================================================
 
-/**
- * Helper to set Platform.OS for testing platform-specific behavior.
- */
-function setPlatformOS(os: 'ios' | 'android' | 'web') {
-  Object.defineProperty(Platform, 'OS', {
-    value: os,
-    writable: true,
-    configurable: true,
-  });
-}
-
 describe('Index Route', () => {
-  const originalPlatform = Platform.OS;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   afterEach(() => {
     // Restore original platform
-    Object.defineProperty(Platform, 'OS', {
-      value: originalPlatform,
-      writable: true,
-      configurable: true,
-    });
+    restorePlatformOS();
   });
 
-  it('redirects to login on native platforms', () => {
-    // Mock native platform
+  it('redirects to login on iOS', () => {
+    // Test iOS
     setPlatformOS('ios');
+
+    const { getByText, unmount } = renderWithProviders(<Index />);
+
+    expect(getByText('Redirected to /login')).toBeTruthy();
+    unmount();
+  });
+
+  it('redirects to login on Android', () => {
+    // Test Android
+    setPlatformOS('android');
 
     const { getByText } = renderWithProviders(<Index />);
 
