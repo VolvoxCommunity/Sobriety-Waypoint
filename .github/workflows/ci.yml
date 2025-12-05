@@ -49,10 +49,11 @@ jobs:
         uses: ./.github/actions/setup-project
 
       - name: Run tests with coverage
-        run: pnpm test:ci
+        run: pnpm test:ci --coverage
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://test.supabase.co' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key' }}
+        continue-on-error: false
 
       - name: Upload coverage to Codecov
         if: always()
@@ -84,6 +85,14 @@ jobs:
       - name: Setup Project
         uses: ./.github/actions/setup-project
 
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" ] || [ -z "${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}" ]; then
+            echo "::error::Missing required Supabase secrets. Build requires EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY."
+            echo "::error::Please add these secrets in: Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+
       - name: Build web application
         run: pnpm build:web
         env:
@@ -92,6 +101,7 @@ jobs:
           EXPO_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.EXPO_PUBLIC_FACEBOOK_APP_ID || '' }}
 
       - name: Upload build artifacts
+        if: success()
         uses: actions/upload-artifact@v5
         with:
           name: web-build
