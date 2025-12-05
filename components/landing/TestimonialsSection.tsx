@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
+import { withOpacity } from '@/utils/colors';
 
 // =============================================================================
 // Types
@@ -100,7 +101,7 @@ function TestimonialCard({ testimonial, theme, width }: TestimonialCardProps) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.quoteMark}>&ldquo;</Text>
+      <Text style={styles.quoteMark}>{'\u201C'}</Text>
       <Text style={styles.quote}>{testimonial.quote}</Text>
       <View style={styles.authorContainer}>
         <Text style={styles.authorName}>{testimonial.author}</Text>
@@ -232,7 +233,7 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
       fontSize: 40,
       fontFamily: theme.fontBold, // font-serif equivalent
       color: Platform.select({
-        web: theme.primary + '33', // Add 33 hex for ~20% opacity
+        web: withOpacity(theme.primary, 0.2), // 20% opacity
         default: theme.primaryLight, // Fallback to primaryLight on native
       }),
       lineHeight: 40,
@@ -264,7 +265,7 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
     },
     badge: {
       backgroundColor: Platform.select({
-        web: theme.primary + '1A', // Add 1A hex for ~10% opacity
+        web: withOpacity(theme.primary, 0.1), // 10% opacity
         default: theme.primaryLight, // Use primaryLight on native
       }),
       borderRadius: 9999,

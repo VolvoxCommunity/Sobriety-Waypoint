@@ -85,6 +85,13 @@ function RootLayoutNav() {
     const hasSobrietyDate = !!profile?.sobriety_date;
     const isProfileComplete = hasName && hasSobrietyDate;
 
+    // On web, allow landing page to show for unauthenticated users
+    // This allows the landing page to be accessible without login/signin
+    if (isWeb && inLanding && !user) {
+      // Allow landing page to render on web for unauthenticated users - don't redirect
+      return;
+    }
+
     // On web, if no segments (initial load at root), allow landing page to show for unauthenticated users
     if (isWeb && !hasSegments && !user) {
       // Allow landing page to render on initial web load - don't redirect

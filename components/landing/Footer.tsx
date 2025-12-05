@@ -12,7 +12,7 @@ import {
   Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { Mail, MessageCircle } from 'lucide-react-native';
 import Logo from './Logo';
 
@@ -34,11 +34,7 @@ export default function Footer() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
-  const handleEmailPress = () => {
-    Linking.openURL('mailto:support@sobrietywaypoint.com');
-  };
-
-  const handleMessagePress = () => {
+  const handleContactPress = () => {
     Linking.openURL('mailto:support@sobrietywaypoint.com');
   };
 
@@ -78,7 +74,7 @@ export default function Footer() {
               {/* Support Links */}
               <View style={styles.linkColumn}>
                 <Text style={styles.linkColumnTitle}>Support</Text>
-                <TouchableOpacity onPress={handleEmailPress}>
+                <TouchableOpacity onPress={handleContactPress}>
                   <Text style={styles.linkText}>Contact Us</Text>
                 </TouchableOpacity>
                 <TouchableOpacity>
@@ -111,7 +107,7 @@ export default function Footer() {
               <Text style={styles.linkText}>Sign In</Text>
             </TouchableOpacity>
             <Text style={styles.linkSeparator}>•</Text>
-            <TouchableOpacity onPress={handleEmailPress}>
+            <TouchableOpacity onPress={handleContactPress}>
               <Text style={styles.linkText}>Contact</Text>
             </TouchableOpacity>
             <Text style={styles.linkSeparator}>•</Text>
@@ -131,10 +127,10 @@ export default function Footer() {
           </Text>
 
           <View style={styles.socialLinks}>
-            <TouchableOpacity style={styles.socialButton} onPress={handleEmailPress}>
+            <TouchableOpacity style={styles.socialButton} onPress={handleContactPress}>
               <Mail size={16} color={theme.textSecondary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} onPress={handleMessagePress}>
+            <TouchableOpacity style={styles.socialButton} onPress={handleContactPress}>
               <MessageCircle size={16} color={theme.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -157,7 +153,7 @@ export default function Footer() {
 // Styles
 // =============================================================================
 
-const createStyles = (theme: any, width: number) => {
+const createStyles = (theme: ThemeColors, width: number) => {
   const isMobile = width < 768;
   const isTablet = width >= 768 && width < 1024;
 

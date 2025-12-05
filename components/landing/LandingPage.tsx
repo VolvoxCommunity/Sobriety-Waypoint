@@ -1,10 +1,9 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Platform, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import React from 'react';
+import { View, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import HeroSection from './HeroSection';
 import FeaturesSection from './FeaturesSection';
 import AppDemoSection from './AppDemoSection';
@@ -28,17 +27,9 @@ import Footer from './Footer';
  */
 export default function LandingPage() {
   const { theme } = useTheme();
-  const router = useRouter();
   const { width } = useWindowDimensions();
 
-  // Ensure we're on web platform (additional safety check)
-  useEffect(() => {
-    if (Platform.OS !== 'web') {
-      router.replace('/login');
-    }
-  }, [router]);
-
-  const styles = createStyles(theme, width);
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
@@ -83,7 +74,7 @@ export default function LandingPage() {
 // Styles
 // =============================================================================
 
-const createStyles = (theme: any, width: number) => {
+const createStyles = (theme: ThemeColors) => {
   return StyleSheet.create({
     container: {
       flex: 1,

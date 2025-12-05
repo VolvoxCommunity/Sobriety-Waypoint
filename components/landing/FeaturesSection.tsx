@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { Calendar, Users, CheckSquare, Award } from 'lucide-react-native';
+import { withOpacity } from '@/utils/colors';
 
 // =============================================================================
 // Types
@@ -101,7 +102,7 @@ function FeatureCard({ feature, theme, width }: FeatureCardProps) {
 
   return (
     <View style={styles.card}>
-      <View style={[styles.iconContainer, { backgroundColor: feature.color + '15' }]}>
+      <View style={[styles.iconContainer, { backgroundColor: withOpacity(feature.color, 0.08) }]}>
         {feature.icon}
       </View>
       <Text style={styles.cardTitle}>{feature.title}</Text>

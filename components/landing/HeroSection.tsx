@@ -111,8 +111,8 @@ export default function HeroSection() {
           <View style={styles.quoteBorder}>
             <View style={styles.quoteBorderLine} />
             <Text style={styles.quote}>
-              &ldquo;Recovery is not a race. You don&apos;t have to feel guilty if it takes you
-              longer than you thought it would.&rdquo;
+              {'\u201C'}Recovery is not a race. You don{'\u2019'}t have to feel guilty if it takes
+              you longer than you thought it would.{'\u201D'}
             </Text>
           </View>
         </View>

@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { UserPlus, CalendarCheck, Link2, TrendingUp } from 'lucide-react-native';
+import { withOpacity } from '@/utils/colors';
 
 // =============================================================================
 // Types
@@ -88,7 +89,8 @@ export default function HowItWorksSection() {
           <View style={styles.quoteBorder}>
             <View style={styles.quoteBorderLine} />
             <Text style={styles.encouragementText}>
-              &ldquo;One day at a time. You&apos;ve got this, and you&apos;re not alone.&rdquo;
+              {'\u201C'}One day at a time. You{'\u2019'}ve got this, and you{'\u2019'}re not alone.
+              {'\u201D'}
             </Text>
           </View>
         </View>
@@ -224,7 +226,6 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
     stepCard: {
       flex: 1,
       alignItems: 'center',
-      paddingHorizontal: isMobile ? 0 : 0,
     },
     stepHeader: {
       flexDirection: 'column',
@@ -237,7 +238,7 @@ const createCardStyles = (theme: ThemeColors, width: number) => {
       fontFamily: theme.fontBold, // font-serif equivalent
       // Using primary color with low opacity for subtle background number
       color: Platform.select({
-        web: theme.primary + '1F', // Add 1F hex for ~12% opacity
+        web: withOpacity(theme.primary, 0.12), // 12% opacity
         default: theme.primaryLight, // Fallback to primaryLight on native
       }),
       lineHeight: 50,

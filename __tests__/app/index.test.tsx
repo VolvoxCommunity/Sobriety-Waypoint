@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, Text } from 'react-native';
+import { Platform } from 'react-native';
 import Index from '../../app/index';
 import { renderWithProviders } from '../test-utils';
 
