@@ -1,16 +1,30 @@
+// Unmock the logger to test the real implementation
 import { logger } from '@/lib/logger';
-import * as Sentry from '@sentry/react-native';
+
+jest.unmock('@/lib/logger');
+
+// Mock Sentry with proper functions for logger tests
+const mockAddBreadcrumb = jest.fn();
+const mockCaptureException = jest.fn();
+
+jest.mock('@sentry/react-native', () => ({
+  addBreadcrumb: (...args: any[]) => mockAddBreadcrumb(...args),
+  captureException: (...args: any[]) => mockCaptureException(...args),
+}));
 
 describe('Logger', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset mock implementations
+    mockAddBreadcrumb.mockImplementation(() => {});
+    mockCaptureException.mockImplementation(() => {});
   });
 
   describe('info()', () => {
     it('creates Sentry breadcrumb with info level', () => {
       logger.info('Test message');
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'info',
         category: 'log',
         message: 'Test message',
@@ -22,7 +36,7 @@ describe('Logger', () => {
     it('includes metadata in breadcrumb data', () => {
       logger.info('Test message', { userId: '123', action: 'login' });
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'info',
         category: 'log',
         message: 'Test message',
@@ -35,7 +49,7 @@ describe('Logger', () => {
       logger.info('User signed in', { category: 'auth', userId: '123' });
 
       // category is extracted to top-level breadcrumb field, not duplicated in data
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'info',
         category: 'auth',
         message: 'User signed in',
@@ -49,7 +63,7 @@ describe('Logger', () => {
     it('creates Sentry breadcrumb with warning level', () => {
       logger.warn('Warning message');
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'warning',
         category: 'log',
         message: 'Warning message',
@@ -63,7 +77,7 @@ describe('Logger', () => {
     it('creates Sentry breadcrumb with error level', () => {
       logger.error('Error message');
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'error',
         category: 'log',
         message: 'Error message',
@@ -76,7 +90,7 @@ describe('Logger', () => {
       const error = new Error('Test error');
       logger.error('Operation failed', error);
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'error',
         category: 'log',
         message: 'Operation failed',
@@ -93,7 +107,7 @@ describe('Logger', () => {
       const error = new Error('Test error');
       logger.error('Operation failed', error, { userId: '456', operation: 'delete' });
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'error',
         category: 'log',
         message: 'Operation failed',
@@ -112,7 +126,7 @@ describe('Logger', () => {
       const error = new Error('Test error');
       logger.error('Operation failed', error);
 
-      expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      expect(mockCaptureException).toHaveBeenCalledWith(error, {
         tags: {
           // Default category when none provided is 'uncategorized'
           category: 'uncategorized',
@@ -127,7 +141,7 @@ describe('Logger', () => {
       const error = new Error('Auth failed');
       logger.error('Login failed', error, { category: 'auth', userId: '123' });
 
-      expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      expect(mockCaptureException).toHaveBeenCalledWith(error, {
         tags: {
           category: 'auth',
         },
@@ -141,7 +155,7 @@ describe('Logger', () => {
     it('does not capture to Sentry when no Error object is provided', () => {
       logger.error('Error message without Error object');
 
-      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(mockCaptureException).not.toHaveBeenCalled();
     });
   });
 
@@ -149,7 +163,7 @@ describe('Logger', () => {
     it('creates Sentry breadcrumb with debug level', () => {
       logger.debug('Debug message');
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'debug',
         category: 'log',
         message: 'Debug message',
@@ -163,7 +177,7 @@ describe('Logger', () => {
     it('creates Sentry breadcrumb with debug level', () => {
       logger.trace('Trace message');
 
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      expect(mockAddBreadcrumb).toHaveBeenCalledWith({
         level: 'debug',
         category: 'log',
         message: 'Trace message',
@@ -174,14 +188,14 @@ describe('Logger', () => {
   });
 
   describe('development mode console output', () => {
-    const originalDev = (global as any).__DEV__;
+    const originalDev = (globalThis as any).__DEV__;
 
     beforeEach(() => {
-      (global as any).__DEV__ = true;
+      (globalThis as any).__DEV__ = true;
     });
 
     afterEach(() => {
-      (global as any).__DEV__ = originalDev;
+      (globalThis as any).__DEV__ = originalDev;
     });
 
     it('logs to console.info in development mode', () => {
@@ -291,14 +305,14 @@ describe('Logger', () => {
   });
 
   describe('Sentry error handling', () => {
-    const originalDev = (global as any).__DEV__;
+    const originalDev = (globalThis as any).__DEV__;
 
     beforeEach(() => {
-      (global as any).__DEV__ = true;
+      (globalThis as any).__DEV__ = true;
     });
 
     afterEach(() => {
-      (global as any).__DEV__ = originalDev;
+      (globalThis as any).__DEV__ = originalDev;
     });
 
     it('silently catches Sentry captureException errors in development', () => {
@@ -306,7 +320,7 @@ describe('Logger', () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
       // Make captureException throw
-      (Sentry.captureException as jest.Mock).mockImplementationOnce(() => {
+      mockCaptureException.mockImplementationOnce(() => {
         throw new Error('Sentry not initialized');
       });
 
@@ -323,7 +337,7 @@ describe('Logger', () => {
 
     it('silently catches Sentry addBreadcrumb errors', () => {
       // Make addBreadcrumb throw
-      (Sentry.addBreadcrumb as jest.Mock).mockImplementationOnce(() => {
+      mockAddBreadcrumb.mockImplementationOnce(() => {
         throw new Error('Sentry not initialized');
       });
 

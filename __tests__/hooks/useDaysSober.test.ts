@@ -37,6 +37,16 @@ jest.mock('@/lib/supabase', () => ({
   },
 }));
 
+// Mock @/lib/date - use actual implementation for getDateDiffInDays
+jest.mock('@/lib/date', () => {
+  const actualDate = jest.requireActual('@/lib/date');
+  return {
+    ...actualDate,
+    DEVICE_TIMEZONE: 'America/New_York',
+    parseDateAsLocal: jest.fn((dateString) => new Date(dateString)),
+  };
+});
+
 // =============================================================================
 // Test Suite
 // =============================================================================

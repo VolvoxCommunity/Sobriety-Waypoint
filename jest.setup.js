@@ -12,6 +12,9 @@ jest.mock('react-native', () => {
     React.createElement('KeyboardAvoidingView', props, children);
   const Modal = ({ children, visible, ...props }) =>
     visible ? React.createElement('Modal', props, children) : null;
+  const Image = ({ source, ...props }) => React.createElement('Image', { source, ...props });
+  const ImageBackground = ({ children, source, ...props }) =>
+    React.createElement('ImageBackground', { source, ...props }, children);
 
   // Mock Animated for AnimatedBottomNav and other animated components
   class MockAnimatedValue {
@@ -74,6 +77,8 @@ jest.mock('react-native', () => {
     ScrollView,
     KeyboardAvoidingView,
     Modal,
+    Image,
+    ImageBackground,
     Animated,
     ActivityIndicator: ({ size, color, ...props }) =>
       React.createElement('ActivityIndicator', { size, color, ...props }),
@@ -124,6 +129,22 @@ global.processColor = (color) => color;
 
 // Define __DEV__ for tests
 global.__DEV__ = false;
+
+// Ensure setTimeout/clearTimeout are available in Node.js test environment
+// These are needed even when using jest.useFakeTimers()
+global.setTimeout = global.setTimeout || setTimeout;
+global.clearTimeout = global.clearTimeout || clearTimeout;
+global.setInterval = global.setInterval || setInterval;
+global.clearInterval = global.clearInterval || clearInterval;
+
+// Suppress react-test-renderer deprecation warnings
+const originalError = console.error;
+console.error = (...args) => {
+  if (typeof args[0] === 'string' && args[0].includes('react-test-renderer is deprecated')) {
+    return;
+  }
+  originalError(...args);
+};
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
@@ -216,6 +237,25 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
+// Mock expo-web-browser
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  openAuthSessionAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
+}));
+
+// Mock expo-linking
+jest.mock('expo-linking', () => ({
+  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  getInitialURL: jest.fn().mockResolvedValue(null),
+  createURL: jest.fn((path) => `sobrietywaypoint://${path}`),
+  parse: jest.fn((url) => ({ path: url, queryParams: {} })),
+}));
+
+// Mock expo-auth-session
+jest.mock('expo-auth-session', () => ({
+  makeRedirectUri: jest.fn(() => 'sobrietywaypoint://auth/callback'),
+}));
+
 // Mock @sentry/react-native
 jest.mock('@sentry/react-native', () => ({
   addBreadcrumb: jest.fn(),
@@ -229,6 +269,126 @@ jest.mock('@sentry/react-native', () => ({
   mobileReplayIntegration: jest.fn(() => ({})),
   feedbackIntegration: jest.fn(() => ({})),
 }));
+
+// Mock @/lib/sentry functions
+jest.mock('@/lib/sentry', () => ({
+  initializeSentry: jest.fn(),
+  navigationIntegration: {
+    registerNavigationContainer: jest.fn(),
+  },
+  setSentryUser: jest.fn(),
+  clearSentryUser: jest.fn(),
+  setSentryContext: jest.fn(),
+}));
+
+// Mock @/lib/logger
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+  LogCategory: {
+    DATABASE: 'database',
+    AUTH: 'auth',
+    UI: 'ui',
+  },
+}));
+
+// Mock @/lib/date
+// Note: We spread actualDate first, then override specific functions
+// This ensures getDateDiffInDays and other functions use the real implementation
+jest.mock('@/lib/date', () => {
+  const actualDate = jest.requireActual('@/lib/date');
+  return {
+    ...actualDate, // Include all actual exports first
+    DEVICE_TIMEZONE: 'America/New_York', // Override DEVICE_TIMEZONE
+    parseDateAsLocal: jest.fn((dateString) => new Date(dateString)), // Mock parseDateAsLocal
+    // getDateDiffInDays, formatDateWithTimezone, formatLocalDate, getUserTimezone
+    // all use the actual implementation from the spread above
+  };
+});
+
+// Mock image assets globally to prevent Jest from trying to parse them
+// These will be handled by moduleNameMapper, but adding explicit mocks as fallback
+jest.mock('@/assets/images/hero-forest.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-dashboard.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-sponsor.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-milestone.jpg', () => 'test-file-stub', { virtual: true });
+
+// Mock @/lib/supabase - must be after @supabase/supabase-js mock
+jest.mock('@/lib/supabase', () => {
+  const { createClient } = require('@supabase/supabase-js');
+  return {
+    supabase: createClient('https://test.supabase.co', 'test-anon-key'),
+  };
+});
+
+// Mock lucide-react-native icons
+jest.mock('lucide-react-native', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  // Create a generic icon component with display name
+  const createIcon = (name) => {
+    const IconComponent = (props) =>
+      React.createElement(View, { testID: `icon-${name}`, ...props });
+    IconComponent.displayName = name;
+    return IconComponent;
+  };
+
+  return {
+    ArrowRight: createIcon('ArrowRight'),
+    Calendar: createIcon('Calendar'),
+    Users: createIcon('Users'),
+    CheckSquare: createIcon('CheckSquare'),
+    Award: createIcon('Award'),
+    UserPlus: createIcon('UserPlus'),
+    CalendarCheck: createIcon('CalendarCheck'),
+    Link2: createIcon('Link2'),
+    TrendingUp: createIcon('TrendingUp'),
+    Shield: createIcon('Shield'),
+    Zap: createIcon('Zap'),
+    Target: createIcon('Target'),
+  };
+});
+
+// Mock react-native-svg
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const Svg = ({ children, ...props }) =>
+    React.createElement(View, { testID: 'svg', ...props }, children);
+  Svg.displayName = 'Svg';
+
+  const Circle = (props) => React.createElement(View, { testID: 'svg-circle', ...props });
+  Circle.displayName = 'Circle';
+
+  const Path = (props) => React.createElement(View, { testID: 'svg-path', ...props });
+  Path.displayName = 'Path';
+
+  const Rect = (props) => React.createElement(View, { testID: 'svg-rect', ...props });
+  Rect.displayName = 'Rect';
+
+  const G = ({ children, ...props }) =>
+    React.createElement(View, { testID: 'svg-g', ...props }, children);
+  G.displayName = 'G';
+
+  // Support both default export (Svg) and named exports
+  const mockModule = {
+    __esModule: true,
+    default: Svg,
+    Svg,
+    Circle,
+    Path,
+    Rect,
+    G,
+  };
+
+  return mockModule;
+});
 
 // Mock @supabase/supabase-js with chainable query builder
 jest.mock('@supabase/supabase-js', () => {
@@ -281,13 +441,16 @@ jest.mock('@supabase/supabase-js', () => {
       auth: {
         signUp: jest.fn(() => Promise.resolve({ data: null, error: null })),
         signInWithPassword: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        signInWithOAuth: jest.fn(() => Promise.resolve({ data: null, error: null })),
         signOut: jest.fn(() => Promise.resolve({ error: null })),
         onAuthStateChange: jest.fn(() => ({
           data: { subscription: { unsubscribe: jest.fn() } },
         })),
         getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+        setSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
       },
       from: jest.fn(() => createQueryBuilder()),
+      rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
     })),
   };
 });

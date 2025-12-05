@@ -88,7 +88,7 @@ jest.mock('@/components/AnimatedBottomNav', () => {
       onActiveIndexChange,
       accentColor,
     }: {
-      items: Array<{ label: string; icon: unknown; onPress: () => void }>;
+      items: { label: string; icon: unknown; onPress: () => void }[];
       activeIndex: number;
       onActiveIndexChange: (index: number) => void;
       accentColor: string;
