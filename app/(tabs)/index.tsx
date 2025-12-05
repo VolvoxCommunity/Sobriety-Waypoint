@@ -27,7 +27,15 @@ import {
 import { useRouter } from 'expo-router';
 import TaskCreationModal from '@/components/TaskCreationModal';
 import { logger, LogCategory } from '@/lib/logger';
+import { parseDateAsLocal } from '@/lib/date';
 
+/**
+ * Render the home dashboard showing the user's sobriety summary, sponsor/sponsee relationships, recent tasks, and quick actions.
+ *
+ * Fetches relationships and recent tasks from the backend, supports pull-to-refresh, allows disconnecting relationships and creating tasks for sponsees, and displays milestone and days-sober information.
+ *
+ * @returns The Home screen React element.
+ */
 export default function HomeScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
@@ -176,6 +184,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
+      testID="home-scroll-view"
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
@@ -200,7 +209,7 @@ export default function HomeScreen() {
             <Text style={styles.sobrietyDate}>
               Since{' '}
               {currentStreakStartDate
-                ? new Date(currentStreakStartDate).toLocaleDateString('en-US', {
+                ? parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
@@ -244,6 +253,7 @@ export default function HomeScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.disconnectButton}
+                  accessibilityLabel={`Disconnect from ${rel.sponsor?.first_name} ${rel.sponsor?.last_initial}.`}
                   onPress={() =>
                     handleDisconnect(
                       rel.id,
@@ -295,6 +305,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.disconnectButton}
+                  accessibilityLabel={`Disconnect from ${rel.sponsee?.first_name} ${rel.sponsee?.last_initial}.`}
                   onPress={() =>
                     handleDisconnect(
                       rel.id,
@@ -356,7 +367,7 @@ export default function HomeScreen() {
           <Text style={styles.actionTitle}>12 Steps</Text>
           <Text style={styles.actionSubtitle}>Learn & Reflect</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/manage-tasks')}>
+        <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/tasks')}>
           <ClipboardList size={32} color={theme.primary} />
           <Text style={styles.actionTitle}>Manage Tasks</Text>
           <Text style={styles.actionSubtitle}>Guide Progress</Text>

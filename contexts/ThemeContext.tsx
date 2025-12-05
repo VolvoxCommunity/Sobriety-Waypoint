@@ -38,7 +38,7 @@ interface ThemeContextType {
 }
 
 const lightTheme: ThemeColors = {
-  background: '#f9fafb',
+  background: '#ffffff',
   surface: '#ffffff',
   card: '#ffffff',
   text: '#111827',
@@ -63,17 +63,17 @@ const lightTheme: ThemeColors = {
 };
 
 const darkTheme: ThemeColors = {
-  background: '#111827',
-  surface: '#1f2937',
-  card: '#1f2937',
-  text: '#f9fafb',
-  textSecondary: '#9ca3af',
-  textTertiary: '#6b7280',
-  textOnPrimary: '#ffffff',
-  primary: '#007AFF',
-  primaryLight: '#003d7a',
-  border: '#374151',
-  borderLight: '#4b5563',
+  background: '#111827', // Dark gray background for all sections
+  surface: '#1f2937', // Slightly lighter for surfaces
+  card: '#1f2937', // Dark gray for cards (provides contrast against background)
+  text: '#f9fafb', // Light gray/white for primary text
+  textSecondary: '#9ca3af', // Medium gray for secondary text
+  textTertiary: '#6b7280', // Darker gray for tertiary text
+  textOnPrimary: '#ffffff', // White text on primary colored buttons
+  primary: '#007AFF', // Same blue for consistency
+  primaryLight: '#1e3a5f', // Darker blue for dark mode (adjusted from #003d7a for better visibility)
+  border: '#374151', // Medium gray border (visible on dark background)
+  borderLight: '#4b5563', // Lighter gray for subtle borders
   error: '#ef4444',
   success: '#007AFF',
   danger: '#ef4444',

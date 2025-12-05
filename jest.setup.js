@@ -10,6 +10,55 @@ jest.mock('react-native', () => {
   const ScrollView = ({ children, ...props }) => React.createElement('ScrollView', props, children);
   const KeyboardAvoidingView = ({ children, ...props }) =>
     React.createElement('KeyboardAvoidingView', props, children);
+  const Modal = ({ children, visible, ...props }) =>
+    visible ? React.createElement('Modal', props, children) : null;
+  const Image = ({ source, ...props }) => React.createElement('Image', { source, ...props });
+  const ImageBackground = ({ children, source, ...props }) =>
+    React.createElement('ImageBackground', { source, ...props }, children);
+
+  // Mock Animated for AnimatedBottomNav and other animated components
+  class MockAnimatedValue {
+    constructor(value) {
+      this._value = value;
+    }
+    setValue(value) {
+      this._value = value;
+    }
+  }
+
+  const Animated = {
+    View: ({ children, style, ...props }) =>
+      React.createElement('View', { ...props, style }, children),
+    Text: ({ children, style, ...props }) =>
+      React.createElement('Text', { ...props, style }, children),
+    Value: MockAnimatedValue,
+    timing: (value, config) => ({
+      start: (callback) => {
+        if (value && value._value !== undefined) {
+          value._value = config.toValue;
+        }
+        callback && callback();
+      },
+    }),
+    sequence: (animations) => ({
+      start: (callback) => {
+        animations.forEach((anim) => anim.start && anim.start());
+        callback && callback();
+      },
+    }),
+    parallel: (animations) => ({
+      start: (callback) => {
+        animations.forEach((anim) => anim.start && anim.start());
+        callback && callback();
+      },
+    }),
+    spring: (value, config) => ({
+      start: (callback) => {
+        callback && callback();
+      },
+    }),
+    event: () => jest.fn(),
+  };
 
   return {
     Platform: {
@@ -27,10 +76,20 @@ jest.mock('react-native', () => {
     TouchableOpacity,
     ScrollView,
     KeyboardAvoidingView,
+    Modal,
+    Image,
+    ImageBackground,
+    Animated,
     ActivityIndicator: ({ size, color, ...props }) =>
       React.createElement('ActivityIndicator', { size, color, ...props }),
     Alert: {
       alert: jest.fn(),
+    },
+    Linking: {
+      openURL: jest.fn().mockResolvedValue(true),
+      canOpenURL: jest.fn().mockResolvedValue(true),
+      getInitialURL: jest.fn().mockResolvedValue(null),
+      addEventListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
     },
     Dimensions: {
       get: jest.fn(() => ({ width: 375, height: 812 })),
@@ -38,6 +97,30 @@ jest.mock('react-native', () => {
       removeEventListener: jest.fn(),
     },
     useColorScheme: jest.fn(() => 'light'),
+    useWindowDimensions: jest.fn(() => ({ width: 375, height: 812 })),
+    LayoutAnimation: {
+      configureNext: jest.fn(),
+      Presets: {
+        easeInEaseOut: {},
+        linear: {},
+        spring: {},
+      },
+      Types: {
+        spring: 'spring',
+        linear: 'linear',
+        easeInEaseOut: 'easeInEaseOut',
+        easeIn: 'easeIn',
+        easeOut: 'easeOut',
+        keyboard: 'keyboard',
+      },
+      Properties: {
+        opacity: 'opacity',
+        scaleX: 'scaleX',
+        scaleY: 'scaleY',
+        scaleXY: 'scaleXY',
+      },
+      create: jest.fn(),
+    },
   };
 });
 
@@ -75,6 +158,36 @@ jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
 }));
 
+// Mock expo-apple-authentication
+jest.mock('expo-apple-authentication', () => {
+  const React = require('react');
+  const { TouchableOpacity, Text } = require('react-native');
+
+  return {
+    signInAsync: jest.fn(),
+    AppleAuthenticationScope: {
+      FULL_NAME: 0,
+      EMAIL: 1,
+    },
+    AppleAuthenticationButtonType: {
+      SIGN_IN: 0,
+      CONTINUE: 1,
+      SIGN_UP: 2,
+    },
+    AppleAuthenticationButtonStyle: {
+      WHITE: 0,
+      WHITE_OUTLINE: 1,
+      BLACK: 2,
+    },
+    AppleAuthenticationButton: ({ onPress, ...props }) =>
+      React.createElement(
+        TouchableOpacity,
+        { testID: 'apple-auth-button', onPress, ...props },
+        React.createElement(Text, null, 'Sign in with Apple')
+      ),
+  };
+});
+
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
@@ -91,6 +204,42 @@ const mockAsyncStorage = {
 };
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
+// Mock expo core module
+jest.mock('expo', () => ({
+  isRunningInExpoGo: jest.fn(() => false),
+}));
+
+// Mock expo-constants
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    version: '1.0.0',
+    extra: {
+      eas: {
+        buildNumber: '123',
+      },
+    },
+  },
+}));
+
+// Mock expo-web-browser
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  openAuthSessionAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
+}));
+
+// Mock expo-linking
+jest.mock('expo-linking', () => ({
+  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  getInitialURL: jest.fn().mockResolvedValue(null),
+  createURL: jest.fn((path) => `sobrietywaypoint://${path}`),
+  parse: jest.fn((url) => ({ path: url, queryParams: {} })),
+}));
+
+// Mock expo-auth-session
+jest.mock('expo-auth-session', () => ({
+  makeRedirectUri: jest.fn(() => 'sobrietywaypoint://auth/callback'),
+}));
+
 // Mock @sentry/react-native
 jest.mock('@sentry/react-native', () => ({
   addBreadcrumb: jest.fn(),
@@ -100,7 +249,122 @@ jest.mock('@sentry/react-native', () => ({
   setContext: jest.fn(),
   init: jest.fn(),
   wrap: jest.fn((component) => component),
+  reactNavigationIntegration: jest.fn(() => ({})),
+  mobileReplayIntegration: jest.fn(() => ({})),
+  feedbackIntegration: jest.fn(() => ({})),
 }));
+
+// Mock @/lib/sentry functions
+jest.mock('@/lib/sentry', () => ({
+  initializeSentry: jest.fn(),
+  navigationIntegration: {
+    registerNavigationContainer: jest.fn(),
+  },
+  setSentryUser: jest.fn(),
+  clearSentryUser: jest.fn(),
+  setSentryContext: jest.fn(),
+}));
+
+// Mock @/lib/logger
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+  LogCategory: {
+    DATABASE: 'database',
+    AUTH: 'auth',
+    UI: 'ui',
+  },
+}));
+
+// Mock @/lib/date
+jest.mock('@/lib/date', () => ({
+  DEVICE_TIMEZONE: 'America/New_York',
+  parseDateAsLocal: jest.fn((dateString) => new Date(dateString)),
+}));
+
+// Mock image assets globally to prevent Jest from trying to parse them
+// These will be handled by moduleNameMapper, but adding explicit mocks as fallback
+jest.mock('@/assets/images/hero-forest.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-dashboard.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-sponsor.jpg', () => 'test-file-stub', { virtual: true });
+jest.mock('@/assets/images/mockup-milestone.jpg', () => 'test-file-stub', { virtual: true });
+
+// Mock @/lib/supabase - must be after @supabase/supabase-js mock
+jest.mock('@/lib/supabase', () => {
+  const { createClient } = require('@supabase/supabase-js');
+  return {
+    supabase: createClient('https://test.supabase.co', 'test-anon-key'),
+  };
+});
+
+// Mock lucide-react-native icons
+jest.mock('lucide-react-native', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  // Create a generic icon component with display name
+  const createIcon = (name) => {
+    const IconComponent = (props) =>
+      React.createElement(View, { testID: `icon-${name}`, ...props });
+    IconComponent.displayName = name;
+    return IconComponent;
+  };
+
+  return {
+    ArrowRight: createIcon('ArrowRight'),
+    Calendar: createIcon('Calendar'),
+    Users: createIcon('Users'),
+    CheckSquare: createIcon('CheckSquare'),
+    Award: createIcon('Award'),
+    UserPlus: createIcon('UserPlus'),
+    CalendarCheck: createIcon('CalendarCheck'),
+    Link2: createIcon('Link2'),
+    TrendingUp: createIcon('TrendingUp'),
+    Shield: createIcon('Shield'),
+    Zap: createIcon('Zap'),
+    Target: createIcon('Target'),
+  };
+});
+
+// Mock react-native-svg
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const Svg = ({ children, ...props }) =>
+    React.createElement(View, { testID: 'svg', ...props }, children);
+  Svg.displayName = 'Svg';
+
+  const Circle = (props) => React.createElement(View, { testID: 'svg-circle', ...props });
+  Circle.displayName = 'Circle';
+
+  const Path = (props) => React.createElement(View, { testID: 'svg-path', ...props });
+  Path.displayName = 'Path';
+
+  const Rect = (props) => React.createElement(View, { testID: 'svg-rect', ...props });
+  Rect.displayName = 'Rect';
+
+  const G = ({ children, ...props }) =>
+    React.createElement(View, { testID: 'svg-g', ...props }, children);
+  G.displayName = 'G';
+
+  // Support both default export (Svg) and named exports
+  const mockModule = {
+    __esModule: true,
+    default: Svg,
+    Svg,
+    Circle,
+    Path,
+    Rect,
+    G,
+  };
+
+  return mockModule;
+});
 
 // Mock @supabase/supabase-js with chainable query builder
 jest.mock('@supabase/supabase-js', () => {
@@ -153,13 +417,16 @@ jest.mock('@supabase/supabase-js', () => {
       auth: {
         signUp: jest.fn(() => Promise.resolve({ data: null, error: null })),
         signInWithPassword: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        signInWithOAuth: jest.fn(() => Promise.resolve({ data: null, error: null })),
         signOut: jest.fn(() => Promise.resolve({ error: null })),
         onAuthStateChange: jest.fn(() => ({
           data: { subscription: { unsubscribe: jest.fn() } },
         })),
         getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+        setSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
       },
       from: jest.fn(() => createQueryBuilder()),
+      rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
     })),
   };
 });

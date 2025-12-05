@@ -15,8 +15,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { Heart } from 'lucide-react-native';
 import { GoogleLogo } from '@/components/auth/SocialLogos';
+import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { logger, LogCategory } from '@/lib/logger';
 
+/**
+ * Render the app's login screen and manage email/password, Google, and Apple sign-in flows.
+ *
+ * Renders inputs for email and password, primary sign-in and Google/Apple sign-in buttons,
+ * validation alerts for missing credentials, error alerts on sign-in failures, and a
+ * navigation control to the sign-up screen.
+ *
+ * @returns The login screen JSX with credential inputs, sign-in actions, and account creation navigation
+ */
 export default function LoginScreen() {
   const { theme } = useTheme();
   const [email, setEmail] = useState('');
@@ -145,6 +155,15 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
+          {/* Apple Sign In - only renders on iOS */}
+          <AppleSignInButton
+            onError={(error) => {
+              logger.error('Apple sign in failed', error, { category: LogCategory.AUTH });
+              // AppleSignInButton only renders on iOS, so Alert.alert is safe here
+              Alert.alert('Error', error.message);
+            }}
+          />
+
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() => router.push('/signup')}
@@ -200,13 +219,13 @@ const createStyles = (theme: ThemeColors) =>
       fontSize: 14,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#374151',
+      color: theme.text,
       marginBottom: 8,
     },
     input: {
       backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: theme.border,
       borderRadius: 12,
       padding: 16,
       fontSize: 16,
@@ -237,18 +256,18 @@ const createStyles = (theme: ThemeColors) =>
     dividerLine: {
       flex: 1,
       height: 1,
-      backgroundColor: '#e5e7eb',
+      backgroundColor: theme.border,
     },
     dividerText: {
       marginHorizontal: 16,
-      color: '#9ca3af',
+      color: theme.textTertiary,
       fontSize: 14,
       fontFamily: theme.fontRegular,
     },
     googleButton: {
       backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: theme.border,
       borderRadius: 12,
       padding: 16,
       flexDirection: 'row',
@@ -257,20 +276,21 @@ const createStyles = (theme: ThemeColors) =>
       marginBottom: 12,
     },
     googleButtonText: {
-      color: '#374151',
+      color: theme.text,
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
+      marginLeft: 8,
     },
     secondaryButton: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: theme.border,
       borderRadius: 12,
       padding: 16,
       alignItems: 'center',
     },
     secondaryButtonText: {
-      color: '#374151',
+      color: theme.text,
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',

@@ -17,8 +17,14 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/worktrees/', '<rootDir>/.worktrees/'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    // Mock image files first (before general @/ alias)
+    '^@/assets/images/.*\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    // Mock all image files
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    // General @/ alias (must come after specific patterns)
+    '^@/(.*)$': '<rootDir>/$1',
+    // Mock expo virtual modules to prevent ESM parsing errors
+    '^expo/virtual/(.*)$': '<rootDir>/__mocks__/expoVirtualMock.js',
   },
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',
@@ -30,13 +36,11 @@ module.exports = {
     '!**/node_modules/**',
   ],
   coverageThreshold: {
-    // Global thresholds temporarily lowered - project needs more test coverage
-    // TODO: Incrementally increase as tests are added
     global: {
-      statements: 10,
-      branches: 5,
-      functions: 10,
-      lines: 10,
+      statements: 80,
+      branches: 70,
+      functions: 80,
+      lines: 80,
     },
   },
 };

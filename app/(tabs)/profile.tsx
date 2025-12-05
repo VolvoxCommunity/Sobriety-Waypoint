@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,9 +30,10 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
+import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
-// Component for displaying sponsee days sober using the hook
+// Component for displaying sponsee days sober using hook
 function SponseeDaysDisplay({
   relationship,
   theme,
@@ -85,7 +86,7 @@ function SponseeDaysDisplay({
   );
 }
 
-// Component for displaying sponsor days sober using the hook
+// Component for displaying sponsor days sober using hook
 function SponsorDaysDisplay({
   relationship,
   theme,
@@ -128,6 +129,18 @@ function SponsorDaysDisplay({
   );
 }
 
+/**
+ * Displays the authenticated user's profile, sobriety journey, and sponsor/sponsee management UI.
+ *
+ * Shows the user's avatar, name, email, current days sober, journey start and current streak information.
+ * Provides actions to edit the sobriety date, log a slip-up, generate or join invite codes, and
+ * disconnect sponsor/sponsee relationships.
+ *
+ * Manages relationship and task statistics fetching, timezone-aware date handling for sobriety and
+ * slip-up flows, and creates relevant notifications when connections change or slip-ups are logged.
+ *
+ * @returns A React element that renders the profile screen UI.
+ */
 export default function ProfileScreen() {
   const { profile, refreshProfile } = useAuth();
   const { theme } = useTheme();
@@ -154,6 +167,13 @@ export default function ProfileScreen() {
   const [sponseeTaskStats, setSponseeTaskStats] = useState<{
     [key: string]: { total: number; completed: number };
   }>({});
+
+  // User's timezone (stored in profile) with device timezone as fallback
+  const userTimezone = getUserTimezone(profile);
+
+  // Stable maximum date for DateTimePicker to prevent iOS crash when value > maximumDate.
+  // iOS throws 'Start date cannot be later in time than end date!' if value > maximumDate.
+  const maximumDate = useMemo(() => new Date(), []);
 
   const fetchRelationships = useCallback(async () => {
     if (!profile) return;
@@ -182,6 +202,7 @@ export default function ProfileScreen() {
         const { data: allTasks } = await supabase
           .from('tasks')
           .select('sponsee_id, status')
+          .eq('sponsor_id', profile.id)
           .in('sponsee_id', sponseeIds);
 
         // Aggregate stats client-side
@@ -543,7 +564,11 @@ export default function ProfileScreen() {
 
   const handleEditSobrietyDate = () => {
     if (profile?.sobriety_date) {
-      setSelectedSobrietyDate(new Date(profile.sobriety_date));
+      // Parse using the user's stored timezone to maintain consistency
+      // with how dates are saved (line 939 uses userTimezone)
+      const parsedDate = parseDateAsLocal(profile.sobriety_date, userTimezone);
+      // Clamp to maximumDate to prevent iOS DateTimePicker crash
+      setSelectedSobrietyDate(parsedDate > maximumDate ? maximumDate : parsedDate);
     }
     setShowSobrietyDatePicker(true);
   };
@@ -586,7 +611,9 @@ export default function ProfileScreen() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ sobriety_date: newDate.toISOString().split('T')[0] })
+        .update({
+          sobriety_date: formatDateWithTimezone(newDate, userTimezone),
+        })
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -619,6 +646,10 @@ export default function ProfileScreen() {
     setShowSlipUpModal(true);
   };
 
+  /**
+   * Submits a slip-up record with timezone-aware date formatting.
+   * Uses the user's stored timezone if available, otherwise falls back to device timezone.
+   */
   const submitSlipUp = async () => {
     if (!profile) return;
 
@@ -627,30 +658,30 @@ export default function ProfileScreen() {
 
     if (slipUpDate > today) {
       if (Platform.OS === 'web') {
-        window.alert('Slip up date cannot be in the future');
+        window.alert('Slip-up date cannot be in the future');
       } else {
-        Alert.alert('Invalid Date', 'Slip up date cannot be in the future');
+        Alert.alert('Invalid Date', 'Slip-up date cannot be in the future');
       }
       return;
     }
 
     if (recoveryDate < slipUpDate) {
       if (Platform.OS === 'web') {
-        window.alert('Recovery restart date must be on or after the slip up date');
+        window.alert('Recovery restart date must be on or after the slip-up date');
       } else {
-        Alert.alert('Invalid Date', 'Recovery restart date must be on or after the slip up date');
+        Alert.alert('Invalid Date', 'Recovery restart date must be on or after the slip-up date');
       }
       return;
     }
 
     const confirmMessage =
-      'This will log your slip up and update your sobriety date. Your sponsor will be notified. Continue?';
+      'This will log your slip-up and restart your current streak. Your sponsor will be notified. Continue?';
 
     const confirmed =
       Platform.OS === 'web'
         ? window.confirm(confirmMessage)
         : await new Promise<boolean>((resolve) => {
-            Alert.alert('Confirm Slip Up Log', confirmMessage, [
+            Alert.alert('Confirm Slip-Up Log', confirmMessage, [
               {
                 text: 'Cancel',
                 style: 'cancel',
@@ -671,19 +702,19 @@ export default function ProfileScreen() {
     try {
       const { error: slipUpError } = await supabase.from('slip_ups').insert({
         user_id: profile.id,
-        slip_up_date: slipUpDate.toISOString().split('T')[0],
-        recovery_restart_date: recoveryDate.toISOString().split('T')[0],
+        slip_up_date: formatDateWithTimezone(slipUpDate, userTimezone),
+        recovery_restart_date: formatDateWithTimezone(recoveryDate, userTimezone),
         notes: slipUpNotes.trim() || null,
       });
 
       if (slipUpError) throw slipUpError;
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ sobriety_date: recoveryDate.toISOString().split('T')[0] })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
+      // IMPORTANT BEHAVIORAL CHANGE:
+      // We intentionally do NOT update profile.sobriety_date here.
+      // Previously, sobriety_date was updated on slip-ups to track 'current streak start'.
+      // Now, sobriety_date represents when the user's recovery journey began (immutable).
+      // The slip_ups table stores recovery_restart_date which useDaysSober uses to
+      // calculate the current streak. See Profile.sobriety_date in types/database.ts.
 
       const { data: sponsors } = await supabase
         .from('sponsor_sponsee_relationships')
@@ -696,7 +727,7 @@ export default function ProfileScreen() {
           user_id: rel.sponsor_id,
           type: 'milestone',
           title: 'Sponsee Slip Up',
-          content: `${profile.first_name} ${profile.last_initial}. has logged a slip up and restarted their recovery journey.`,
+          content: `${profile.first_name} ${profile.last_initial}. has logged a slip-up and restarted their recovery journey.`,
           data: {
             sponsee_id: profile.id,
             slip_up_date: slipUpDate.toISOString(),
@@ -711,19 +742,19 @@ export default function ProfileScreen() {
 
       if (Platform.OS === 'web') {
         window.alert(
-          'Your slip up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
+          'Your slip-up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
         );
       } else {
         Alert.alert(
-          'Slip Up Logged',
-          'Your slip up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
+          'Slip-Up Logged',
+          'Your slip-up has been logged. Remember, recovery is a journey. You are brave for being honest. Keep moving forward, one day at a time.'
         );
       }
     } catch (error: unknown) {
-      logger.error('Slip up logging failed', error as Error, {
+      logger.error('Slip-up logging failed', error as Error, {
         category: LogCategory.DATABASE,
       });
-      const message = error instanceof Error ? error.message : 'Failed to log slip up.';
+      const message = error instanceof Error ? error.message : 'Failed to log slip-up.';
       if (Platform.OS === 'web') {
         window.alert(message);
       } else {
@@ -768,7 +799,7 @@ export default function ProfileScreen() {
           {journeyStartDate && (
             <Text style={styles.journeyStartDate}>
               Journey started:{' '}
-              {new Date(journeyStartDate).toLocaleDateString('en-US', {
+              {parseDateAsLocal(journeyStartDate).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
@@ -782,7 +813,7 @@ export default function ProfileScreen() {
         {hasSlipUps && currentStreakStartDate && (
           <Text style={styles.currentStreakDate}>
             Current streak since{' '}
-            {new Date(currentStreakStartDate).toLocaleDateString('en-US', {
+            {parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', {
               month: 'long',
               day: 'numeric',
               year: 'numeric',
@@ -925,9 +956,11 @@ export default function ProfileScreen() {
               <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
               <input
                 type="date"
-                value={selectedSobrietyDate.toISOString().split('T')[0]}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={(e) => setSelectedSobrietyDate(new Date(e.target.value))}
+                value={formatDateWithTimezone(selectedSobrietyDate, userTimezone)}
+                max={formatDateWithTimezone(new Date(), userTimezone)}
+                onChange={(e) =>
+                  setSelectedSobrietyDate(parseDateAsLocal(e.target.value, userTimezone))
+                }
                 style={{
                   padding: 12,
                   fontSize: 16,
@@ -972,7 +1005,7 @@ export default function ProfileScreen() {
                 onChange={(event, date) => {
                   if (date) setSelectedSobrietyDate(date);
                 }}
-                maximumDate={new Date()}
+                maximumDate={maximumDate}
               />
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -1010,9 +1043,9 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={slipUpDate.toISOString().split('T')[0]}
-                  max={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setSlipUpDate(new Date(e.target.value))}
+                  value={formatDateWithTimezone(slipUpDate, userTimezone)}
+                  max={formatDateWithTimezone(new Date(), userTimezone)}
+                  onChange={(e) => setSlipUpDate(parseDateAsLocal(e.target.value, userTimezone))}
                   style={{
                     padding: 12,
                     fontSize: 16,
@@ -1057,9 +1090,9 @@ export default function ProfileScreen() {
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
-                  value={recoveryDate.toISOString().split('T')[0]}
-                  min={slipUpDate.toISOString().split('T')[0]}
-                  onChange={(e) => setRecoveryDate(new Date(e.target.value))}
+                  value={formatDateWithTimezone(recoveryDate, userTimezone)}
+                  min={formatDateWithTimezone(slipUpDate, userTimezone)}
+                  onChange={(e) => setRecoveryDate(parseDateAsLocal(e.target.value, userTimezone))}
                   style={{
                     padding: 12,
                     fontSize: 16,

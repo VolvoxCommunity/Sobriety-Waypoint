@@ -41,7 +41,11 @@ function getEnvironment(): string {
   if (__DEV__) {
     return 'development';
   }
-  return process.env.EXPO_PUBLIC_APP_ENV || 'production';
+  const env = process.env.EXPO_PUBLIC_APP_ENV;
+  if (!env) {
+    console.warn('[Sentry] EXPO_PUBLIC_APP_ENV not set, defaulting to production');
+  }
+  return env || 'production';
 }
 
 /**

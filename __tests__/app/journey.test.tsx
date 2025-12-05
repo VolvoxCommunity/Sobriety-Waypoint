@@ -187,8 +187,19 @@ describe('JourneyScreen', () => {
     expect(screen.getByText('Loading your journey...')).toBeTruthy();
   });
 
-  it('handles empty state', async () => {
+  it('shows "Your journey is just beginning" when there is no sobriety data', async () => {
     (useAuth as jest.Mock).mockReturnValue({ profile: { ...mockProfile, sobriety_date: null } });
+    // Mock useDaysSober to return empty/null values for the empty state.
+    (useDaysSober as jest.Mock).mockReturnValue({
+      daysSober: 0,
+      journeyDays: 0,
+      hasSlipUps: false,
+      mostRecentSlipUp: null,
+      journeyStartDate: null,
+      currentStreakStartDate: null,
+      loading: false,
+      error: null,
+    });
     setupSupabaseMock([], [], []);
 
     render(<JourneyScreen />);
@@ -299,6 +310,83 @@ describe('JourneyScreen', () => {
       expect(screen.getAllByText('0').length).toBeGreaterThan(0);
       // Should NOT show any milestones (0 days = no milestones reached)
       expect(screen.queryByText('30 Days Sober')).toBeNull();
+    });
+  });
+
+  it('shows error state when fetch fails', async () => {
+    // Make supabase return an error
+    (supabase.from as jest.Mock).mockImplementation(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockRejectedValue(new Error('Network error')),
+    }));
+
+    render(<JourneyScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load your journey timeline')).toBeTruthy();
+    });
+  });
+
+  it('displays step completions in timeline', async () => {
+    const steps = [
+      {
+        id: 'step-progress-1',
+        step_number: 1,
+        completed: true,
+        completed_at: '2024-02-15T00:00:00Z',
+        notes: 'Completed step 1',
+      },
+    ];
+    setupSupabaseMock([], steps, []);
+
+    render(<JourneyScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Step 1 Completed')).toBeTruthy();
+    });
+  });
+
+  it('displays completed tasks in timeline', async () => {
+    const tasks = [
+      {
+        id: 'task-1',
+        title: 'Daily Reflection',
+        description: 'Reflect on your day',
+        step_number: 1,
+        sponsor_id: 'sponsor-123',
+        sponsee_id: 'user-123',
+        status: 'completed',
+        completed_at: '2024-02-20T00:00:00Z',
+      },
+    ];
+    setupSupabaseMock([], [], tasks);
+
+    render(<JourneyScreen />);
+
+    await waitFor(() => {
+      // Task title is used as event title
+      expect(screen.getByText('Daily Reflection')).toBeTruthy();
+    });
+  });
+
+  it('shows task milestones when 5+ tasks completed', async () => {
+    // Create 6 completed tasks
+    const tasks = Array.from({ length: 6 }, (_, i) => ({
+      id: `task-${i + 1}`,
+      title: `Task ${i + 1}`,
+      step_number: 1,
+      sponsor_id: 'sponsor-123',
+      sponsee_id: 'user-123',
+      status: 'completed',
+      completed_at: new Date(2024, 1, 10 + i).toISOString(),
+    }));
+    setupSupabaseMock([], [], tasks);
+
+    render(<JourneyScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('5 Tasks Completed')).toBeTruthy();
     });
   });
 });
