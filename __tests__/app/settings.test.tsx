@@ -39,17 +39,21 @@ jest.mock('react-native-safe-area-context', () => ({
 const mockSignOut = jest.fn();
 const mockDeleteAccount = jest.fn();
 const mockRefreshProfile = jest.fn();
-const mockProfile = {
+const defaultMockProfile = {
   id: 'test-user-id',
   first_name: 'Test',
   last_initial: 'D',
   sobriety_date: '2024-01-01',
 };
+// Use a mutable variable to allow per-test override
+let mockProfile: typeof defaultMockProfile | null = defaultMockProfile;
 jest.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     signOut: mockSignOut,
     deleteAccount: mockDeleteAccount,
-    profile: mockProfile,
+    get profile() {
+      return mockProfile;
+    },
     refreshProfile: mockRefreshProfile,
   }),
 }));
@@ -197,6 +201,8 @@ describe('SettingsScreen', () => {
     jest.clearAllMocks();
     mockSignOut.mockResolvedValue(undefined);
     mockSupabaseFrom.mockReset();
+    // Reset profile to default for each test
+    mockProfile = defaultMockProfile;
   });
 
   describe('Header', () => {
@@ -1039,6 +1045,40 @@ describe('SettingsScreen', () => {
       await waitFor(() => {
         expect(getByText('Edit Name')).toBeTruthy();
       });
+    });
+
+    it('shows error when profile is null during name save', async () => {
+      const { Alert } = jest.requireMock('react-native');
+      // Set up Supabase mock (should NOT be called if guard works)
+      const mockEq = jest.fn().mockResolvedValue({ error: null });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseFrom.mockReturnValue({ update: mockUpdate });
+
+      // Set profile to null before rendering
+      mockProfile = null;
+
+      const { getByTestId, getByText } = render(<SettingsScreen />);
+
+      fireEvent.press(getByTestId('account-name-row'));
+
+      await waitFor(() => {
+        expect(getByText('Edit Name')).toBeTruthy();
+      });
+
+      // Fill in valid name data
+      fireEvent.changeText(getByTestId('edit-first-name-input'), 'NewName');
+      fireEvent.changeText(getByTestId('edit-last-initial-input'), 'X');
+
+      // Try to save
+      fireEvent.press(getByTestId('save-name-button'));
+
+      // Should show error because profile is null
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Unable to save - profile not loaded');
+      });
+
+      // Supabase should NOT be called when profile is null
+      expect(mockSupabaseFrom).not.toHaveBeenCalled();
     });
   });
 
