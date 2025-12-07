@@ -85,6 +85,14 @@ export default function OnboardingScreen() {
   // Track when we're waiting for profile to update after form submission
   const [awaitingProfileUpdate, setAwaitingProfileUpdate] = useState(false);
 
+  // Auto-advance to Step 2 if profile updates with complete name while on Step 1
+  // This handles: page refresh, navigation quirks, async profile data arrival
+  useEffect(() => {
+    if (step === 1 && hasCompleteName) {
+      setStep(2);
+    }
+  }, [step, hasCompleteName, profile]);
+
   // Navigate to main app when profile becomes complete after submission
   // This ensures we only navigate AFTER React has processed the profile state update
   useEffect(() => {
