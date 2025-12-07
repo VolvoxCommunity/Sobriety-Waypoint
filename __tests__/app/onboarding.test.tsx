@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import OnboardingScreen from '@/app/onboarding';
 
@@ -811,6 +811,54 @@ describe('OnboardingScreen', () => {
 
       await waitFor(() => {
         expect(getByText("Let's get to know you better.")).toBeTruthy();
+      });
+    });
+
+    it('auto-advances from Step 1 to Step 2 when profile updates with complete name', async () => {
+      // Start with incomplete profile (null first_name)
+      let currentProfile: {
+        id: string;
+        first_name: string | null;
+        last_initial: string | null;
+        sobriety_date: string | null;
+      } = {
+        id: 'user-123',
+        first_name: null,
+        last_initial: null,
+        sobriety_date: null,
+      };
+
+      mockUseAuth.mockImplementation(() => ({
+        user: mockUser,
+        profile: currentProfile,
+        refreshProfile: mockRefreshProfile,
+        signOut: mockSignOut,
+      }));
+
+      const { getByText, queryByText, rerender } = render(<OnboardingScreen />);
+
+      // Verify Step 1 is shown initially
+      await waitFor(() => {
+        expect(getByText("Let's get to know you better.")).toBeTruthy();
+      });
+
+      // Simulate profile update (e.g., OAuth data arrives or async fetch completes)
+      currentProfile = {
+        id: 'user-123',
+        first_name: 'Jane',
+        last_initial: 'D',
+        sobriety_date: null,
+      };
+
+      // Rerender to trigger useEffect with updated profile
+      act(() => {
+        rerender(<OnboardingScreen />);
+      });
+
+      // Verify auto-advance to Step 2
+      await waitFor(() => {
+        expect(queryByText('Your Sobriety Date')).toBeTruthy();
+        expect(queryByText("Let's get to know you better.")).toBeNull();
       });
     });
   });
