@@ -442,6 +442,20 @@ export default function SettingsScreen() {
    * Validates input before saving and handles errors with user feedback.
    */
   const handleSaveName = async () => {
+    // Guard: Ensure profile is loaded before attempting save
+    if (!profile?.id) {
+      const errorMessage = 'Unable to save - profile not loaded';
+      logger.error('Name save attempted with null profile', new Error(errorMessage), {
+        category: LogCategory.DATABASE,
+      });
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + errorMessage);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+      return;
+    }
+
     // Validation
     if (!editFirstName.trim()) {
       setNameValidationError('First name is required');
@@ -460,7 +474,7 @@ export default function SettingsScreen() {
           first_name: editFirstName.trim(),
           last_initial: editLastInitial.toUpperCase(),
         })
-        .eq('id', profile?.id);
+        .eq('id', profile.id);
 
       if (error) throw error;
 
@@ -544,7 +558,9 @@ export default function SettingsScreen() {
                   <View>
                     <Text style={styles.menuItemText}>Name</Text>
                     <Text style={styles.menuItemSubtext}>
-                      {profile?.first_name} {profile?.last_initial}.
+                      {profile?.first_name && profile?.last_initial
+                        ? `${profile.first_name} ${profile.last_initial}.`
+                        : 'Loading...'}
                     </Text>
                   </View>
                 </View>
