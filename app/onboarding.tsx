@@ -48,14 +48,25 @@ export default function OnboardingScreen() {
   const { user, profile, refreshProfile, signOut } = useAuth();
   const router = useRouter();
 
-  // Check if profile has complete name from OAuth (non-null, non-placeholder)
-  const hasCompleteName =
-    profile?.first_name !== null &&
-    profile?.first_name !== undefined &&
-    profile?.last_initial !== null &&
-    profile?.last_initial !== undefined &&
-    profile?.first_name !== 'User' &&
-    profile?.last_initial !== 'U';
+  /**
+   * Determines if the profile has a complete, non-placeholder name from OAuth.
+   *
+   * Checks for:
+   * - Non-null/undefined values (profile might be loading)
+   * - Non-placeholder values ('User'/'U' are default placeholders used when OAuth doesn't provide names)
+   *
+   * When true, we can skip the name entry step in onboarding since OAuth already provided valid data.
+   */
+  const hasCompleteName = useMemo(
+    () =>
+      profile?.first_name !== null &&
+      profile?.first_name !== undefined &&
+      profile?.last_initial !== null &&
+      profile?.last_initial !== undefined &&
+      profile?.first_name !== 'User' &&
+      profile?.last_initial !== 'U',
+    [profile?.first_name, profile?.last_initial]
+  );
 
   // Skip Step 1 (name entry) if OAuth already provided complete name
   const [step, setStep] = useState(hasCompleteName ? 2 : 1);
@@ -91,7 +102,7 @@ export default function OnboardingScreen() {
     if (step === 1 && hasCompleteName) {
       setStep(2);
     }
-  }, [step, hasCompleteName, profile]);
+  }, [step, hasCompleteName]);
 
   // Navigate to main app when profile becomes complete after submission
   // This ensures we only navigate AFTER React has processed the profile state update
