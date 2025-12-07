@@ -524,7 +524,7 @@ export default function SettingsScreen() {
             accessibilityLabel="Close settings"
             accessibilityRole="button"
           >
-            <X size={24} color={theme.textSecondary} />
+            <X size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
 
@@ -1173,7 +1173,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       width: HEADER_BUTTON_WIDTH,
     },
     closeButton: {
-      padding: 4,
+      width: HEADER_BUTTON_WIDTH,
+      height: HEADER_BUTTON_WIDTH,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     headerTitle: {
       fontSize: 18,
@@ -1573,7 +1576,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
     textInput: {
       backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: theme.borderLight,
+      borderColor: theme.border,
       borderRadius: 12,
       padding: 14,
       fontSize: 16,
@@ -1598,7 +1601,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       borderRadius: 12,
       backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: theme.borderLight,
+      borderColor: theme.border,
       alignItems: 'center',
     },
     modalCancelText: {
