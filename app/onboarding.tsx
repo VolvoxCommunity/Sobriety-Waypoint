@@ -48,7 +48,17 @@ export default function OnboardingScreen() {
   const { user, profile, refreshProfile, signOut } = useAuth();
   const router = useRouter();
 
-  const [step, setStep] = useState(1);
+  // Check if profile has complete name from OAuth (non-null, non-placeholder)
+  const hasCompleteName =
+    profile?.first_name !== null &&
+    profile?.first_name !== undefined &&
+    profile?.last_initial !== null &&
+    profile?.last_initial !== undefined &&
+    profile?.first_name !== 'User' &&
+    profile?.last_initial !== 'U';
+
+  // Skip Step 1 (name entry) if OAuth already provided complete name
+  const [step, setStep] = useState(hasCompleteName ? 2 : 1);
   // Pre-fill name fields from OAuth profile if available (e.g., Google sign-in)
   const [firstName, setFirstName] = useState(profile?.first_name ?? '');
   const [lastInitial, setLastInitial] = useState(profile?.last_initial ?? '');
