@@ -98,14 +98,17 @@ export default function OnboardingScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   // Track when we're waiting for profile to update after form submission
   const [awaitingProfileUpdate, setAwaitingProfileUpdate] = useState(false);
+  // Track if user manually navigated back to Step 1 to edit their name
+  const [userWentBackToStep1, setUserWentBackToStep1] = useState(false);
 
   // Auto-advance to Step 2 if profile updates with complete name while on Step 1
   // This handles: page refresh, navigation quirks, async profile data arrival
+  // BUT: Don't auto-advance if user manually clicked "Back" to edit their name
   useEffect(() => {
-    if (step === 1 && hasCompleteName) {
+    if (step === 1 && hasCompleteName && !userWentBackToStep1) {
       setStep(2);
     }
-  }, [step, hasCompleteName]);
+  }, [step, hasCompleteName, userWentBackToStep1]);
 
   // Navigate to main app when profile becomes complete after submission
   // This ensures we only navigate AFTER React has processed the profile state update
@@ -273,7 +276,10 @@ export default function OnboardingScreen() {
             maxLength={1}
             autoCapitalize="characters"
             returnKeyType="done"
-            onSubmitEditing={() => setStep(2)}
+            onSubmitEditing={() => {
+              setUserWentBackToStep1(false);
+              setStep(2);
+            }}
           />
         </View>
 
@@ -298,7 +304,10 @@ export default function OnboardingScreen() {
             styles.button,
             (!firstName || !lastInitial || lastInitial.length !== 1) && styles.buttonDisabled,
           ]}
-          onPress={() => setStep(2)}
+          onPress={() => {
+            setUserWentBackToStep1(false);
+            setStep(2);
+          }}
           disabled={!firstName || !lastInitial || lastInitial.length !== 1}
         >
           <Text style={styles.buttonText}>Continue</Text>
@@ -398,7 +407,10 @@ export default function OnboardingScreen() {
           {step === 2 && (
             <TouchableOpacity
               style={styles.secondaryButton}
-              onPress={() => setStep(1)}
+              onPress={() => {
+                setUserWentBackToStep1(true);
+                setStep(1);
+              }}
               disabled={loading}
             >
               <ChevronLeft size={20} color={theme.text} />

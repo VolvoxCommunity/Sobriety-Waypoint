@@ -982,5 +982,47 @@ describe('OnboardingScreen', () => {
         expect(queryByText("Let's get to know you better.")).toBeNull();
       });
     });
+
+    it('allows user to go back to Step 1 to edit name without auto-advancing', async () => {
+      const completeProfile = {
+        id: 'user-123',
+        first_name: 'John',
+        last_initial: 'D',
+        sobriety_date: null,
+      };
+
+      mockUseAuth.mockReturnValue({
+        user: mockUser,
+        profile: completeProfile,
+        refreshProfile: mockRefreshProfile,
+        signOut: mockSignOut,
+      });
+
+      const { queryByText, getByText } = render(<OnboardingScreen />);
+
+      // Should start on Step 2 (complete name)
+      await waitFor(() => {
+        expect(queryByText('Your Sobriety Date')).toBeTruthy();
+      });
+
+      // Click Back button to go to Step 1
+      const backButton = getByText('Back');
+      fireEvent.press(backButton);
+
+      // Should now be on Step 1
+      await waitFor(() => {
+        expect(queryByText("Let's get to know you better.")).toBeTruthy();
+        expect(queryByText('Your Sobriety Date')).toBeNull();
+      });
+
+      // User should stay on Step 1 (not auto-advance back to Step 2)
+      // Give it time to potentially auto-advance if the bug existed
+      await waitFor(
+        () => {
+          expect(queryByText("Let's get to know you better.")).toBeTruthy();
+        },
+        { timeout: 500 }
+      );
+    });
   });
 });
