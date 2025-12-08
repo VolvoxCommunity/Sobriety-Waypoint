@@ -34,6 +34,7 @@ import {
   parseDateAsLocal,
   getUserTimezone,
 } from '@/lib/date';
+import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
 
 // =============================================================================
 // Constants
@@ -99,6 +100,8 @@ export default function OnboardingScreen() {
     return profileFirstName === PLACEHOLDER_FIRST_NAME ? '' : profileFirstName;
   });
   const [lastInitial, setLastInitial] = useState(profile?.last_initial ?? '');
+  // Track onboarding start time for analytics duration calculation
+  const [onboardingStartTime] = useState(() => Date.now());
 
   /**
    * Validates that Step 1 form fields contain valid data for advancing.
@@ -199,6 +202,11 @@ export default function OnboardingScreen() {
   // Ref for field navigation
   const lastInitialRef = useRef<TextInput>(null);
 
+  // Track onboarding started on mount
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.ONBOARDING_STARTED);
+  }, []);
+
   /**
    * Advances to step 2 if name validation passes.
    * Shared by Continue button and keyboard submit on last initial field.
@@ -207,6 +215,11 @@ export default function OnboardingScreen() {
     if (!isStep1Valid) return;
     setUserWentBackToStep1(false);
     setStep(2);
+    // Track step completion
+    trackEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+      step: 1,
+      step_name: 'name_entry',
+    });
   }, [isStep1Valid]);
 
   const totalSteps = 2;
@@ -256,6 +269,12 @@ export default function OnboardingScreen() {
 
       if (error) throw error;
 
+      // Track onboarding completion with duration
+      const durationSeconds = Math.floor((Date.now() - onboardingStartTime) / 1000);
+      trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, {
+        duration_seconds: durationSeconds,
+      });
+
       // Refresh the profile state in AuthContext
       // refreshProfile() catches errors internally and returns null on failure,
       // so we proceed to set awaitingProfileUpdate regardless since the database
@@ -290,6 +309,14 @@ export default function OnboardingScreen() {
     }
     if (selectedDate) {
       setSobrietyDate(selectedDate);
+      // Track sobriety date set
+      const today = new Date();
+      const daysSober = Math.floor(
+        (today.getTime() - selectedDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      trackEvent(AnalyticsEvents.ONBOARDING_SOBRIETY_DATE_SET, {
+        days_sober: daysSober,
+      });
     }
   };
 

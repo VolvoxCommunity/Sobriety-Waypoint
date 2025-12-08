@@ -18,6 +18,17 @@ import OnboardingScreen from '@/app/onboarding';
 // Mocks
 // =============================================================================
 
+// Mock analytics
+jest.mock('@/lib/analytics', () => ({
+  trackEvent: jest.fn(),
+  AnalyticsEvents: {
+    ONBOARDING_STARTED: 'onboarding_started',
+    ONBOARDING_STEP_COMPLETED: 'onboarding_step_completed',
+    ONBOARDING_SOBRIETY_DATE_SET: 'onboarding_sobriety_date_set',
+    ONBOARDING_COMPLETED: 'onboarding_completed',
+  },
+}));
+
 // Mock expo-router
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
