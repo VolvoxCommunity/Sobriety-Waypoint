@@ -1025,38 +1025,17 @@ describe('SettingsScreen', () => {
       });
     });
 
-    it('shows error when profile is null during name save', async () => {
-      const { Alert } = jest.requireMock('react-native');
-      // Set up Supabase mock (should NOT be called if guard works)
-      const mockEq = jest.fn().mockResolvedValue({ error: null });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate });
-
+    it('does not open modal when profile is null', async () => {
       // Set profile to null before rendering
       mockProfile = null;
 
-      const { getByTestId, getByText } = render(<SettingsScreen />);
+      const { getByTestId, queryByText } = render(<SettingsScreen />);
 
+      // Try to open the modal - should be blocked by guard
       fireEvent.press(getByTestId('account-name-row'));
 
-      await waitFor(() => {
-        expect(getByText('Edit Name')).toBeTruthy();
-      });
-
-      // Fill in valid name data
-      fireEvent.changeText(getByTestId('edit-first-name-input'), 'NewName');
-      fireEvent.changeText(getByTestId('edit-last-initial-input'), 'X');
-
-      // Try to save
-      fireEvent.press(getByTestId('save-name-button'));
-
-      // Should show error because profile is null
-      await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Unable to save - profile not loaded');
-      });
-
-      // Supabase should NOT be called when profile is null
-      expect(mockSupabaseFrom).not.toHaveBeenCalled();
+      // Modal should NOT open when profile is null
+      expect(queryByText('Edit Name')).toBeNull();
     });
   });
 
@@ -1256,7 +1235,7 @@ describe('SettingsScreen', () => {
     });
   });
 
-  it('handles profile with null first_name gracefully', async () => {
+  it('does not open modal when profile has null first_name', async () => {
     // Use the existing mock infrastructure by setting mockProfile before render
     mockProfile = {
       ...defaultMockProfile,
@@ -1264,25 +1243,17 @@ describe('SettingsScreen', () => {
       last_initial: null,
     } as typeof defaultMockProfile;
 
-    const { getByText, getByTestId } = render(<SettingsScreen />);
+    const { getByText, getByTestId, queryByText } = render(<SettingsScreen />);
 
     await waitFor(() => {
       expect(getByText('Account')).toBeTruthy();
     });
 
-    // Should handle null values gracefully
+    // Try to open the modal - should be blocked by guard
     fireEvent.press(getByTestId('account-name-row'));
 
-    await waitFor(() => {
-      expect(getByText('Edit Name')).toBeTruthy();
-    });
-
-    // Inputs should default to empty strings
-    const firstNameInput = getByTestId('edit-first-name-input');
-    const lastInitialInput = getByTestId('edit-last-initial-input');
-
-    expect(firstNameInput.props.value).toBe('');
-    expect(lastInitialInput.props.value).toBe('');
+    // Modal should NOT open when profile has null values
+    expect(queryByText('Edit Name')).toBeNull();
   });
 
   it('enforces maxLength on last initial input', async () => {

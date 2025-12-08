@@ -542,8 +542,12 @@ export default function SettingsScreen() {
               style={styles.menuItem}
               testID="account-name-row"
               onPress={() => {
-                setEditFirstName(profile?.first_name ?? '');
-                setEditLastInitial(profile?.last_initial ?? '');
+                // Guard: Prevent opening modal with empty fields when profile hasn't loaded
+                if (!profile?.first_name || !profile?.last_initial) {
+                  return;
+                }
+                setEditFirstName(profile.first_name);
+                setEditLastInitial(profile.last_initial);
                 setIsEditNameModalVisible(true);
               }}
               accessibilityRole="button"
