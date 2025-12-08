@@ -12,6 +12,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 /**
  * Props for the GlassView component.
+ *
+ * @property children - Content to render inside the glass container
+ * @property effectStyle - Glass effect intensity: 'regular' (default) or 'clear'
+ * @property tintColor - Override the theme's default glass tint color
+ * @property style - Additional styles applied to the container
+ * @property testID - Test ID for testing
  */
 export interface GlassViewProps {
   /** Content to render inside the glass container */
