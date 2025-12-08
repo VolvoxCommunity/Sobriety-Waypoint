@@ -1257,19 +1257,12 @@ describe('SettingsScreen', () => {
   });
 
   it('handles profile with null first_name gracefully', async () => {
-    // Temporarily override the mock to simulate null first_name
-    const nullProfile = {
-      ...mockProfile,
+    // Use the existing mock infrastructure by setting mockProfile before render
+    mockProfile = {
+      ...defaultMockProfile,
       first_name: null,
       last_initial: null,
-    };
-
-    jest.spyOn(require('@/contexts/AuthContext'), 'useAuth').mockReturnValue({
-      signOut: mockSignOut,
-      deleteAccount: mockDeleteAccount,
-      profile: nullProfile,
-      refreshProfile: mockRefreshProfile,
-    });
+    } as typeof defaultMockProfile;
 
     const { getByText, getByTestId } = render(<SettingsScreen />);
 
