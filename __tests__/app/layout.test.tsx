@@ -139,6 +139,11 @@ jest.mock('@/components/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// Mock lucide-react-native
+jest.mock('lucide-react-native', () => ({
+  X: () => null,
+}));
+
 // =============================================================================
 // Test Suite
 // =============================================================================

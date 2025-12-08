@@ -101,14 +101,13 @@ jest.mock('lucide-react-native', () => ({
   Moon: () => null,
   Sun: () => null,
   Monitor: () => null,
-  ChevronLeft: () => null,
+  ChevronRight: () => null,
   ChevronDown: () => null,
   ChevronUp: () => null,
   Shield: () => null,
   FileText: () => null,
   Github: () => null,
   Trash2: () => null,
-  X: () => null,
   AlertTriangle: () => null,
   RefreshCw: () => null,
   CheckCircle: () => null,
@@ -117,6 +116,7 @@ jest.mock('lucide-react-native', () => ({
   Info: () => null,
   Copy: () => null,
   User: () => null,
+  X: () => null,
 }));
 
 // Mock expo-clipboard
@@ -200,24 +200,15 @@ describe('SettingsScreen', () => {
   });
 
   describe('Header', () => {
-    it('renders settings header', () => {
+    // Note: Header title and back button are now handled by native Stack navigator
+    // The custom header with close button has been replaced with iOS-native header
+
+    it('renders settings content container', () => {
       render(<SettingsScreen />);
 
-      expect(screen.getByText('Settings')).toBeTruthy();
-    });
-
-    it('renders close button', () => {
-      render(<SettingsScreen />);
-
-      expect(screen.getByLabelText('Close settings')).toBeTruthy();
-    });
-
-    it('navigates back when close button is pressed', () => {
-      render(<SettingsScreen />);
-
-      fireEvent.press(screen.getByLabelText('Close settings'));
-
-      expect(mockBack).toHaveBeenCalled();
+      // Verify the main content sections are rendered (header is native)
+      expect(screen.getByText('Account')).toBeTruthy();
+      expect(screen.getByText('Appearance')).toBeTruthy();
     });
   });
 
@@ -412,8 +403,8 @@ describe('SettingsScreen', () => {
     it('renders all UI elements', () => {
       render(<SettingsScreen />);
 
-      // Main sections should be rendered
-      expect(screen.getByText('Settings')).toBeTruthy();
+      // Main sections should be rendered (Settings title is now in native header)
+      expect(screen.getByText('Account')).toBeTruthy();
       expect(screen.getByText('Appearance')).toBeTruthy();
       expect(screen.getByText('Sign Out')).toBeTruthy();
       expect(screen.getByText('DANGER ZONE')).toBeTruthy();
