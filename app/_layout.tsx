@@ -7,8 +7,16 @@ initializeSentry();
 
 /* eslint-disable import/first -- Sentry and Analytics must initialize before React components load */
 // Initialize Firebase Analytics for event tracking (skip during SSR)
+// Dynamic import prevents build failures - Firebase SDK requires browser APIs
+// Note: Async init means early events may be dropped (handled gracefully by analytics module)
 if (typeof window !== 'undefined') {
-  import('@/lib/analytics').then((analytics) => analytics.initializeAnalytics());
+  import('@/lib/analytics')
+    .then((analytics) => analytics.initializeAnalytics())
+    .catch((error) => {
+      // Log but don't crash - analytics is non-critical
+      // eslint-disable-next-line no-console
+      console.error('[Analytics] Failed to initialize:', error);
+    });
 }
 import { useEffect } from 'react';
 import {
