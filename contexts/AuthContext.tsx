@@ -9,6 +9,14 @@ import { Platform } from 'react-native';
 import { setSentryUser, clearSentryUser, setSentryContext } from '@/lib/sentry';
 import { logger, LogCategory } from '@/lib/logger';
 import { DEVICE_TIMEZONE } from '@/lib/date';
+import {
+  trackEvent,
+  setUserId,
+  setUserProperties,
+  resetAnalytics,
+  calculateDaysSoberBucket,
+  AnalyticsEvents,
+} from '@/lib/analytics';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -424,15 +432,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Update Sentry context when profile changes
+  // Update Sentry context and analytics when profile changes
   useEffect(() => {
     if (profile) {
       setSentryUser(profile.id);
       setSentryContext('profile', {
         email: profile.email,
       });
+
+      // Set analytics user ID
+      setUserId(profile.id);
+
+      // Calculate and set days sober bucket if sobriety date exists
+      if (profile.sobriety_date) {
+        const sobrietyDate = new Date(profile.sobriety_date);
+        const today = new Date();
+        const daysSober = Math.floor(
+          (today.getTime() - sobrietyDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        setUserProperties({
+          days_sober_bucket: calculateDaysSoberBucket(daysSober),
+        });
+      }
     } else {
       clearSentryUser();
+      setUserId(null);
     }
   }, [profile]);
 
@@ -442,6 +467,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
     if (error) throw error;
+
+    // Track successful login
+    trackEvent(AnalyticsEvents.AUTH_LOGIN, { method: 'email' });
   };
 
   const signInWithGoogle = async () => {
@@ -500,6 +528,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               throw sessionError;
             }
 
+            // Track successful Google sign in
+            trackEvent(AnalyticsEvents.AUTH_LOGIN, { method: 'google' });
+
             // Profile creation is handled by onAuthStateChange listener (line 350).
             // Calling it here would cause a race condition and potential deadlock
             // since setSession() hasn't fully completed yet.
@@ -529,6 +560,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
     if (error) throw error;
+
+    // Track successful sign up
+    trackEvent(AnalyticsEvents.AUTH_SIGN_UP, { method: 'email' });
+
     // Profile creation is handled by onAuthStateChange listener when SIGNED_IN event fires.
     // This avoids race conditions where both signUp and onAuthStateChange try to create
     // the profile simultaneously, causing duplicate key errors.
@@ -544,6 +579,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @throws Error if sign out fails for reasons other than missing session
    */
   const signOut = async () => {
+    // Track logout before clearing session
+    trackEvent(AnalyticsEvents.AUTH_LOGOUT);
+    await resetAnalytics();
+
     clearSentryUser();
 
     const { error } = await supabase.auth.signOut({ scope: 'local' });

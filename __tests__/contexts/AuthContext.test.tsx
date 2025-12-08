@@ -123,6 +123,20 @@ jest.mock('@/lib/date', () => ({
   DEVICE_TIMEZONE: 'America/New_York',
 }));
 
+// Mock analytics
+jest.mock('@/lib/analytics', () => ({
+  trackEvent: jest.fn(),
+  setUserId: jest.fn(),
+  setUserProperties: jest.fn(),
+  resetAnalytics: jest.fn(() => Promise.resolve()),
+  calculateDaysSoberBucket: jest.fn(() => '31-90'),
+  AnalyticsEvents: {
+    AUTH_LOGIN: 'auth_login',
+    AUTH_SIGN_UP: 'auth_sign_up',
+    AUTH_LOGOUT: 'auth_logout',
+  },
+}));
+
 // =============================================================================
 // Helper
 // =============================================================================
