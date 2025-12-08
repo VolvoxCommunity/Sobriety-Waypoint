@@ -51,7 +51,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     bundleIdentifier: 'com.volvox.sobrietywaypoint',
-    icon: './assets/images/logo.png',
+    icon: './assets/images/ios-icon.icon',
     supportsTablet: true,
     usesAppleSignIn: true, // Enable Sign in with Apple capability
     infoPlist: {
