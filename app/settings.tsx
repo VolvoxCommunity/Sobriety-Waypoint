@@ -102,6 +102,15 @@ interface BuildInfo {
 }
 
 // =============================================================================
+// Constants
+// =============================================================================
+/**
+ * No-op function to prevent event propagation on inner Pressable.
+ * Defined outside component to avoid creating new function on each render.
+ */
+const noop = () => {};
+
+// =============================================================================
 // Helper Functions
 // =============================================================================
 /**
