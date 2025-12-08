@@ -3,6 +3,8 @@ import {
   sanitizeParams,
   calculateDaysSoberBucket,
   shouldInitializeAnalytics,
+  isDebugMode,
+  getAnalyticsEnvironment,
 } from '@/lib/analytics-utils';
 import type { DaysSoberBucket } from '@/types/analytics';
 
@@ -151,6 +153,78 @@ describe('Analytics Utilities', () => {
         delete process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID;
       } else {
         process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID = originalValue;
+      }
+    });
+  });
+
+  describe('isDebugMode', () => {
+    it('returns false when __DEV__ is false and no env var set', () => {
+      const originalValue = process.env.EXPO_PUBLIC_ANALYTICS_DEBUG;
+      delete process.env.EXPO_PUBLIC_ANALYTICS_DEBUG;
+
+      // __DEV__ is false in Jest test environment
+      expect(isDebugMode()).toBe(false);
+
+      // Restore
+      if (originalValue !== undefined) {
+        process.env.EXPO_PUBLIC_ANALYTICS_DEBUG = originalValue;
+      }
+    });
+
+    it('returns true when EXPO_PUBLIC_ANALYTICS_DEBUG is set to true', () => {
+      const originalValue = process.env.EXPO_PUBLIC_ANALYTICS_DEBUG;
+      process.env.EXPO_PUBLIC_ANALYTICS_DEBUG = 'true';
+
+      expect(isDebugMode()).toBe(true);
+
+      // Restore
+      if (originalValue === undefined) {
+        delete process.env.EXPO_PUBLIC_ANALYTICS_DEBUG;
+      } else {
+        process.env.EXPO_PUBLIC_ANALYTICS_DEBUG = originalValue;
+      }
+    });
+
+    it('returns false when EXPO_PUBLIC_ANALYTICS_DEBUG is not "true"', () => {
+      const originalValue = process.env.EXPO_PUBLIC_ANALYTICS_DEBUG;
+      process.env.EXPO_PUBLIC_ANALYTICS_DEBUG = 'false';
+
+      expect(isDebugMode()).toBe(false);
+
+      // Restore
+      if (originalValue === undefined) {
+        delete process.env.EXPO_PUBLIC_ANALYTICS_DEBUG;
+      } else {
+        process.env.EXPO_PUBLIC_ANALYTICS_DEBUG = originalValue;
+      }
+    });
+  });
+
+  describe('getAnalyticsEnvironment', () => {
+    it('returns production when __DEV__ is false and no env var', () => {
+      const originalValue = process.env.EXPO_PUBLIC_APP_ENV;
+      delete process.env.EXPO_PUBLIC_APP_ENV;
+
+      // __DEV__ is false in Jest, so it returns the env var or 'production'
+      expect(getAnalyticsEnvironment()).toBe('production');
+
+      // Restore
+      if (originalValue !== undefined) {
+        process.env.EXPO_PUBLIC_APP_ENV = originalValue;
+      }
+    });
+
+    it('returns EXPO_PUBLIC_APP_ENV when set', () => {
+      const originalValue = process.env.EXPO_PUBLIC_APP_ENV;
+      process.env.EXPO_PUBLIC_APP_ENV = 'staging';
+
+      expect(getAnalyticsEnvironment()).toBe('staging');
+
+      // Restore
+      if (originalValue === undefined) {
+        delete process.env.EXPO_PUBLIC_APP_ENV;
+      } else {
+        process.env.EXPO_PUBLIC_APP_ENV = originalValue;
       }
     });
   });
