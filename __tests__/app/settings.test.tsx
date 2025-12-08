@@ -205,28 +205,6 @@ describe('SettingsScreen', () => {
     mockProfile = defaultMockProfile;
   });
 
-  describe('Header', () => {
-    it('renders settings header', () => {
-      render(<SettingsScreen />);
-
-      expect(screen.getByText('Settings')).toBeTruthy();
-    });
-
-    it('renders close button', () => {
-      render(<SettingsScreen />);
-
-      expect(screen.getByLabelText('Close settings')).toBeTruthy();
-    });
-
-    it('navigates back when close button is pressed', () => {
-      render(<SettingsScreen />);
-
-      fireEvent.press(screen.getByLabelText('Close settings'));
-
-      expect(mockBack).toHaveBeenCalled();
-    });
-  });
-
   describe('Theme Section', () => {
     it('renders appearance section', () => {
       render(<SettingsScreen />);
@@ -418,8 +396,7 @@ describe('SettingsScreen', () => {
     it('renders all UI elements', () => {
       render(<SettingsScreen />);
 
-      // Main sections should be rendered
-      expect(screen.getByText('Settings')).toBeTruthy();
+      // Main sections should be rendered (header is now native, not rendered in component)
       expect(screen.getByText('Appearance')).toBeTruthy();
       expect(screen.getByText('Sign Out')).toBeTruthy();
       expect(screen.getByText('DANGER ZONE')).toBeTruthy();
