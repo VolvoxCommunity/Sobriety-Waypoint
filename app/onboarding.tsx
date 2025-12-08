@@ -53,6 +53,7 @@ export default function OnboardingScreen() {
    *
    * Checks for:
    * - Non-null/undefined values (profile might be loading)
+   * - Non-empty/whitespace-only values (must contain actual content)
    * - Non-placeholder values ('User'/'U' are default placeholders used when OAuth doesn't provide names)
    *
    * When true, we can skip the name entry step in onboarding since OAuth already provided valid data.
@@ -61,8 +62,10 @@ export default function OnboardingScreen() {
     () =>
       profile?.first_name !== null &&
       profile?.first_name !== undefined &&
+      profile?.first_name.trim() !== '' &&
       profile?.last_initial !== null &&
       profile?.last_initial !== undefined &&
+      profile?.last_initial.trim() !== '' &&
       profile?.first_name !== 'User' &&
       profile?.last_initial !== 'U',
     [profile?.first_name, profile?.last_initial]

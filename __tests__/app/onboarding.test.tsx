@@ -861,7 +861,6 @@ describe('OnboardingScreen', () => {
         expect(queryByText("Let's get to know you better.")).toBeNull();
       });
     });
-  });
 
     it('handles empty string name values (different from null)', async () => {
       const emptyStringProfile = {

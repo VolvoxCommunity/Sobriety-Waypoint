@@ -461,7 +461,7 @@ export default function SettingsScreen() {
       setNameValidationError('First name is required');
       return;
     }
-    if (editLastInitial.length !== 1) {
+    if (editLastInitial.trim().length !== 1) {
       setNameValidationError('Last initial must be exactly 1 character');
       return;
     }
