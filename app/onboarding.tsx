@@ -34,7 +34,7 @@ import {
   parseDateAsLocal,
   getUserTimezone,
 } from '@/lib/date';
-import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
+import { trackEvent, AnalyticsEvents, calculateDaysSoberBucket } from '@/lib/analytics';
 
 // =============================================================================
 // Constants
@@ -315,7 +315,7 @@ export default function OnboardingScreen() {
         (today.getTime() - selectedDate.getTime()) / (1000 * 60 * 60 * 24)
       );
       trackEvent(AnalyticsEvents.ONBOARDING_SOBRIETY_DATE_SET, {
-        days_sober: daysSober,
+        days_sober_bucket: calculateDaysSoberBucket(daysSober),
       });
     }
   };
