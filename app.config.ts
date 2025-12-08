@@ -100,6 +100,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         organization: 'volvox',
       },
     ],
+    [
+      '@react-native-firebase/app',
+      {
+        // iOS uses GoogleService-Info.plist automatically from ios/ directory
+        // Android uses google-services.json automatically from android/app/ directory
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
