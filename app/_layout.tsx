@@ -130,13 +130,15 @@ function RootLayoutNav() {
                 accessibilityRole="button"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 30,
+                  height: 30,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  backgroundColor: isDark ? '#374151' : '#e5e7eb',
+                  borderRadius: 15,
                 }}
               >
-                <X size={22} color={theme.textSecondary} />
+                <X size={16} color={theme.textSecondary} strokeWidth={2.5} />
               </TouchableOpacity>
             ),
             contentStyle: { backgroundColor: theme.background },
