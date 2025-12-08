@@ -19,7 +19,8 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { View, ActivityIndicator, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { X } from 'lucide-react-native';
 import { useFonts } from 'expo-font';
 import {
   JetBrainsMono_400Regular,
@@ -129,7 +130,7 @@ function RootLayoutNav() {
                 accessibilityRole="button"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Text style={{ color: theme.primary, fontSize: 17, fontWeight: '600' }}>Done</Text>
+                <X size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             ),
             contentStyle: { backgroundColor: theme.background },
