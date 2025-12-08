@@ -74,6 +74,7 @@ build/
 
 # iOS
 ios/
+!ios/GoogleService-Info.plist
 ios/Pods/
 ios/build/
 ios/.xcode.env.local
