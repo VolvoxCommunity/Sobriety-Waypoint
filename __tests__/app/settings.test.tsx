@@ -1346,7 +1346,7 @@ describe('SettingsScreen', () => {
     const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
     mockSupabaseFrom.mockReturnValue({ update: mockUpdate });
 
-    const { getByTestId, getByText, UNSAFE_queryByType } = render(<SettingsScreen />);
+    const { getByTestId, getByText, queryByText } = render(<SettingsScreen />);
 
     fireEvent.press(getByTestId('account-name-row'));
 
@@ -1359,10 +1359,9 @@ describe('SettingsScreen', () => {
 
     fireEvent.press(getByTestId('save-name-button'));
 
-    // Should show ActivityIndicator
+    // Should show ActivityIndicator (Save text is replaced with spinner)
     await waitFor(() => {
-      const activityIndicators = UNSAFE_queryByType(require('react-native').ActivityIndicator);
-      expect(activityIndicators).toBeTruthy();
+      expect(queryByText('Save')).toBeNull();
     });
 
     // Resolve to complete save
