@@ -8,8 +8,8 @@
         {
           "blend-mode": "normal",
           "hidden": false,
-          "image-name": "Volvox Logo (Blue) (Circle).png",
-          "name": "Volvox Logo (Blue) (Circle)",
+          "image-name": "Logo.png",
+          "name": "Logo",
           "position": {
             "scale": 0.7,
             "translation-in-points": [0, 0]
