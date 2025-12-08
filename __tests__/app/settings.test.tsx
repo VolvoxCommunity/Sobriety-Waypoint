@@ -1079,11 +1079,16 @@ describe('SettingsScreen', () => {
 
     fireEvent.press(getByTestId('save-name-button'));
 
+    // First, verify the update was called with trimmed values
     await waitFor(() => {
       expect(mockUpdate).toHaveBeenCalledWith({
         first_name: 'John', // Should be trimmed
         last_initial: 'D',
       });
+    });
+
+    // Then verify the modal closes after the async save completes
+    await waitFor(() => {
       expect(queryByText('Edit Name')).toBeNull();
     });
   });
@@ -1107,11 +1112,16 @@ describe('SettingsScreen', () => {
 
     fireEvent.press(getByTestId('save-name-button'));
 
+    // First, verify the update was called with uppercase last initial
     await waitFor(() => {
       expect(mockUpdate).toHaveBeenCalledWith({
         first_name: 'John',
         last_initial: 'D', // Should be uppercase
       });
+    });
+
+    // Then verify the modal closes after the async save completes
+    await waitFor(() => {
       expect(queryByText('Edit Name')).toBeNull();
     });
   });
