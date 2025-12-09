@@ -32,46 +32,46 @@ Pre-configured in Supabase with:
 
 ### Authentication
 
-| Flow | File | Description |
-|------|------|-------------|
-| Login | `auth/login.yaml` | Login → Dashboard |
+| Flow   | File               | Description                     |
+| ------ | ------------------ | ------------------------------- |
+| Login  | `auth/login.yaml`  | Login → Dashboard               |
 | Logout | `auth/logout.yaml` | Logout → Return to login screen |
 
 ### Critical Path
 
-| Flow | File | Description |
-|------|------|-------------|
-| Signup | `critical-path/signup-to-dashboard.yaml` | Sign up → Onboarding → Dashboard |
-| Tab Navigation | `critical-path/tab-navigation.yaml` | Navigate all tabs (smoke test) |
+| Flow           | File                                     | Description                      |
+| -------------- | ---------------------------------------- | -------------------------------- |
+| Signup         | `critical-path/signup-to-dashboard.yaml` | Sign up → Onboarding → Dashboard |
+| Tab Navigation | `critical-path/tab-navigation.yaml`      | Navigate all tabs (smoke test)   |
 
 ### Tasks
 
-| Flow | File | Description |
-|------|------|-------------|
-| View Tasks | `tasks/view-task-list.yaml` | View assigned tasks |
-| Complete Task | `tasks/complete-task.yaml` | Mark a task as complete |
-| Assign Task | `tasks/assign-task.yaml` | Sponsor assigns task to sponsee |
+| Flow          | File                        | Description                     |
+| ------------- | --------------------------- | ------------------------------- |
+| View Tasks    | `tasks/view-task-list.yaml` | View assigned tasks             |
+| Complete Task | `tasks/complete-task.yaml`  | Mark a task as complete         |
+| Assign Task   | `tasks/assign-task.yaml`    | Sponsor assigns task to sponsee |
 
 ### Journey
 
-| Flow | File | Description |
-|------|------|-------------|
+| Flow            | File                           | Description              |
+| --------------- | ------------------------------ | ------------------------ |
 | View Milestones | `journey/view-milestones.yaml` | View timeline/milestones |
-| Record Slip-up | `journey/record-slip-up.yaml` | Record a slip-up event |
+| Record Slip-up  | `journey/record-slip-up.yaml`  | Record a slip-up event   |
 
 ### Profile
 
-| Flow | File | Description |
-|------|------|-------------|
-| Edit Profile | `profile/edit-profile.yaml` | Change display name |
+| Flow         | File                        | Description             |
+| ------------ | --------------------------- | ----------------------- |
+| Edit Profile | `profile/edit-profile.yaml` | Change display name     |
 | Change Theme | `profile/change-theme.yaml` | Toggle light/dark theme |
 
 ### Steps
 
-| Flow | File | Description |
-|------|------|-------------|
-| Browse Steps | `steps/browse-steps.yaml` | Browse 12-step list |
-| Read Step | `steps/read-step.yaml` | Expand and read a step's content |
+| Flow         | File                      | Description                      |
+| ------------ | ------------------------- | -------------------------------- |
+| Browse Steps | `steps/browse-steps.yaml` | Browse 12-step list              |
+| Read Step    | `steps/read-step.yaml`    | Expand and read a step's content |
 
 ## Directory Structure
 
@@ -179,7 +179,7 @@ maestro/screenshots/
 
 Add new section:
 
-```markdown
+````markdown
 ## E2E Testing
 
 This project uses [Maestro](https://maestro.mobile.dev/) for end-to-end testing on iOS and Android.
@@ -190,12 +190,14 @@ This project uses [Maestro](https://maestro.mobile.dev/) for end-to-end testing 
    ```bash
    curl -Ls "https://get.maestro.mobile.dev" | bash
    ```
+````
 
 2. Ensure iOS Simulator or Android Emulator is installed and running
 
 ### Setup
 
 1. Copy the test credentials to your local environment:
+
    ```bash
    cp .env.example .env.local
    ```
@@ -218,6 +220,7 @@ pnpm maestro:flow <path>  # Run a single test flow
 ### Pre-push Hook
 
 E2E tests run automatically when pushing to `main` or `develop` branches. Ensure your simulator is running before pushing to these branches.
+
 ```
 
 ## Implementation Steps
@@ -232,3 +235,4 @@ E2E tests run automatically when pushing to `main` or `develop` branches. Ensure
 8. Update `.env.example`
 9. Update `README.md`
 10. Update `CLAUDE.md` with E2E testing section
+```
