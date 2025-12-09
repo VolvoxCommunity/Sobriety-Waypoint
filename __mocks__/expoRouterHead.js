@@ -8,7 +8,7 @@ const React = require('react');
 /**
  * Renders the provided children inside a React Fragment.
  * @param {{ children?: import('react').ReactNode }} props - Component props.
- * @returns {import('react').ReactElement<any, string | import('react').JSXElementConstructor<any>>} A React Fragment containing the given children.
+ * @returns {import('react').ReactElement} A React Fragment containing the given children.
  */
 function Head({ children }) {
   return React.createElement(React.Fragment, null, children);

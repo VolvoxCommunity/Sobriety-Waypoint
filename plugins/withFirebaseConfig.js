@@ -71,14 +71,22 @@ function detectConfigFormat(content) {
 /**
  * Ensure a file at targetPath is created from an EAS secret value.
  *
- * If secretValue is falsy, the function does nothing and returns `false`. If secretValue
- * is an existing absolute filesystem path, that file is copied to targetPath. Otherwise
- * secretValue is treated as base64-encoded content and decoded to UTF-8; if the decoded
- * content appears to be JSON (`{`) or a plist (`<`) it is written to targetPath, and
- * if decoding fails or the decoded content does not match those markers the original
- * secretValue is written as-is. The target directory is created if it does not exist.
+ * If secretValue is falsy, the function does nothing and returns `false`.
  *
- * @param {string} secretValue - The secret value to write: either an absolute file path, base64-encoded content, or raw JSON/plist content.
+ * The function handles three input formats:
+ * 1. **Absolute file path**: If secretValue is an existing absolute filesystem path,
+ *    that file is copied to targetPath.
+ * 2. **Raw JSON/plist content**: If secretValue is already valid JSON (starts with `{`)
+ *    or plist XML (starts with `<?xml` or `<!DOCTYPE`), it is written directly.
+ * 3. **Base64-encoded content**: If secretValue doesn't match the above formats,
+ *    it is decoded from base64. If the decoded content is valid JSON/plist,
+ *    the decoded content is written. Otherwise, the original secretValue is written as-is
+ *    with a warning logged.
+ *
+ * The target directory is created if it does not exist.
+ *
+ * @param {string} secretValue - The secret value to write: either an absolute file path,
+ *   raw JSON/plist content, or base64-encoded JSON/plist content.
  * @param {string} targetPath - Filesystem path where the secret content should be written.
  * @returns {boolean} `true` if a file was written to targetPath, `false` if secretValue was falsy.
  */
