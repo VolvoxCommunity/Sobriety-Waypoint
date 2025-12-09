@@ -30,27 +30,28 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-// Mock @react-native-firebase/analytics before imports
+// Mock @react-native-firebase/analytics modular API
 const mockLogEvent = jest.fn(() => Promise.resolve());
 const mockSetUserId = jest.fn(() => Promise.resolve());
 const mockSetUserProperties = jest.fn(() => Promise.resolve());
 const mockLogScreenView = jest.fn(() => Promise.resolve());
 const mockResetAnalyticsData = jest.fn(() => Promise.resolve());
 const mockSetAnalyticsCollectionEnabled = jest.fn(() => Promise.resolve());
+const mockAnalyticsInstance = { _instance: 'mock-analytics' };
 
-// Use wrapper functions to avoid hoisting issues with mock variable references
+// Mock modular API - named exports instead of default export
 jest.mock('@react-native-firebase/analytics', () => {
   return {
     __esModule: true,
-    default: jest.fn(() => ({
-      logEvent: (...args: unknown[]) => mockLogEvent(...args),
-      setUserId: (...args: unknown[]) => mockSetUserId(...args),
-      setUserProperties: (...args: unknown[]) => mockSetUserProperties(...args),
-      logScreenView: (...args: unknown[]) => mockLogScreenView(...args),
-      resetAnalyticsData: (...args: unknown[]) => mockResetAnalyticsData(...args),
-      setAnalyticsCollectionEnabled: (...args: unknown[]) =>
-        mockSetAnalyticsCollectionEnabled(...args),
-    })),
+    getAnalytics: jest.fn(() => mockAnalyticsInstance),
+    logEvent: (_analytics: unknown, ...args: unknown[]) => mockLogEvent(...args),
+    logScreenView: (_analytics: unknown, ...args: unknown[]) => mockLogScreenView(...args),
+    setUserId: (_analytics: unknown, ...args: unknown[]) => mockSetUserId(...args),
+    setUserProperties: (_analytics: unknown, ...args: unknown[]) => mockSetUserProperties(...args),
+    resetAnalyticsData: (_analytics: unknown, ...args: unknown[]) =>
+      mockResetAnalyticsData(...args),
+    setAnalyticsCollectionEnabled: (_analytics: unknown, ...args: unknown[]) =>
+      mockSetAnalyticsCollectionEnabled(...args),
   };
 });
 
