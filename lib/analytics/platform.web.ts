@@ -238,13 +238,17 @@ async function hashUserId(input: string | null): Promise<string | null> {
  * 3. Returning a sanitized object suitable for nested logging
  * 4. Handling circular references gracefully
  *
+ * The `ancestors` WeakSet tracks objects in the current recursion path only.
+ * This correctly handles shared objects that appear in multiple non-circular positions
+ * (e.g., the same config object used as values for different keys).
+ *
  * @param params - The original event params to sanitize
- * @param seen - WeakSet to track visited objects and detect circular references
+ * @param ancestors - WeakSet tracking objects in current recursion path (ancestors only)
  * @returns Sanitized params object with PII redacted and reserved keys removed
  */
 function sanitizeParamsForLogging(
   params?: EventParams,
-  seen: WeakSet<object> = new WeakSet()
+  ancestors: WeakSet<object> = new WeakSet()
 ): Record<string, unknown> {
   if (!params) {
     return {};
@@ -266,13 +270,15 @@ function sanitizeParamsForLogging(
 
     // For nested objects, recursively sanitize with circular reference detection
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      // Detect circular references
-      if (seen.has(value)) {
+      // Detect circular references (object is an ancestor in current recursion path)
+      if (ancestors.has(value)) {
         sanitized[key] = '[Circular]';
         continue;
       }
-      seen.add(value);
-      sanitized[key] = sanitizeParamsForLogging(value as EventParams, seen);
+      // Add to ancestors for this recursion path, then remove after processing
+      ancestors.add(value);
+      sanitized[key] = sanitizeParamsForLogging(value as EventParams, ancestors);
+      ancestors.delete(value);
     } else {
       sanitized[key] = value;
     }

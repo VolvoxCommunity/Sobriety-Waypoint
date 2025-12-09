@@ -923,5 +923,30 @@ describe('Web Analytics - New Functionality', () => {
       // This should not crash, even if logging might fail internally
       expect(() => trackEventWeb('test_event', circular)).not.toThrow();
     });
+
+    it('correctly handles shared objects (not circular) in params', () => {
+      mockIsDebugMode.mockReturnValue(true);
+
+      // Shared object used in multiple places - NOT circular, just shared
+      const shared = { id: '123', name: 'test' };
+      const params = {
+        first: shared,
+        second: shared,
+        nested: { inner: shared },
+      };
+
+      trackEventWeb('test_event', params);
+
+      // Should log all instances of shared object correctly (not as [Circular])
+      const debugCall = mockLoggerDebug.mock.calls.find((call) =>
+        call[0].includes('Event: test_event')
+      );
+      expect(debugCall).toBeDefined();
+
+      // All references to the shared object should be sanitized properly, not marked [Circular]
+      expect(debugCall[1].event_params.first).toEqual({ id: '123', name: '[Filtered]' });
+      expect(debugCall[1].event_params.second).toEqual({ id: '123', name: '[Filtered]' });
+      expect(debugCall[1].event_params.nested.inner).toEqual({ id: '123', name: '[Filtered]' });
+    });
   });
 });
