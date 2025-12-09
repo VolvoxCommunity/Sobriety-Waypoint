@@ -47,10 +47,28 @@ export { calculateDaysSoberBucket } from '@/lib/analytics-utils';
 // Module State
 // =============================================================================
 /**
- * Guard flag to prevent multiple initialization attempts at the index level.
- * This provides defense-in-depth against hot reload and React Strict Mode double-invocations.
+ * Initialization state to prevent race conditions at the public API level.
+ *
+ * Uses Promise-based pattern instead of boolean flag:
+ * - null: not started
+ * - Promise: initialization in progress (concurrent callers await the same Promise)
+ * - 'completed': successfully initialized
+ * - 'skipped': analytics disabled (no config)
+ *
+ * This prevents the race condition where resetting a boolean flag on failure
+ * could allow concurrent calls to both proceed with initialization.
  */
-let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
+let initializationState: 'pending' | 'completed' | 'skipped' | 'failed' | null = null;
+
+/**
+ * Internal initialization logic. Called by initializeAnalytics wrapper.
+ *
+ * @param config - Analytics configuration
+ */
+async function doInitialize(config: AnalyticsConfig): Promise<void> {
+  await initializePlatformAnalytics(config);
+}
 
 /**
  * Initialize Firebase Analytics for the app.
@@ -58,6 +76,11 @@ let isInitialized = false;
  * Call this once at app startup, before any other analytics calls.
  * On native platforms, Firebase is configured via config files.
  * On web, it uses environment variables.
+ *
+ * This function uses a Promise-based pattern to prevent race conditions:
+ * - Concurrent calls during initialization will await the same Promise
+ * - Once completed, subsequent calls return immediately
+ * - On failure, retry is allowed (state is reset)
  *
  * @example
  * ```ts
@@ -67,27 +90,37 @@ let isInitialized = false;
  * ```
  */
 export async function initializeAnalytics(): Promise<void> {
-  // Defense-in-depth: prevent re-initialization at the public API level
-  if (isInitialized) {
+  // Already completed or skipped - return immediately
+  if (initializationState === 'completed' || initializationState === 'skipped') {
     if (isDebugMode()) {
-      logger.debug('Analytics already initialized, skipping', {
+      logger.debug(`Analytics already ${initializationState}, skipping`, {
         category: LogCategory.ANALYTICS,
       });
     }
     return;
   }
 
+  // Initialization in progress - wait for the existing Promise
+  // This prevents race conditions from concurrent calls
+  if (initializationPromise !== null && initializationState === 'pending') {
+    if (isDebugMode()) {
+      logger.debug('Analytics initialization in progress, waiting...', {
+        category: LogCategory.ANALYTICS,
+      });
+    }
+    return initializationPromise;
+  }
+
+  // Check if analytics should be initialized
   if (!shouldInitializeAnalytics()) {
     if (isDebugMode()) {
       logger.warn('Firebase not configured - analytics disabled', {
         category: LogCategory.ANALYTICS,
       });
     }
+    initializationState = 'skipped';
     return;
   }
-
-  // Mark as initialized before async operations to prevent race conditions
-  isInitialized = true;
 
   // On native, Firebase reads config from GoogleService-Info.plist / google-services.json
   // On web, we need explicit configuration via environment variables
@@ -109,16 +142,24 @@ export async function initializeAnalytics(): Promise<void> {
     });
   }
 
-  try {
-    await initializePlatformAnalytics(config);
-  } catch (error) {
-    // Reset flag to allow retry on critical failures
-    isInitialized = false;
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Failed to initialize analytics platform', err, {
-      category: LogCategory.ANALYTICS,
+  // Start new initialization
+  initializationState = 'pending';
+  initializationPromise = doInitialize(config)
+    .then(() => {
+      initializationState = 'completed';
+    })
+    .catch((error) => {
+      // Reset state to allow retry
+      initializationState = 'failed';
+      initializationPromise = null;
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Failed to initialize analytics platform', err, {
+        category: LogCategory.ANALYTICS,
+      });
+      // Don't rethrow - analytics failures shouldn't crash the app
     });
-  }
+
+  return initializationPromise;
 }
 
 /**
