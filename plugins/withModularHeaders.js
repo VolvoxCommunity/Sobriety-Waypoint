@@ -23,11 +23,11 @@ const { withPodfile } = require('@expo/config-plugins');
  */
 function withModularHeaders(config) {
   return withPodfile(config, (podfileConfig) => {
-    if (!config.modResults || typeof config.modResults.contents !== 'string') {
+    if (!podfileConfig.modResults || typeof podfileConfig.modResults.contents !== 'string') {
       throw new Error('Invalid Podfile config: modResults.contents must be a string');
     }
 
-    const podfile = config.modResults.contents;
+    const podfile = podfileConfig.modResults.contents;
 
     // Check if use_modular_headers! is already present
     if (podfile.includes('use_modular_headers!')) {
