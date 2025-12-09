@@ -2,15 +2,28 @@
  * Firebase Analytics implementation for native platforms (iOS/Android).
  *
  * This file is automatically selected by Metro bundler on iOS and Android.
+ * Uses the modular API introduced in React Native Firebase v22.
  *
  * @module lib/analytics/platform.native
+ * @see {@link https://rnfirebase.io/migrating-to-v22 Migration Guide}
  */
 
-import analytics from '@react-native-firebase/analytics';
+import {
+  getAnalytics,
+  logEvent,
+  logScreenView,
+  setUserId,
+  setUserProperties,
+  resetAnalyticsData,
+  setAnalyticsCollectionEnabled,
+} from '@react-native-firebase/analytics';
 
 import type { EventParams, UserProperties, AnalyticsConfig } from '@/types/analytics';
 import { isDebugMode } from '@/lib/analytics-utils';
 import { logger, LogCategory } from '@/lib/logger';
+
+// Get the analytics instance once for reuse
+const analyticsInstance = getAnalytics();
 
 /**
  * Initializes Firebase Analytics for native platforms.
@@ -22,7 +35,7 @@ import { logger, LogCategory } from '@/lib/logger';
 export async function initializePlatformAnalytics(_config?: AnalyticsConfig): Promise<void> {
   try {
     if (isDebugMode()) {
-      await analytics().setAnalyticsCollectionEnabled(true);
+      await setAnalyticsCollectionEnabled(analyticsInstance, true);
       logger.info('Firebase Analytics initialized for native', {
         category: LogCategory.ANALYTICS,
       });
@@ -47,15 +60,13 @@ export function trackEventPlatform(eventName: string, params?: EventParams): voi
     logger.debug(`Event: ${eventName}`, { category: LogCategory.ANALYTICS, ...params });
   }
 
-  analytics()
-    .logEvent(eventName, params)
-    .catch((error: unknown) => {
-      logger.error(
-        `Failed to track event ${eventName}`,
-        error instanceof Error ? error : new Error(String(error)),
-        { category: LogCategory.ANALYTICS }
-      );
-    });
+  logEvent(analyticsInstance, eventName, params).catch((error: unknown) => {
+    logger.error(
+      `Failed to track event ${eventName}`,
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS }
+    );
+  });
 }
 
 /**
@@ -69,15 +80,13 @@ export function setUserIdPlatform(userId: string | null): void {
     logger.debug(`setUserId: ${userId}`, { category: LogCategory.ANALYTICS });
   }
 
-  analytics()
-    .setUserId(userId)
-    .catch((error: unknown) => {
-      logger.error(
-        'Failed to set user ID',
-        error instanceof Error ? error : new Error(String(error)),
-        { category: LogCategory.ANALYTICS }
-      );
-    });
+  setUserId(analyticsInstance, userId).catch((error: unknown) => {
+    logger.error(
+      'Failed to set user ID',
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS }
+    );
+  });
 }
 
 /**
@@ -107,15 +116,13 @@ export function setUserPropertiesPlatform(properties: UserProperties): void {
     }
   }
 
-  analytics()
-    .setUserProperties(normalized)
-    .catch((error: unknown) => {
-      logger.error(
-        'Failed to set user properties',
-        error instanceof Error ? error : new Error(String(error)),
-        { category: LogCategory.ANALYTICS }
-      );
-    });
+  setUserProperties(analyticsInstance, normalized).catch((error: unknown) => {
+    logger.error(
+      'Failed to set user properties',
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS }
+    );
+  });
 }
 
 /**
@@ -129,18 +136,16 @@ export function trackScreenViewPlatform(screenName: string, screenClass?: string
     logger.debug(`Screen view: ${screenName}`, { category: LogCategory.ANALYTICS });
   }
 
-  analytics()
-    .logScreenView({
-      screen_name: screenName,
-      screen_class: screenClass || screenName,
-    })
-    .catch((error: unknown) => {
-      logger.error(
-        'Failed to track screen view',
-        error instanceof Error ? error : new Error(String(error)),
-        { category: LogCategory.ANALYTICS }
-      );
-    });
+  logScreenView(analyticsInstance, {
+    screen_name: screenName,
+    screen_class: screenClass || screenName,
+  }).catch((error: unknown) => {
+    logger.error(
+      'Failed to track screen view',
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS }
+    );
+  });
 }
 
 /**
@@ -152,7 +157,7 @@ export async function resetAnalyticsPlatform(): Promise<void> {
       logger.info('Resetting analytics state', { category: LogCategory.ANALYTICS });
     }
 
-    await analytics().resetAnalyticsData();
+    await resetAnalyticsData(analyticsInstance);
   } catch (error) {
     logger.error(
       'Failed to reset analytics',
