@@ -73,6 +73,20 @@ let analytics: Analytics | null = null;
 let app: FirebaseApp | null = null;
 let vercelAnalytics: VercelAnalytics | null = null;
 
+/**
+ * Initialization state to prevent race conditions.
+ *
+ * Uses Promise-based pattern instead of boolean flag:
+ * - null: not started
+ * - Promise: initialization in progress (concurrent callers await the same Promise)
+ * - 'completed': successfully initialized
+ *
+ * This prevents the race condition where resetting a boolean flag on failure
+ * could allow concurrent calls to both proceed with initialization.
+ */
+let initializationPromise: Promise<void> | null = null;
+let initializationState: 'pending' | 'completed' | 'failed' | null = null;
+
 // =============================================================================
 // Constants (continued)
 // =============================================================================
@@ -222,11 +236,20 @@ async function hashUserId(input: string | null): Promise<string | null> {
  * 1. Removing reserved logger keys to prevent overwrites
  * 2. Redacting PII-prone keys to prevent data leaks
  * 3. Returning a sanitized object suitable for nested logging
+ * 4. Handling circular references gracefully
+ *
+ * The `ancestors` WeakSet tracks objects in the current recursion path only.
+ * This correctly handles shared objects that appear in multiple non-circular positions
+ * (e.g., the same config object used as values for different keys).
  *
  * @param params - The original event params to sanitize
+ * @param ancestors - WeakSet tracking objects in current recursion path (ancestors only)
  * @returns Sanitized params object with PII redacted and reserved keys removed
  */
-function sanitizeParamsForLogging(params?: EventParams): Record<string, unknown> {
+function sanitizeParamsForLogging(
+  params?: EventParams,
+  ancestors: WeakSet<object> = new WeakSet()
+): Record<string, unknown> {
   if (!params) {
     return {};
   }
@@ -245,9 +268,17 @@ function sanitizeParamsForLogging(params?: EventParams): Record<string, unknown>
       continue;
     }
 
-    // For nested objects, recursively sanitize
+    // For nested objects, recursively sanitize with circular reference detection
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      sanitized[key] = sanitizeParamsForLogging(value as EventParams);
+      // Detect circular references (object is an ancestor in current recursion path)
+      if (ancestors.has(value)) {
+        sanitized[key] = '[Circular]';
+        continue;
+      }
+      // Add to ancestors for this recursion path, then remove after processing
+      ancestors.add(value);
+      sanitized[key] = sanitizeParamsForLogging(value as EventParams, ancestors);
+      ancestors.delete(value);
     } else {
       sanitized[key] = value;
     }
@@ -334,26 +365,17 @@ function dispatchEvent(eventName: string, params?: EventParams): void {
 // =============================================================================
 // Main Logic
 // =============================================================================
+
 /**
- * Initializes analytics providers for web.
+ * Internal initialization logic. Called by initializePlatformAnalytics wrapper.
+ * This function performs the actual work and may throw on critical errors.
  *
- * Initializes Firebase Analytics and/or Vercel Analytics based on configuration.
- * Firebase requires explicit configuration; Vercel Analytics auto-detects if installed.
- *
- * @param config - Firebase configuration (required if Firebase is enabled)
- * @returns Promise that resolves when initialization is complete
- *
- * @example
- * ```ts
- * await initializePlatformAnalytics({
- *   apiKey: 'your-api-key',
- *   projectId: 'your-project',
- *   appId: 'your-app-id',
- *   measurementId: 'G-XXXXXXXXXX'
- * });
- * ```
+ * @param config - Firebase configuration
+ * @throws Error if Firebase initialization fails critically
  */
-export async function initializePlatformAnalytics(config: AnalyticsConfig): Promise<void> {
+async function doInitialize(config: AnalyticsConfig): Promise<void> {
+  let firebaseError: Error | null = null;
+
   // Initialize Firebase if enabled
   if (IS_FIREBASE_ENABLED) {
     try {
@@ -392,15 +414,15 @@ export async function initializePlatformAnalytics(config: AnalyticsConfig): Prom
         }
       }
     } catch (error) {
-      logger.error(
-        'Failed to initialize Firebase Analytics',
-        error instanceof Error ? error : new Error(String(error)),
-        { category: LogCategory.ANALYTICS }
-      );
+      // Capture error but don't return - still initialize Vercel if enabled
+      firebaseError = error instanceof Error ? error : new Error(String(error));
+      logger.error('Failed to initialize Firebase Analytics', firebaseError, {
+        category: LogCategory.ANALYTICS,
+      });
     }
   }
 
-  // Initialize Vercel Analytics if enabled
+  // Initialize Vercel Analytics if enabled - independent of Firebase success/failure
   await initializeVercelAnalytics();
 
   if (isDebugMode()) {
@@ -409,8 +431,70 @@ export async function initializePlatformAnalytics(config: AnalyticsConfig): Prom
       provider: ANALYTICS_PROVIDER,
       firebaseEnabled: IS_FIREBASE_ENABLED && analytics !== null,
       vercelEnabled: IS_VERCEL_ENABLED && vercelAnalytics !== null,
+      firebaseError: firebaseError ? firebaseError.message : null,
     });
   }
+
+  // Note: We intentionally do NOT throw on Firebase failures.
+  // Analytics initialization failures should be handled gracefully since they're
+  // not critical to app functionality. The error is logged above for monitoring.
+}
+
+/**
+ * Initialize configured analytics providers for the web platform.
+ *
+ * This function uses a Promise-based pattern to prevent race conditions:
+ * - Concurrent calls during initialization will await the same Promise
+ * - Once completed, subsequent calls return immediately
+ * - On failure, retry is allowed (state is reset)
+ *
+ * Firebase and Vercel Analytics are initialized independently - a Firebase failure
+ * will not prevent Vercel Analytics from initializing when provider is 'both'.
+ *
+ * Initialization errors are handled gracefully and logged. Analytics failures do not
+ * throw exceptions since they are not critical to app functionality.
+ *
+ * @param config - Firebase configuration required when Firebase analytics is enabled.
+ *   If Firebase is enabled but config is missing or invalid (empty apiKey, projectId, or appId),
+ *   Firebase initialization will fail and be logged. If Vercel is also enabled (provider='both'),
+ *   Vercel Analytics will still be initialized.
+ */
+export async function initializePlatformAnalytics(config: AnalyticsConfig): Promise<void> {
+  // Already completed successfully - return immediately
+  if (initializationState === 'completed') {
+    if (isDebugMode()) {
+      logger.debug('Analytics already initialized, skipping re-initialization', {
+        category: LogCategory.ANALYTICS,
+      });
+    }
+    return;
+  }
+
+  // Initialization in progress - wait for the existing Promise
+  // This prevents race conditions from concurrent calls
+  if (initializationPromise !== null && initializationState === 'pending') {
+    if (isDebugMode()) {
+      logger.debug('Analytics initialization in progress, waiting...', {
+        category: LogCategory.ANALYTICS,
+      });
+    }
+    return initializationPromise;
+  }
+
+  // Start new initialization
+  initializationState = 'pending';
+  initializationPromise = doInitialize(config)
+    .then(() => {
+      initializationState = 'completed';
+    })
+    .catch((error) => {
+      // Reset state to allow retry
+      initializationState = 'failed';
+      initializationPromise = null;
+      throw error;
+    });
+
+  return initializationPromise;
 }
 
 /**
@@ -554,10 +638,9 @@ export function trackScreenViewPlatform(screenName: string, screenClass?: string
 }
 
 /**
- * Resets analytics for logout.
+ * Reset analytics state for the current user.
  *
- * Clears user ID and user properties in Firebase Analytics.
- * Vercel Analytics does not support reset operations.
+ * Clears the Firebase Analytics user ID and user properties. No-op for Vercel Analytics because it does not expose a reset API.
  */
 export async function resetAnalyticsPlatform(): Promise<void> {
   if (isDebugMode()) {
@@ -565,6 +648,28 @@ export async function resetAnalyticsPlatform(): Promise<void> {
   }
 
   setUserIdPlatform(null);
+}
+
+// =============================================================================
+// Testing Utilities
+// =============================================================================
+/**
+ * Reset the module's analytics initialization state for tests.
+ *
+ * Clears the internal initialization state and removes stored Firebase and Vercel analytics instances so the module can be re-initialized in a test.
+ *
+ * @throws Will throw an Error if called when NODE_ENV is not 'test'.
+ * @internal
+ */
+export function __resetForTesting(): void {
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('__resetForTesting should only be called in test environments');
+  }
+  initializationState = null;
+  initializationPromise = null;
+  analytics = null;
+  app = null;
+  vercelAnalytics = null;
 }
 
 // =============================================================================

@@ -43,12 +43,44 @@ import {
 export { AnalyticsEvents, type AnalyticsEventName } from '@/types/analytics';
 export { calculateDaysSoberBucket } from '@/lib/analytics-utils';
 
+// =============================================================================
+// Module State
+// =============================================================================
+/**
+ * Initialization state to prevent race conditions at the public API level.
+ *
+ * Uses Promise-based pattern instead of boolean flag:
+ * - null: not started
+ * - Promise: initialization in progress (concurrent callers await the same Promise)
+ * - 'completed': successfully initialized
+ * - 'skipped': analytics disabled (no config)
+ *
+ * This prevents the race condition where resetting a boolean flag on failure
+ * could allow concurrent calls to both proceed with initialization.
+ */
+let initializationPromise: Promise<void> | null = null;
+let initializationState: 'pending' | 'completed' | 'skipped' | 'failed' | null = null;
+
+/**
+ * Internal initialization logic. Called by initializeAnalytics wrapper.
+ *
+ * @param config - Analytics configuration
+ */
+async function doInitialize(config: AnalyticsConfig): Promise<void> {
+  await initializePlatformAnalytics(config);
+}
+
 /**
  * Initialize Firebase Analytics for the app.
  *
  * Call this once at app startup, before any other analytics calls.
  * On native platforms, Firebase is configured via config files.
  * On web, it uses environment variables.
+ *
+ * This function uses a Promise-based pattern to prevent race conditions:
+ * - Concurrent calls during initialization will await the same Promise
+ * - Once completed, subsequent calls return immediately
+ * - On failure, retry is allowed (state is reset)
  *
  * @example
  * ```ts
@@ -58,12 +90,35 @@ export { calculateDaysSoberBucket } from '@/lib/analytics-utils';
  * ```
  */
 export async function initializeAnalytics(): Promise<void> {
+  // Already completed or skipped - return immediately
+  if (initializationState === 'completed' || initializationState === 'skipped') {
+    if (isDebugMode()) {
+      logger.debug(`Analytics already ${initializationState}, skipping`, {
+        category: LogCategory.ANALYTICS,
+      });
+    }
+    return;
+  }
+
+  // Initialization in progress - wait for the existing Promise
+  // This prevents race conditions from concurrent calls
+  if (initializationPromise !== null && initializationState === 'pending') {
+    if (isDebugMode()) {
+      logger.debug('Analytics initialization in progress, waiting...', {
+        category: LogCategory.ANALYTICS,
+      });
+    }
+    return initializationPromise;
+  }
+
+  // Check if analytics should be initialized
   if (!shouldInitializeAnalytics()) {
     if (isDebugMode()) {
       logger.warn('Firebase not configured - analytics disabled', {
         category: LogCategory.ANALYTICS,
       });
     }
+    initializationState = 'skipped';
     return;
   }
 
@@ -87,7 +142,24 @@ export async function initializeAnalytics(): Promise<void> {
     });
   }
 
-  await initializePlatformAnalytics(config);
+  // Start new initialization
+  initializationState = 'pending';
+  initializationPromise = doInitialize(config)
+    .then(() => {
+      initializationState = 'completed';
+    })
+    .catch((error) => {
+      // Reset state to allow retry
+      initializationState = 'failed';
+      initializationPromise = null;
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Failed to initialize analytics platform', err, {
+        category: LogCategory.ANALYTICS,
+      });
+      // Don't rethrow - analytics failures shouldn't crash the app
+    });
+
+  return initializationPromise;
 }
 
 /**
@@ -156,28 +228,44 @@ export function setUserProperties(properties: UserProperties): void {
 }
 
 /**
- * Tracks a screen view event.
+ * Record a screen view for analytics.
  *
- * This is typically called automatically by navigation tracking,
- * but can be called manually for non-standard screens.
+ * Typically invoked automatically by navigation tracking; call manually for non-standard or ephemeral screens.
  *
- * @param screenName - The name of the screen
- * @param screenClass - Optional screen class name
- *
- * @example
- * ```ts
- * trackScreenView('HomeScreen', 'TabScreen');
- * ```
+ * @param screenName - The logical name of the screen (e.g., "Home", "Settings")
+ * @param screenClass - Optional class or category of the screen (e.g., "TabScreen")
  */
 export function trackScreenView(screenName: string, screenClass?: string): void {
   trackScreenViewPlatform(screenName, screenClass);
 }
 
 /**
- * Reset analytics state for the current user.
+ * Resets analytics state for the current user.
  *
  * Clears the analytics user identifier and any user-specific analytics data.
+ *
+ * Note: This does NOT reset the analytics initialization state.
+ * Analytics initialization persists after reset.
  */
 export async function resetAnalytics(): Promise<void> {
   await resetAnalyticsPlatform();
+}
+
+// =============================================================================
+// Testing Utilities
+// =============================================================================
+/**
+ * Reset the module's analytics initialization state for tests.
+ *
+ * Clears the internal initialization state so the module can be re-initialized in a test.
+ *
+ * @throws Will throw an Error if called when NODE_ENV is not 'test'.
+ * @internal
+ */
+export function __resetForTesting(): void {
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('__resetForTesting should only be called in test environments');
+  }
+  initializationState = null;
+  initializationPromise = null;
 }
