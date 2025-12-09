@@ -143,13 +143,16 @@ function RootLayoutNav() {
         <meta property="og:title" content="Sobriety Waypoint" />
         <meta property="og:description" content="Your companion on the journey to recovery" />
         <meta property="og:site_name" content="Sobriety Waypoint" />
-        <meta property="og:image" content="/assets/images/banner.png" />
+        <meta property="og:image" content="https://sobrietywaypoint.com/assets/images/banner.png" />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Sobriety Waypoint" />
         <meta name="twitter:description" content="Your companion on the journey to recovery" />
-        <meta name="twitter:image" content="/assets/images/banner.png" />
+        <meta
+          name="twitter:image"
+          content="https://sobrietywaypoint.com/assets/images/banner.png"
+        />
       </Head>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" />
