@@ -2,11 +2,10 @@
 // Imports
 // =============================================================================
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, ViewStyle } from 'react-native';
+import { Platform, ViewStyle } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
-  BottomSheetView,
   BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -235,6 +234,9 @@ const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
     // ---------------------------------------------------------------------------
     // Render
     // ---------------------------------------------------------------------------
+    // Note: Children are passed directly to BottomSheetModal without a BottomSheetView wrapper.
+    // This is required for BottomSheetScrollView to work correctly - it must be a direct child
+    // of the modal for proper scroll gesture handling and content height calculations.
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
@@ -249,7 +251,7 @@ const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
         enableDismissOnClose={true}
         enableDynamicSizing={false}
       >
-        <BottomSheetView style={styles.contentContainer}>{children}</BottomSheetView>
+        {children}
       </BottomSheetModal>
     );
   }
@@ -257,15 +259,6 @@ const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
 
 // Set display name for debugging
 GlassBottomSheet.displayName = 'GlassBottomSheet';
-
-// =============================================================================
-// Styles
-// =============================================================================
-const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-  },
-});
 
 // =============================================================================
 // Exports

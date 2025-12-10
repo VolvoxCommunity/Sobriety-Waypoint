@@ -15,15 +15,14 @@ const NativeTabs =
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   Platform.OS !== 'web' ? require('@/components/navigation/NativeBottomTabs').NativeTabs : null;
 
-// Android icons using Material Design Icons from Google Fonts CDN
-// These are loaded as remote URIs which works without native font linking
-const ANDROID_ICON_BASE = 'https://fonts.gstatic.com/s/i/materialiconsround';
+// Android icons using local Lucide SVG files
+// Loaded via require() which Metro bundles as native image assets
 const androidIcons = {
-  home: { uri: `${ANDROID_ICON_BASE}/home/v17/24px.svg` },
-  book: { uri: `${ANDROID_ICON_BASE}/menu_book/v13/24px.svg` },
-  trending: { uri: `${ANDROID_ICON_BASE}/trending_up/v17/24px.svg` },
-  tasks: { uri: `${ANDROID_ICON_BASE}/checklist/v6/24px.svg` },
-  profile: { uri: `${ANDROID_ICON_BASE}/person/v16/24px.svg` },
+  home: require('@/assets/icons/home.svg'),
+  book: require('@/assets/icons/book-open.svg'),
+  trending: require('@/assets/icons/trending-up.svg'),
+  tasks: require('@/assets/icons/check-square.svg'),
+  profile: require('@/assets/icons/user.svg'),
 };
 
 // =============================================================================
@@ -132,6 +131,7 @@ export default function TabLayout(): React.ReactElement {
   // - Android: BottomNavigationView with Material Design
   return (
     <NativeTabs
+      labeled={true}
       tabBarActiveTintColor={theme.primary}
       tabBarInactiveTintColor={theme.textSecondary}
       tabBarStyle={{

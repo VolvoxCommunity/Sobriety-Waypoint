@@ -561,7 +561,8 @@ const SettingsSheet = forwardRef<SettingsSheetRef>((props, ref) => {
     <>
       <GlassBottomSheet ref={sheetRef} snapPoints={['90%']}>
         <BottomSheetScrollView
-          contentContainerStyle={styles.content}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
         >
@@ -1083,6 +1084,9 @@ const SettingsSheet = forwardRef<SettingsSheetRef>((props, ref) => {
               <Text style={styles.footerCredit}>By Bill Chirico</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Bottom padding to ensure content can scroll fully into view */}
+          <View style={styles.bottomPadding} />
         </BottomSheetScrollView>
       </GlassBottomSheet>
 
@@ -1181,9 +1185,17 @@ SettingsSheet.displayName = 'SettingsSheet';
  */
 const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
   StyleSheet.create({
-    content: {
+    scrollView: {
+      flex: 1,
+    },
+    scrollViewContent: {
       padding: 20,
-      paddingBottom: 40,
+      // flexGrow ensures content can expand and scroll properly with dynamic content
+      flexGrow: 1,
+    },
+    bottomPadding: {
+      // Small padding for visual breathing room at the bottom of the sheet
+      height: 20,
     },
     section: {
       marginBottom: 24,

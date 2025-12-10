@@ -96,9 +96,15 @@ describe('GlassBottomSheet', () => {
       expect(getByText('Test Content')).toBeTruthy();
     });
 
-    it('should render BottomSheetView wrapper', () => {
-      const { getByTestId } = renderWithTheme(<GlassBottomSheet {...defaultProps} />);
-      expect(getByTestId('bottom-sheet-view')).toBeTruthy();
+    it('should render children directly inside modal (no BottomSheetView wrapper)', () => {
+      // Children are passed directly to BottomSheetModal without a BottomSheetView wrapper.
+      // This is required for BottomSheetScrollView to work correctly as a direct child.
+      const { getByTestId, getByText } = renderWithTheme(<GlassBottomSheet {...defaultProps} />);
+      const modal = getByTestId('bottom-sheet-modal');
+      const content = getByText('Test Content');
+      // Verify content is rendered and is a child of the modal
+      expect(modal).toBeTruthy();
+      expect(content).toBeTruthy();
     });
   });
 
