@@ -7,28 +7,28 @@ import { Profile } from '@/types/database';
 // Types & Interfaces
 // =============================================================================
 /**
- * A partial profile object that may contain name information.
+ * A partial profile object that may contain display name information.
  */
-type ProfileLike = Partial<Pick<Profile, 'first_name' | 'last_initial'>> | null | undefined;
+type ProfileLike = Partial<Pick<Profile, 'display_name'>> | null | undefined;
 
 // =============================================================================
 // Functions
 // =============================================================================
 
 /**
- * Formats a profile's name as "FirstName LastInitial." or just "FirstName" if no last initial.
- * Returns "?" if the profile is null/undefined or has no first name.
+ * Formats a profile's display name.
+ * Returns "?" if the profile is null/undefined or has no display name.
  *
  * @param profile - The profile object (or partial profile) to format
  * @returns Formatted name string
  *
  * @example
  * ```ts
- * formatProfileName({ first_name: 'John', last_initial: 'D' })
+ * formatProfileName({ display_name: 'John D.' })
  * // Returns: "John D."
  *
- * formatProfileName({ first_name: 'Jane', last_initial: null })
- * // Returns: "Jane"
+ * formatProfileName({ display_name: null })
+ * // Returns: "?"
  *
  * formatProfileName(null)
  * // Returns: "?"
@@ -40,17 +40,11 @@ export function formatProfileName(profile: ProfileLike): string {
     return '?';
   }
 
-  // Handle missing or empty first name
-  const firstName = profile.first_name?.trim();
-  if (!firstName) {
+  // Handle missing or empty display name
+  const displayName = profile.display_name?.trim();
+  if (!displayName) {
     return '?';
   }
 
-  // Format with last initial if available
-  if (profile.last_initial) {
-    return `${firstName} ${profile.last_initial}.`;
-  }
-
-  // Return first name only
-  return firstName;
+  return displayName;
 }

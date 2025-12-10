@@ -87,8 +87,7 @@ jest.mock('@/contexts/ThemeContext', () => ({
 // Mock AuthContext
 const mockProfile = {
   id: 'user-123',
-  first_name: 'John',
-  last_initial: 'D',
+  display_name: 'John D.',
   sobriety_date: '2024-01-01',
 };
 

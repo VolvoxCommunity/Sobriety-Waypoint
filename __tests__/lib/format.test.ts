@@ -8,36 +8,14 @@ import { Profile } from '@/types/database';
 // Tests
 // =============================================================================
 describe('formatProfileName', () => {
-  test('formats full name with first name and last initial', () => {
+  test('returns display name when present', () => {
     const profile: Partial<Profile> = {
-      first_name: 'John',
-      last_initial: 'D',
+      display_name: 'John D.',
     };
 
     const result = formatProfileName(profile);
 
     expect(result).toBe('John D.');
-  });
-
-  test('formats name with only first name when last initial is missing', () => {
-    const profile: Partial<Profile> = {
-      first_name: 'Jane',
-      last_initial: null,
-    };
-
-    const result = formatProfileName(profile);
-
-    expect(result).toBe('Jane');
-  });
-
-  test('handles undefined last initial', () => {
-    const profile: Partial<Profile> = {
-      first_name: 'Bob',
-    };
-
-    const result = formatProfileName(profile);
-
-    expect(result).toBe('Bob');
   });
 
   test('returns question mark when profile is null', () => {
@@ -52,9 +30,17 @@ describe('formatProfileName', () => {
     expect(result).toBe('?');
   });
 
-  test('returns question mark when first name is missing', () => {
+  test('returns question mark when display name is missing', () => {
+    const profile: Partial<Profile> = {};
+
+    const result = formatProfileName(profile);
+
+    expect(result).toBe('?');
+  });
+
+  test('returns question mark when display name is null', () => {
     const profile: Partial<Profile> = {
-      last_initial: 'S',
+      display_name: null,
     };
 
     const result = formatProfileName(profile);
@@ -62,10 +48,9 @@ describe('formatProfileName', () => {
     expect(result).toBe('?');
   });
 
-  test('handles empty string first name', () => {
+  test('returns question mark for empty string display name', () => {
     const profile: Partial<Profile> = {
-      first_name: '',
-      last_initial: 'D',
+      display_name: '',
     };
 
     const result = formatProfileName(profile);
@@ -73,10 +58,19 @@ describe('formatProfileName', () => {
     expect(result).toBe('?');
   });
 
-  test('trims whitespace from first name', () => {
+  test('returns question mark for whitespace-only display name', () => {
     const profile: Partial<Profile> = {
-      first_name: '  Sarah  ',
-      last_initial: 'J',
+      display_name: '   ',
+    };
+
+    const result = formatProfileName(profile);
+
+    expect(result).toBe('?');
+  });
+
+  test('trims whitespace from display name', () => {
+    const profile: Partial<Profile> = {
+      display_name: '  Sarah J.  ',
     };
 
     const result = formatProfileName(profile);

@@ -197,9 +197,8 @@ export default function TaskCreationModal({
               <TouchableOpacity style={styles.dropdown} onPress={() => toggleDropdown('sponsee')}>
                 <Text style={[styles.dropdownText, !selectedSponseeId && styles.placeholderText]}>
                   {selectedSponseeId
-                    ? `${sponsees.find((s) => s.id === selectedSponseeId)?.first_name} ${
-                        sponsees.find((s) => s.id === selectedSponseeId)?.last_initial
-                      }.`
+                    ? (sponsees.find((s) => s.id === selectedSponseeId)?.display_name ??
+                      'Select sponsee')
                     : 'Select sponsee'}
                 </Text>
                 <ChevronDown size={20} color={theme.textSecondary} />
@@ -218,10 +217,7 @@ export default function TaskCreationModal({
                         closeAllDropdowns();
                       }}
                     >
-                      <Text style={styles.dropdownItemText}>
-                        {sponsee?.first_name}
-                        {sponsee?.last_initial ? ` ${sponsee?.last_initial}.` : ''}
-                      </Text>
+                      <Text style={styles.dropdownItemText}>{sponsee?.display_name ?? '?'}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>

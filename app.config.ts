@@ -115,7 +115,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: './assets/images/favicon.png',
   },
   plugins: [
-    'expo-router',
+    [
+      'expo-router',
+      {
+        origin: 'https://sobrietywaypoint.com',
+      },
+    ],
     'expo-apple-authentication',
     'expo-font',
     'expo-secure-store',

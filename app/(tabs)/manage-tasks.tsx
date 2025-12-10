@@ -324,7 +324,7 @@ export default function ManageTasksScreen() {
                 <View style={styles.sponseeHeader}>
                   <View style={styles.sponseeAvatar}>
                     <Text style={styles.sponseeAvatarText}>
-                      {(sponsee?.first_name || '?')[0].toUpperCase()}
+                      {(sponsee?.display_name || '?')[0].toUpperCase()}
                     </Text>
                   </View>
                   <View style={styles.sponseeInfo}>
