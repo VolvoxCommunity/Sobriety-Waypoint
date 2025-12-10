@@ -169,6 +169,7 @@ describe('validation utilities', () => {
       it('counts trimmed length', () => {
         expect(validateDisplayName('  J  ')).toBe('Display name must be at least 2 characters');
       });
+    });
 
     describe('boundary conditions', () => {
       it('accepts exactly 2 characters', () => {
@@ -183,9 +184,7 @@ describe('validation utilities', () => {
 
       it('rejects 31 characters', () => {
         const name = 'A'.repeat(31);
-        expect(validateDisplayName(name)).toBe(
-          'Display name must be 30 characters or less'
-        );
+        expect(validateDisplayName(name)).toBe('Display name must be 30 characters or less');
       });
 
       it('rejects 1 character', () => {
@@ -388,9 +387,7 @@ describe('validation utilities', () => {
 
       it('counts length after trimming', () => {
         const name = '  ' + 'A'.repeat(31) + '  ';
-        expect(validateDisplayName(name)).toBe(
-          'Display name must be 30 characters or less'
-        );
+        expect(validateDisplayName(name)).toBe('Display name must be 30 characters or less');
       });
     });
 
@@ -418,12 +415,7 @@ describe('validation utilities', () => {
       });
 
       it('accepts hyphenated names', () => {
-        const names = [
-          'Mary-Anne',
-          'Jean-Claude',
-          'Anne-Marie-Louise',
-          'Abdul-Rahman',
-        ];
+        const names = ['Mary-Anne', 'Jean-Claude', 'Anne-Marie-Louise', 'Abdul-Rahman'];
         names.forEach((name) => {
           expect(validateDisplayName(name)).toBeNull();
         });

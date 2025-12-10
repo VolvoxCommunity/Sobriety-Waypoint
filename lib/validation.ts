@@ -4,10 +4,11 @@
 
 /**
  * Regex pattern for valid display names.
- * Allows: letters (any language via \p{L}), spaces, periods, hyphens
+ * Allows: letters (any language via \p{L}), regular spaces, periods, hyphens
+ * Note: Uses space character ' ' instead of \s to exclude tabs, newlines, etc.
  * Length: 2-30 characters (enforced separately for better error messages)
  */
-const DISPLAY_NAME_REGEX = /^[\p{L}\s.\-]+$/u;
+const DISPLAY_NAME_REGEX = /^[\p{L} .\-]+$/u;
 
 /**
  * Validates email address format

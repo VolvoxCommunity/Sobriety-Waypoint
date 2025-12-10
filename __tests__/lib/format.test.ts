@@ -325,7 +325,7 @@ describe('formatProfileName', () => {
         'Anne-Marie',
         'J.R.R. T.',
         'José García',
-        'O\'Brien',
+        "O'Brien",
       ];
 
       // Note: O'Brien contains apostrophe which is not in the allowed character set
@@ -333,7 +333,7 @@ describe('formatProfileName', () => {
       validFormats.forEach((displayName) => {
         const profile: Partial<Profile> = { display_name: displayName };
         const result = formatProfileName(profile);
-        
+
         // For O'Brien, it should still format it even though it wouldn't pass validation
         expect(result).toBe(displayName);
       });

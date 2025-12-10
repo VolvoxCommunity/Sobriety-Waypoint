@@ -97,7 +97,7 @@ export function shouldInitializeAnalytics(): boolean {
   }
 
   // Web requires explicit configuration via environment variables
-  const measurementId = process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID;
+  const measurementId = process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim();
   return Boolean(measurementId && measurementId.length > 0);
 }
 

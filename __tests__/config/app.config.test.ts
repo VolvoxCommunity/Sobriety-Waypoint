@@ -29,7 +29,11 @@ describe('app.config.ts', () => {
     it('includes expo-router plugin', () => {
       const config = appConfig({ config: {} } as any);
 
-      const hasExpoRouter = config.plugins?.includes('expo-router');
+      // expo-router can be a string or array [name, options]
+      const hasExpoRouter = config.plugins?.some(
+        (plugin: unknown) =>
+          plugin === 'expo-router' || (Array.isArray(plugin) && plugin[0] === 'expo-router')
+      );
       expect(hasExpoRouter).toBe(true);
     });
 

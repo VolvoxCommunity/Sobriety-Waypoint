@@ -87,8 +87,8 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
       // Solution: Update BOTH user_metadata (for future reference) AND the profile
       // table directly (to fix the profile that was just created without a name).
       if (credential.fullName?.givenName || credential.fullName?.familyName) {
-        const firstName = credential.fullName.givenName ?? '';
-        const familyName = credential.fullName.familyName ?? '';
+        const firstName = (credential.fullName.givenName ?? '').trim();
+        const familyName = (credential.fullName.familyName ?? '').trim();
 
         // Build display name in "FirstName L." format
         // Handle edge cases: firstName only, lastInitial only, or both

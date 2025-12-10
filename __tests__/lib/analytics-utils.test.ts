@@ -418,10 +418,11 @@ describe('Analytics Utilities', () => {
   });
 
   describe('calculateDaysSoberBucket - additional edge cases', () => {
-    it('handles fractional days (rounds down)', () => {
-      // Implementation uses <= comparison, so 7.9 should be in 0-7 bucket
-      expect(calculateDaysSoberBucket(7.9)).toBe('0-7');
-      expect(calculateDaysSoberBucket(30.5)).toBe('8-30');
+    it('handles fractional days', () => {
+      // Implementation uses <= comparison, so 7.9 <= 7 is false, goes to 8-30
+      // Similarly, 30.5 <= 30 is false, goes to 31-90
+      expect(calculateDaysSoberBucket(7.9)).toBe('8-30');
+      expect(calculateDaysSoberBucket(30.5)).toBe('31-90');
     });
 
     it('handles very large numbers', () => {
@@ -464,14 +465,7 @@ describe('Analytics Utilities', () => {
 
     it('returns correct type (DaysSoberBucket)', () => {
       const result = calculateDaysSoberBucket(45);
-      const validBuckets: readonly string[] = [
-        '0-7',
-        '8-30',
-        '31-90',
-        '91-180',
-        '181-365',
-        '365+',
-      ];
+      const validBuckets: readonly string[] = ['0-7', '8-30', '31-90', '91-180', '181-365', '365+'];
       expect(validBuckets).toContain(result);
     });
   });
