@@ -156,7 +156,7 @@ function SponsorDaysDisplay({
  * @returns A React element representing the profile screen
  */
 export default function ProfileScreen() {
-  const { profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { theme } = useTheme();
   const router = useRouter();
   const [inviteCode, setInviteCode] = useState('');
@@ -309,7 +309,7 @@ export default function ProfileScreen() {
   };
 
   const joinWithInviteCode = async () => {
-    if (!inviteCode.trim() || !profile) return;
+    if (!inviteCode.trim() || !profile || !user) return;
 
     const trimmedCode = inviteCode.trim().toUpperCase();
 
@@ -385,7 +385,7 @@ export default function ProfileScreen() {
         return;
       }
 
-      if (invite.sponsor_id === profile.id) {
+      if (invite.sponsor_id === user.id) {
         if (Platform.OS === 'web') {
           window.alert('You cannot connect to yourself as a sponsor');
         } else {
@@ -399,7 +399,7 @@ export default function ProfileScreen() {
         .from('sponsor_sponsee_relationships')
         .select('id')
         .eq('sponsor_id', invite.sponsor_id)
-        .eq('sponsee_id', profile.id)
+        .eq('sponsee_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
@@ -413,11 +413,12 @@ export default function ProfileScreen() {
         return;
       }
 
+      // Use user.id for sponsee_id to satisfy RLS policy: sponsee_id = auth.uid()
       const { error: relationshipError } = await supabase
         .from('sponsor_sponsee_relationships')
         .insert({
           sponsor_id: invite.sponsor_id,
-          sponsee_id: profile.id,
+          sponsee_id: user.id,
           status: 'active',
         });
 
@@ -436,17 +437,17 @@ export default function ProfileScreen() {
         return;
       }
 
+      // Use user.id (auth.uid()) instead of profile.id to satisfy RLS policy
+      // The WITH CHECK clause requires: used_by = auth.uid()
       const { error: updateError } = await supabase
         .from('invite_codes')
-        .update({ used_by: profile.id, used_at: new Date().toISOString() })
+        .update({ used_by: user.id, used_at: new Date().toISOString() })
         .eq('id', invite.id);
 
       if (updateError) {
         logger.error('Invite code update failed', updateError as Error, {
           category: LogCategory.DATABASE,
         });
-        // Note: This error usually indicates a missing RLS policy in Supabase.
-        // Run scripts/fix_invite_codes_rls.sql to fix it.
       }
 
       await supabase.from('notifications').insert([
@@ -455,10 +456,10 @@ export default function ProfileScreen() {
           type: 'connection_request',
           title: 'New Sponsee Connected',
           content: `${profile.display_name ?? 'Unknown'} has connected with you as their sponsor.`,
-          data: { sponsee_id: profile.id },
+          data: { sponsee_id: user.id },
         },
         {
-          user_id: profile.id,
+          user_id: user.id,
           type: 'connection_request',
           title: 'Connected to Sponsor',
           content: `You are now connected with ${sponsorProfile.display_name ?? 'Unknown'} as your sponsor.`,
