@@ -488,12 +488,6 @@ describe('ProfileScreen', () => {
       // The sheet is mocked, so we can't test its opening behavior here
       // That behavior is tested in LogSlipUpSheet.test.tsx
     });
-
-    it('slip-up sheet UI is tested in LogSlipUpSheet.test.tsx', async () => {
-      // The slip-up modal UI has been moved to a separate LogSlipUpSheet component
-      // UI tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
-      expect(true).toBe(true);
-    });
   });
 
   describe('Invite Code Flow', () => {
@@ -605,14 +599,6 @@ describe('ProfileScreen', () => {
         const button = screen.getByText('Generate Invite Code');
         expect(button).toBeTruthy();
       });
-    });
-  });
-
-  describe('Slip-up Sheet Interaction', () => {
-    it('slip-up sheet interactions are tested in LogSlipUpSheet.test.tsx', () => {
-      // The slip-up modal has been moved to LogSlipUpSheet component
-      // All interaction tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
-      expect(true).toBe(true);
     });
   });
 
@@ -776,22 +762,6 @@ describe('ProfileScreen', () => {
       await waitFor(() => {
         expect(screen.getByText('Connect')).toBeTruthy();
       });
-    });
-  });
-
-  describe('Slip-up Sheet Notes', () => {
-    it('notes input tests are in LogSlipUpSheet.test.tsx', () => {
-      // The slip-up modal has been moved to LogSlipUpSheet component
-      // All notes input tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
-      expect(true).toBe(true);
-    });
-  });
-
-  describe('Slip-up Sheet Date Pickers', () => {
-    it('date picker tests are in LogSlipUpSheet.test.tsx', () => {
-      // The slip-up modal has been moved to LogSlipUpSheet component
-      // All date picker tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
-      expect(true).toBe(true);
     });
   });
 
@@ -975,14 +945,6 @@ describe('ProfileScreen', () => {
         expect(screen.getByText('180 Days')).toBeTruthy();
         // Edit button is rendered with Edit2 icon
       });
-    });
-  });
-
-  describe('Slip Up Sheet', () => {
-    it('slip-up sheet UI tests are in LogSlipUpSheet.test.tsx', () => {
-      // The slip-up modal has been moved to LogSlipUpSheet component
-      // All UI and interaction tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
-      expect(true).toBe(true);
     });
   });
 
@@ -1513,14 +1475,6 @@ describe('ProfileScreen', () => {
         // Check that the journey section exists with the date
         expect(screen.getByText(/Journey started:/)).toBeTruthy();
       });
-    });
-  });
-
-  describe('Slip Up Submission', () => {
-    it('submission tests are in LogSlipUpSheet.test.tsx', () => {
-      // The slip-up modal has been moved to LogSlipUpSheet component
-      // All submission and loading state tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
-      expect(true).toBe(true);
     });
   });
 

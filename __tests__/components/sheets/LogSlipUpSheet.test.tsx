@@ -256,7 +256,7 @@ describe('LogSlipUpSheet', () => {
     });
 
     it('calls onClose when close icon is pressed', () => {
-      const { getByText } = renderWithProviders(
+      const { getByTestId } = renderWithProviders(
         <LogSlipUpSheet
           ref={sheetRef}
           profile={mockProfile}
@@ -266,8 +266,8 @@ describe('LogSlipUpSheet', () => {
         />
       );
 
-      const cancelButton = getByText('Cancel');
-      fireEvent.press(cancelButton);
+      const closeIconButton = getByTestId('close-icon-button');
+      fireEvent.press(closeIconButton);
 
       expect(mockOnClose).toHaveBeenCalled();
     });
@@ -282,9 +282,13 @@ describe('LogSlipUpSheet', () => {
           return { insert: insertMock };
         }
         if (table === 'sponsor_sponsee_relationships') {
+          // Chain: .select().eq().eq() - need two .eq() calls
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
           };
         }
         if (table === 'notifications') {
@@ -456,8 +460,11 @@ describe('LogSlipUpSheet', () => {
         }
         if (table === 'sponsor_sponsee_relationships') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
           };
         }
         if (table === 'notifications') {

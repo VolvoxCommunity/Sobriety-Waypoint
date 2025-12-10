@@ -292,7 +292,13 @@ const LogSlipUpSheet = forwardRef<LogSlipUpSheetRef, LogSlipUpSheetProps>(
             <AlertCircle size={24} color={theme.danger} />
           </View>
           <Text style={styles.title}>Log a Slip Up</Text>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={handleClose}
+            style={styles.closeButton}
+            testID="close-icon-button"
+            accessibilityLabel="Close"
+            accessibilityRole="button"
+          >
             <X size={24} color={theme.textSecondary} />
           </TouchableOpacity>
         </View>
