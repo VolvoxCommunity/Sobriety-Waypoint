@@ -712,7 +712,7 @@ export default function TasksScreen() {
                     <View style={styles.sponseeHeader}>
                       <View style={styles.sponseeAvatar}>
                         <Text style={styles.sponseeAvatarText}>
-                          {(sponsee?.display_name || '?')[0].toUpperCase()}
+                          {formatProfileName(sponsee)[0].toUpperCase()}
                         </Text>
                       </View>
                       <View style={styles.sponseeInfo}>
