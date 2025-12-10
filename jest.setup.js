@@ -329,3 +329,58 @@ jest.mock('@/lib/supabase', () => {
     supabase: createClient('https://test.supabase.co', 'test-anon-key'),
   };
 });
+
+// Mock react-native-bottom-tabs
+jest.mock('react-native-bottom-tabs', () => {
+  const React = require('react');
+  return {
+    createNativeBottomTabNavigator: () => ({
+      Navigator: ({ children, ...props }) => React.createElement('TabNavigator', props, children),
+      Screen: ({ children, ...props }) => React.createElement('TabScreen', props, children),
+    }),
+  };
+});
+
+// Mock @gorhom/bottom-sheet
+jest.mock('@gorhom/bottom-sheet', () => {
+  const React = require('react');
+  return {
+    __esModule: true,
+    default: ({ children, ...props }) => React.createElement('BottomSheet', props, children),
+    BottomSheetModal: ({ children, ...props }) =>
+      React.createElement('BottomSheetModal', props, children),
+    BottomSheetModalProvider: ({ children }) => children,
+    BottomSheetView: ({ children, ...props }) =>
+      React.createElement('BottomSheetView', props, children),
+    BottomSheetScrollView: ({ children, ...props }) =>
+      React.createElement('BottomSheetScrollView', props, children),
+    BottomSheetBackdrop: ({ children, ...props }) =>
+      React.createElement('BottomSheetBackdrop', props, children),
+    useBottomSheetModal: () => ({
+      dismiss: jest.fn(),
+      present: jest.fn(),
+    }),
+  };
+});
+
+// Mock expo-blur
+jest.mock('expo-blur', () => {
+  const React = require('react');
+  return {
+    BlurView: ({ children, ...props }) => React.createElement('BlurView', props, children),
+  };
+});
+
+// Mock react-native-keyboard-controller
+jest.mock('react-native-keyboard-controller', () => {
+  const React = require('react');
+  return {
+    KeyboardProvider: ({ children }) => children,
+    KeyboardAwareScrollView: ({ children, ...props }) =>
+      React.createElement('KeyboardAwareScrollView', props, children),
+    KeyboardAvoidingView: ({ children, ...props }) =>
+      React.createElement('KeyboardAvoidingView', props, children),
+    useKeyboardHandler: () => ({}),
+    useReanimatedKeyboardAnimation: () => ({ height: { value: 0 }, progress: { value: 0 } }),
+  };
+});
