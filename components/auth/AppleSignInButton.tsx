@@ -66,17 +66,6 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
         throw new Error('No identity token returned from Apple');
       }
 
-      // DEBUG: Log the entire credential to see what Apple provides
-      logger.info('Apple credential received', {
-        category: LogCategory.AUTH,
-        hasIdentityToken: !!credential.identityToken,
-        hasFullName: !!credential.fullName,
-        givenName: credential.fullName?.givenName ?? 'NULL',
-        familyName: credential.fullName?.familyName ?? 'NULL',
-        email: credential.email ?? 'NULL',
-        user: credential.user ?? 'NULL',
-      });
-
       // Apple only provides the user's full name on the FIRST sign-in.
       // Subsequent sign-ins return null for fullName. We must capture and
       // store this data BEFORE calling signInWithIdToken so that
@@ -89,11 +78,6 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
       let nameData: PendingAppleAuthName | null = null;
 
       if (credential.fullName?.givenName || credential.fullName?.familyName) {
-        logger.info('Apple provided name data - storing for profile creation', {
-          category: LogCategory.AUTH,
-          givenName: credential.fullName.givenName,
-          familyName: credential.fullName.familyName,
-        });
         const firstName = (credential.fullName.givenName ?? '').trim();
         const familyName = (credential.fullName.familyName ?? '').trim();
 
@@ -112,10 +96,6 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
         // Store name data so createOAuthProfileIfNeeded can access it
         // This must happen BEFORE signInWithIdToken
         setPendingAppleAuthName(nameData);
-        logger.info('Pending Apple name stored', {
-          category: LogCategory.AUTH,
-          displayName: nameData.displayName,
-        });
       } else {
         // Apple did not provide name - this happens on subsequent sign-ins
         logger.warn('Apple did NOT provide name data - user may need to revoke app access', {
@@ -183,10 +163,6 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
               error: profileError.message,
             });
           } else {
-            logger.info('Profile updated with Apple name data', {
-              category: LogCategory.AUTH,
-              displayName: nameData.displayName,
-            });
             // Refresh AuthContext profile state so onboarding sees the display name
             await refreshProfile();
           }

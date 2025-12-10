@@ -203,27 +203,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const pendingAppleName = getPendingAppleAuthName();
 
     if (!pendingAppleName?.displayName) {
-      logger.info('No pending Apple name to store in metadata', {
-        category: LogCategory.AUTH,
-      });
       return;
     }
 
     // Check if user_metadata already has the display_name
     if (user.user_metadata?.display_name) {
-      logger.info('User metadata already has display_name, skipping update', {
-        category: LogCategory.AUTH,
-        existingDisplayName: user.user_metadata.display_name,
-      });
       return;
     }
 
     // Store the pending Apple name in user_metadata so it persists across sessions
-    logger.info('Storing Apple name in user metadata', {
-      category: LogCategory.AUTH,
-      displayName: pendingAppleName.displayName,
-    });
-
     const { error } = await supabase.auth.updateUser({
       data: {
         display_name: pendingAppleName.displayName,
