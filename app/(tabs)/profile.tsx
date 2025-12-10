@@ -667,7 +667,7 @@ export default function ProfileScreen() {
     await refreshProfile();
   };
 
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, insets);
 
   return (
     <KeyboardAvoidingView style={styles.keyboardAvoidingContainer}>
@@ -948,7 +948,10 @@ export default function ProfileScreen() {
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>['theme'],
+  insets: { top: number } = { top: 0 }
+) =>
   StyleSheet.create({
     keyboardAvoidingContainer: {
       flex: 1,
@@ -960,13 +963,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
     header: {
       alignItems: 'center',
       padding: 24,
-      paddingTop: Platform.OS === 'ios' ? 16 : 24, // Reduced top padding since native header provides spacing
+      // Add safe area top inset for Dynamic Island/notch clearance
+      paddingTop: insets.top + 16,
       backgroundColor: theme.surface,
       position: 'relative', // For absolute positioning of settings button
     },
     settingsButton: {
       position: 'absolute',
-      top: Platform.OS === 'ios' ? 16 : 24,
+      // Position below Dynamic Island/notch
+      top: insets.top + 8,
       right: 16,
       padding: 8,
       borderRadius: 8,
