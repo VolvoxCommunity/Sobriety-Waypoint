@@ -118,6 +118,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-router',
       {
+        // Setting the origin is required to fix a <Head> component handoff error in expo-router.
+        // Without this, server/client rendering can mismatch <head> contents, causing hydration errors.
+        // See: https://github.com/expo/router/issues/856
         origin: 'https://sobrietywaypoint.com',
       },
     ],
