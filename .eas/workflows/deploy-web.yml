@@ -1,19 +1,4 @@
-# =============================================================================
-# EAS Workflow: Deploy Web to Production
-# =============================================================================
-#
-# This workflow automatically builds and deploys the web app to EAS Hosting
-# when changes are pushed to the main branch.
-#
-# The `type: deploy` job handles:
-#   1. Running `npx expo export -p web` to build the web bundle
-#   2. Deploying the bundle to EAS Hosting
-#
-# @see https://docs.expo.dev/eas/workflows/
-# @see https://docs.expo.dev/eas/hosting/
-# =============================================================================
-
-name: Deploy web to production
+name: Deploy Web
 
 on:
   push:
@@ -25,5 +10,4 @@ jobs:
     type: deploy
     environment: production
     params:
-      # Deploy to production (promotes to main hosting URL)
       prod: true

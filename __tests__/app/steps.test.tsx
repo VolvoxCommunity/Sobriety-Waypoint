@@ -11,7 +11,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import StepsScreen from '@/app/(tabs)/steps';
-import { StepContent } from '@/types/database';
+import { StepContent, Profile } from '@/types/database';
 
 // =============================================================================
 // Mocks
@@ -85,11 +85,19 @@ jest.mock('@/contexts/ThemeContext', () => ({
 }));
 
 // Mock AuthContext
-const mockProfile = {
+let mockProfile: Profile = {
   id: 'user-123',
-  first_name: 'John',
-  last_initial: 'D',
+  email: 'test@example.com',
+  display_name: 'John D.',
   sobriety_date: '2024-01-01',
+  notification_preferences: {
+    tasks: true,
+    messages: true,
+    milestones: true,
+    daily: true,
+  },
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 };
 
 jest.mock('@/contexts/AuthContext', () => ({
@@ -174,6 +182,21 @@ describe('StepsScreen', () => {
     mockStepsData = mockSteps;
     mockStepsError = null;
     mockProgressData = [];
+    // Reset profile to default with display_name
+    mockProfile = {
+      id: 'user-123',
+      email: 'test@example.com',
+      display_name: 'John D.',
+      sobriety_date: '2024-01-01',
+      notification_preferences: {
+        tasks: true,
+        messages: true,
+        milestones: true,
+        daily: true,
+      },
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
   });
 
   describe('loading state', () => {
@@ -388,6 +411,117 @@ describe('StepsScreen', () => {
       // Should call supabase delete
       await waitFor(() => {
         expect(supabase.from).toHaveBeenCalledWith('user_step_progress');
+      });
+    });
+  });
+
+  describe('display_name handling', () => {
+    it('renders StepsScreen with profile containing display_name and verifies schema change', async () => {
+      // Reset to default profile with display_name (new schema)
+      mockProfile = {
+        id: 'user-123',
+        email: 'test@example.com',
+        display_name: 'John D.',
+        sobriety_date: '2024-01-01',
+        notification_preferences: {
+          tasks: true,
+          messages: true,
+          milestones: true,
+          daily: true,
+        },
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
+
+      render(<StepsScreen />);
+
+      // Verify component renders successfully with display_name in profile
+      await waitFor(() => {
+        expect(screen.getByText('The 12 Steps')).toBeTruthy();
+      });
+
+      // Verify component can access profile and use it (via profile.id in fetchProgress)
+      // The component uses profile.id to fetch user step progress, which confirms
+      // the profile structure is correct and the component can access profile properties
+      await waitFor(() => {
+        expect(screen.getByText('We admitted we were powerless')).toBeTruthy();
+      });
+
+      // Verify component successfully uses profile.id by checking supabase query was called
+      // This demonstrates the component behavior rather than testing mock state
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      expect(supabase.from).toHaveBeenCalledWith('user_step_progress');
+    });
+
+    it('handles missing display_name gracefully', async () => {
+      // Set profile without display_name
+      mockProfile = {
+        id: 'user-123',
+        email: 'test@example.com',
+        display_name: null,
+        sobriety_date: '2024-01-01',
+        notification_preferences: {
+          tasks: true,
+          messages: true,
+          milestones: true,
+          daily: true,
+        },
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
+
+      render(<StepsScreen />);
+
+      // Verify component still renders successfully
+      await waitFor(() => {
+        expect(screen.getByText('The 12 Steps')).toBeTruthy();
+      });
+
+      // Verify component can still fetch and display steps
+      await waitFor(() => {
+        expect(screen.getByText('We admitted we were powerless')).toBeTruthy();
+      });
+
+      // Verify component successfully uses profile.id even when display_name is null
+      // This demonstrates the component handles missing display_name gracefully
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      expect(supabase.from).toHaveBeenCalledWith('user_step_progress');
+    });
+
+    it('handles undefined display_name gracefully', async () => {
+      // Set profile with undefined display_name (simulating old schema)
+      mockProfile = {
+        id: 'user-123',
+        email: 'test@example.com',
+        display_name: undefined,
+        sobriety_date: '2024-01-01',
+        notification_preferences: {
+          tasks: true,
+          messages: true,
+          milestones: true,
+          daily: true,
+        },
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
+
+      render(<StepsScreen />);
+
+      // Verify component still renders successfully
+      await waitFor(() => {
+        expect(screen.getByText('The 12 Steps')).toBeTruthy();
+      });
+
+      // Verify component can still fetch and display steps
+      await waitFor(() => {
+        expect(screen.getByText('We admitted we were powerless')).toBeTruthy();
+      });
+
+      // Verify component can still toggle step completion (uses profile.id)
+      fireEvent.press(screen.getByText('We admitted we were powerless'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Mark as Complete')).toBeTruthy();
       });
     });
   });

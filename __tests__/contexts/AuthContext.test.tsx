@@ -24,6 +24,7 @@ const mockSignOut = jest.fn();
 const mockSignInWithOAuth = jest.fn();
 const mockSetSession = jest.fn();
 const mockGetSession = jest.fn();
+const mockUpdateUser = jest.fn();
 const mockRpc = jest.fn();
 const mockOnAuthStateChange = jest.fn();
 const mockFrom = jest.fn();
@@ -47,6 +48,7 @@ const resetSupabaseMock = (
   mockSignUp.mockResolvedValue({ data: {}, error: null });
   mockSignOut.mockResolvedValue({ error: null });
   mockSetSession.mockResolvedValue({ data: { session: defaultSession }, error: null });
+  mockUpdateUser.mockResolvedValue({ data: { user: {} }, error: null });
   mockRpc.mockResolvedValue({ data: null, error: null });
 
   mockOnAuthStateChange.mockReturnValue({
@@ -73,6 +75,7 @@ jest.mock('@/lib/supabase', () => ({
       signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
       setSession: (...args: unknown[]) => mockSetSession(...args),
       getSession: () => mockGetSession(),
+      updateUser: (...args: unknown[]) => mockUpdateUser(...args),
       onAuthStateChange: (...args: unknown[]) => mockOnAuthStateChange(...args),
     },
     from: (...args: unknown[]) => mockFrom(...args),
@@ -137,6 +140,27 @@ jest.mock('@/lib/analytics', () => ({
   },
 }));
 
+// Mock apple-auth-name module (used for passing Apple Sign In name data)
+// Use module state so setPendingAppleAuthName affects getPendingAppleAuthName
+let mockPendingAppleName: {
+  firstName: string;
+  familyName: string;
+  displayName: string;
+  fullName: string;
+} | null = null;
+
+jest.mock('@/lib/apple-auth-name', () => ({
+  getPendingAppleAuthName: jest.fn(() => mockPendingAppleName),
+  setPendingAppleAuthName: jest.fn(
+    (data: { firstName: string; familyName: string; displayName: string; fullName: string }) => {
+      mockPendingAppleName = data;
+    }
+  ),
+  clearPendingAppleAuthName: jest.fn(() => {
+    mockPendingAppleName = null;
+  }),
+}));
+
 // =============================================================================
 // Helper
 // =============================================================================
@@ -153,6 +177,8 @@ describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetSupabaseMock();
+    // Reset the mock Apple name state
+    mockPendingAppleName = null;
   });
 
   describe('useAuth hook', () => {
@@ -397,7 +423,7 @@ describe('AuthContext', () => {
     it('fetches profile when session exists', async () => {
       resetSupabaseMock({
         session: { user: { id: 'user-456', email: 'test@example.com' } },
-        profile: { id: 'user-456', email: 'test@example.com', first_name: 'Test' },
+        profile: { id: 'user-456', email: 'test@example.com', display_name: 'Test T.' },
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -440,7 +466,7 @@ describe('AuthContext', () => {
     it('fetches profile when user is logged in', async () => {
       resetSupabaseMock({
         session: { user: { id: 'user-789', email: 'test@example.com' } },
-        profile: { id: 'user-789', email: 'test@example.com', first_name: 'John' },
+        profile: { id: 'user-789', email: 'test@example.com', display_name: 'John J.' },
       });
 
       // Mock onAuthStateChange to trigger with session
@@ -646,7 +672,7 @@ describe('AuthContext', () => {
 
   describe('auth state change events', () => {
     it('handles SIGNED_IN event', async () => {
-      const mockProfile = { id: 'user-signin', email: 'test@example.com', first_name: 'John' };
+      const mockProfile = { id: 'user-signin', email: 'test@example.com', display_name: 'John J.' };
 
       mockFrom.mockImplementation(() => ({
         select: jest.fn().mockReturnThis(),
@@ -701,125 +727,32 @@ describe('AuthContext', () => {
     });
   });
 
-  describe('OAuth profile creation', () => {
-    it('creates profile for new OAuth user with full name', async () => {
-      const mockInsert = jest.fn().mockResolvedValue({ data: null, error: null });
-
-      mockFrom.mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }), // No existing profile
-        insert: mockInsert,
-      }));
-
-      mockOnAuthStateChange.mockImplementation(
-        (
-          callback: (
-            event: string,
-            session: {
-              user: { id: string; email: string; user_metadata?: { full_name?: string } };
-            } | null
-          ) => void
-        ) => {
-          setTimeout(() => {
-            callback('SIGNED_IN', {
-              user: {
-                id: 'new-oauth-user',
-                email: 'oauth@example.com',
-                user_metadata: { full_name: 'John Doe' },
-              },
-            });
-          }, 10);
-          return {
-            data: {
-              subscription: { unsubscribe: jest.fn() },
-            },
-          };
-        }
-      );
-
-      renderHook(() => useAuth(), { wrapper });
-
-      await waitFor(() => {
-        expect(mockInsert).toHaveBeenCalled();
-      });
-
-      // Verify the insert was called with correct name parsing
-      const insertCall = mockInsert.mock.calls[0][0];
-      expect(insertCall.id).toBe('new-oauth-user');
-      expect(insertCall.email).toBe('oauth@example.com');
-      expect(insertCall.first_name).toBe('John');
-      expect(insertCall.last_initial).toBe('D');
-    });
-
-    it('handles single-word name in OAuth metadata', async () => {
-      const mockInsert = jest.fn().mockResolvedValue({ data: null, error: null });
-
-      mockFrom.mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-        insert: mockInsert,
-      }));
+  describe('Apple name storage in user_metadata', () => {
+    it('stores pending Apple name in user_metadata on sign-in', async () => {
+      // Set pending Apple name before auth (using mock state directly)
+      mockPendingAppleName = {
+        firstName: 'John',
+        familyName: 'Doe',
+        displayName: 'John D.',
+        fullName: 'John Doe',
+      };
 
       mockOnAuthStateChange.mockImplementation(
         (
           callback: (
             event: string,
             session: {
-              user: { id: string; email: string; user_metadata?: { full_name?: string } };
+              user: { id: string; email: string; user_metadata?: Record<string, unknown> };
             } | null
           ) => void
         ) => {
           setTimeout(() => {
             callback('SIGNED_IN', {
               user: {
-                id: 'single-name-user',
-                email: 'single@example.com',
-                user_metadata: { full_name: 'Madonna' },
+                id: 'apple-user',
+                email: 'apple@example.com',
+                user_metadata: {}, // No existing display_name
               },
-            });
-          }, 10);
-          return {
-            data: {
-              subscription: { unsubscribe: jest.fn() },
-            },
-          };
-        }
-      );
-
-      renderHook(() => useAuth(), { wrapper });
-
-      await waitFor(() => {
-        expect(mockInsert).toHaveBeenCalled();
-      });
-
-      // Single-word name: last_initial should be first letter of first name
-      const insertCall = mockInsert.mock.calls[0][0];
-      expect(insertCall.first_name).toBe('Madonna');
-      expect(insertCall.last_initial).toBe('M');
-    });
-
-    it('handles duplicate key error gracefully when profile already exists', async () => {
-      const mockInsert = jest.fn().mockResolvedValue({
-        data: null,
-        error: { code: '23505', message: 'duplicate key value' },
-      });
-
-      mockFrom.mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: new Error('Query failed') }), // Query fails
-        insert: mockInsert,
-      }));
-
-      mockOnAuthStateChange.mockImplementation(
-        (
-          callback: (event: string, session: { user: { id: string; email: string } } | null) => void
-        ) => {
-          setTimeout(() => {
-            callback('SIGNED_IN', {
-              user: { id: 'existing-user', email: 'existing@example.com' },
             });
           }, 10);
           return {
@@ -836,32 +769,40 @@ describe('AuthContext', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      // Should not throw - duplicate key with failed query is acceptable
-      expect(mockInsert).toHaveBeenCalled();
+      // Verify updateUser was called to store the Apple name
+      expect(mockUpdateUser).toHaveBeenCalledWith({
+        data: {
+          display_name: 'John D.',
+          full_name: 'John Doe',
+        },
+      });
     });
 
-    it('skips profile creation when profile already exists', async () => {
-      const existingProfile = {
-        id: 'existing-oauth-user',
-        email: 'existing@example.com',
-        first_name: 'Jane',
+    it('skips storing name if user_metadata already has display_name', async () => {
+      // Set pending Apple name before auth (using mock state directly)
+      mockPendingAppleName = {
+        firstName: 'John',
+        familyName: 'Doe',
+        displayName: 'John D.',
+        fullName: 'John Doe',
       };
-      const mockInsert = jest.fn();
-
-      mockFrom.mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: existingProfile, error: null }),
-        insert: mockInsert,
-      }));
 
       mockOnAuthStateChange.mockImplementation(
         (
-          callback: (event: string, session: { user: { id: string; email: string } } | null) => void
+          callback: (
+            event: string,
+            session: {
+              user: { id: string; email: string; user_metadata?: Record<string, unknown> };
+            } | null
+          ) => void
         ) => {
           setTimeout(() => {
             callback('SIGNED_IN', {
-              user: { id: 'existing-oauth-user', email: 'existing@example.com' },
+              user: {
+                id: 'apple-user',
+                email: 'apple@example.com',
+                user_metadata: { display_name: 'Existing Name' }, // Already has display_name
+              },
             });
           }, 10);
           return {
@@ -872,15 +813,53 @@ describe('AuthContext', () => {
         }
       );
 
-      renderHook(() => useAuth(), { wrapper });
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
-        // Give time for the callback to process
-        return new Promise((resolve) => setTimeout(resolve, 50));
+        expect(result.current.loading).toBe(false);
       });
 
-      // Insert should NOT be called since profile exists
-      expect(mockInsert).not.toHaveBeenCalled();
+      // updateUser should NOT be called since display_name already exists
+      expect(mockUpdateUser).not.toHaveBeenCalled();
+    });
+
+    it('does not store name when no pending Apple name exists', async () => {
+      // mockPendingAppleName is already null from beforeEach
+
+      mockOnAuthStateChange.mockImplementation(
+        (
+          callback: (
+            event: string,
+            session: {
+              user: { id: string; email: string; user_metadata?: Record<string, unknown> };
+            } | null
+          ) => void
+        ) => {
+          setTimeout(() => {
+            callback('SIGNED_IN', {
+              user: {
+                id: 'oauth-user',
+                email: 'oauth@example.com',
+                user_metadata: {},
+              },
+            });
+          }, 10);
+          return {
+            data: {
+              subscription: { unsubscribe: jest.fn() },
+            },
+          };
+        }
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // updateUser should NOT be called since there's no pending Apple name
+      expect(mockUpdateUser).not.toHaveBeenCalled();
     });
   });
 

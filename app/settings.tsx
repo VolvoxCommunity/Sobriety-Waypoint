@@ -51,6 +51,7 @@ import * as Application from 'expo-application';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { logger, LogCategory } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
+import { validateDisplayName } from '@/lib/validation';
 import packageJson from '../package.json';
 
 // Enable LayoutAnimation on Android
@@ -222,22 +223,12 @@ const EXTERNAL_LINKS = {
 // Component
 // =============================================================================
 /**
- * Settings screen for managing app preferences and user account.
+ * Render the Settings screen for managing user account, appearance, app updates, legal links, and build information.
  *
- * Provides the following functionality:
- * - Theme mode selection (light/dark/system)
- * - Access to legal documents (privacy policy, terms of service)
- * - Link to source code repository
- * - Sign out functionality
- * - Account deletion
+ * Provides UI and handlers for editing the display name, signing out, deleting the account, selecting theme mode,
+ * checking/applying updates, copying build/runtime details, and opening external links.
  *
- * @returns Settings screen component with navigation header
- *
- * @example
- * ```tsx
- * // Navigated to via router.push('/settings')
- * <SettingsScreen />
- * ```
+ * @returns The Settings screen React element
  */
 export default function SettingsScreen() {
   const { signOut, deleteAccount, profile, refreshProfile } = useAuth();
@@ -248,8 +239,7 @@ export default function SettingsScreen() {
   const [isBuildInfoExpanded, setIsBuildInfoExpanded] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isEditNameModalVisible, setIsEditNameModalVisible] = useState(false);
-  const [editFirstName, setEditFirstName] = useState('');
-  const [editLastInitial, setEditLastInitial] = useState('');
+  const [editDisplayName, setEditDisplayName] = useState('');
   const [nameValidationError, setNameValidationError] = useState<string | null>(null);
   const [isSavingName, setIsSavingName] = useState(false);
   const buildInfo = getBuildInfo();
@@ -451,7 +441,7 @@ export default function SettingsScreen() {
   };
 
   /**
-   * Saves the updated name to Supabase and refreshes the profile.
+   * Saves the updated display name to Supabase and refreshes the profile.
    * Validates input before saving and handles errors with user feedback.
    */
   const handleSaveName = async () => {
@@ -474,16 +464,10 @@ export default function SettingsScreen() {
       return;
     }
 
-    // Validation
-    const trimmedFirstName = editFirstName.trim();
-    const trimmedLastInitial = editLastInitial.trim();
-
-    if (!trimmedFirstName) {
-      setNameValidationError('First name is required');
-      return;
-    }
-    if (trimmedLastInitial.length !== 1) {
-      setNameValidationError('Last initial must be exactly 1 character');
+    // Validation using shared validation function
+    const validationError = validateDisplayName(editDisplayName);
+    if (validationError) {
+      setNameValidationError(validationError);
       return;
     }
 
@@ -492,8 +476,7 @@ export default function SettingsScreen() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          first_name: trimmedFirstName,
-          last_initial: trimmedLastInitial.toUpperCase(),
+          display_name: editDisplayName.trim(),
         })
         .eq('id', profile.id);
 
@@ -504,9 +487,9 @@ export default function SettingsScreen() {
       setNameValidationError(null);
 
       if (Platform.OS === 'web') {
-        window.alert('Name updated successfully');
+        window.alert('Display name updated successfully');
       } else {
-        Alert.alert('Success', 'Name updated successfully');
+        Alert.alert('Success', 'Display name updated successfully');
       }
     } catch (error: unknown) {
       // Handle both Error objects and Supabase error objects with message property
@@ -515,9 +498,9 @@ export default function SettingsScreen() {
           ? error.message
           : typeof error === 'object' && error !== null && 'message' in error
             ? String((error as { message: unknown }).message)
-            : 'Failed to update name';
+            : 'Failed to update display name';
       const err = error instanceof Error ? error : new Error(errorMessage);
-      logger.error('Name update failed', err, {
+      logger.error('Display name update failed', err, {
         category: LogCategory.DATABASE,
       });
       if (Platform.OS === 'web') {
@@ -537,7 +520,10 @@ export default function SettingsScreen() {
       <ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 8 }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: Math.max(insets.bottom, 34) + 40 },
+        ]}
         keyboardShouldPersistTaps="handled"
         removeClippedSubviews={false}
         scrollEventThrottle={16}
@@ -553,24 +539,21 @@ export default function SettingsScreen() {
               testID="account-name-row"
               onPress={() => {
                 // Guard: Prevent opening modal with empty fields when profile hasn't loaded
-                if (!profile?.first_name || !profile?.last_initial) {
+                if (!profile?.display_name) {
                   return;
                 }
-                setEditFirstName(profile.first_name);
-                setEditLastInitial(profile.last_initial);
+                setEditDisplayName(profile.display_name);
                 setIsEditNameModalVisible(true);
               }}
               accessibilityRole="button"
-              accessibilityLabel="Edit your name"
+              accessibilityLabel="Edit your display name"
             >
               <View style={styles.menuItemLeft}>
                 <User size={20} color={theme.textSecondary} />
                 <View>
-                  <Text style={styles.menuItemText}>Name</Text>
+                  <Text style={styles.menuItemText}>Display Name</Text>
                   <Text style={styles.menuItemSubtext}>
-                    {profile?.first_name && profile?.last_initial
-                      ? `${profile.first_name} ${profile.last_initial}.`
-                      : 'Loading...'}
+                    {profile?.display_name ?? 'Loading...'}
                   </Text>
                 </View>
               </View>
@@ -1063,7 +1046,7 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Edit Name Modal */}
+      {/* Edit Display Name Modal */}
       <Modal
         visible={isEditNameModalVisible}
         transparent
@@ -1082,39 +1065,31 @@ export default function SettingsScreen() {
         >
           <Pressable style={styles.editNameModal} onPress={noop}>
             {/* noop handler prevents tap propagation to backdrop */}
-            <Text style={styles.modalTitle}>Edit Name</Text>
+            <Text style={styles.modalTitle}>Edit Display Name</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>First Name</Text>
+              <Text style={styles.inputLabel}>Display Name</Text>
               <TextInput
-                testID="edit-first-name-input"
+                testID="edit-display-name-input"
                 style={styles.textInput}
-                value={editFirstName}
+                value={editDisplayName}
                 onChangeText={(text) => {
-                  setEditFirstName(text);
+                  setEditDisplayName(text);
                   setNameValidationError(null);
                 }}
-                placeholder="Enter first name"
+                placeholder="How you'll appear to others"
                 placeholderTextColor={theme.textTertiary}
                 autoCapitalize="words"
+                maxLength={30}
               />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Last Initial</Text>
-              <TextInput
-                testID="edit-last-initial-input"
-                style={styles.textInput}
-                value={editLastInitial}
-                onChangeText={(text) => {
-                  setEditLastInitial(text.toUpperCase());
-                  setNameValidationError(null);
-                }}
-                placeholder="Enter last initial"
-                placeholderTextColor={theme.textTertiary}
-                maxLength={1}
-                autoCapitalize="characters"
-              />
+              <Text
+                style={[
+                  styles.characterCount,
+                  editDisplayName.length >= 25 && styles.characterCountWarning,
+                ]}
+              >
+                {editDisplayName.length}/30 characters
+              </Text>
             </View>
 
             {nameValidationError && (
@@ -1561,6 +1536,16 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       color: theme.text,
+    },
+    characterCount: {
+      fontSize: 12,
+      fontFamily: theme.fontRegular,
+      color: theme.textTertiary,
+      marginTop: 6,
+      textAlign: 'right',
+    },
+    characterCountWarning: {
+      color: theme.warning,
     },
     validationError: {
       fontSize: 14,

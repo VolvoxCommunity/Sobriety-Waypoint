@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -33,7 +34,16 @@ import { logger, LogCategory } from '@/lib/logger';
 import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
-// Component for displaying sponsee days sober using hook
+/**
+ * Renders a card for a sponsee showing avatar, display name, connection date, optional sobriety days and task completion, and a disconnect control.
+ *
+ * @param relationship - Sponsor/sponsee relationship object; component reads `relationship.sponsee`, `relationship.connected_at`, and `relationship.sponsee.sobriety_date` when present.
+ * @param theme - Current theme object used for styling.
+ * @param onDisconnect - Callback invoked when the user presses the Disconnect button.
+ * @param taskStats - Optional task statistics for the sponsee with `total` and `completed` counts.
+ *
+ * @returns The JSX element rendering the sponsee relationship card.
+ */
 function SponseeDaysDisplay({
   relationship,
   theme,
@@ -52,12 +62,12 @@ function SponseeDaysDisplay({
       <View style={createStyles(theme).relationshipHeader}>
         <View style={createStyles(theme).avatar}>
           <Text style={createStyles(theme).avatarText}>
-            {(relationship.sponsee?.first_name || '?')[0].toUpperCase()}
+            {(relationship.sponsee?.display_name || '?')[0].toUpperCase()}
           </Text>
         </View>
         <View style={createStyles(theme).relationshipInfo}>
           <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsee?.first_name} {relationship.sponsee?.last_initial}.
+            {relationship.sponsee?.display_name ?? '?'}
           </Text>
           <Text style={createStyles(theme).relationshipMeta}>
             Connected {new Date(relationship.connected_at).toLocaleDateString()}
@@ -86,7 +96,14 @@ function SponseeDaysDisplay({
   );
 }
 
-// Component for displaying sponsor days sober using hook
+/**
+ * Render a card showing a sponsor's avatar, connection date, optional sobriety info, and a disconnect action.
+ *
+ * @param relationship - Sponsor-sponsee relationship object providing sponsor display_name, sobriety_date, and connected_at
+ * @param theme - Theme object used to style the card
+ * @param onDisconnect - Callback invoked when the Disconnect button is pressed
+ * @returns A React element representing the sponsor relationship card
+ */
 function SponsorDaysDisplay({
   relationship,
   theme,
@@ -103,12 +120,12 @@ function SponsorDaysDisplay({
       <View style={createStyles(theme).relationshipHeader}>
         <View style={createStyles(theme).avatar}>
           <Text style={createStyles(theme).avatarText}>
-            {(relationship.sponsor?.first_name || '?')[0].toUpperCase()}
+            {(relationship.sponsor?.display_name || '?')[0].toUpperCase()}
           </Text>
         </View>
         <View style={createStyles(theme).relationshipInfo}>
           <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsor?.first_name} {relationship.sponsor?.last_initial}.
+            {relationship.sponsor?.display_name ?? '?'}
           </Text>
           <Text style={createStyles(theme).relationshipMeta}>
             Connected {new Date(relationship.connected_at).toLocaleDateString()}
@@ -130,16 +147,13 @@ function SponsorDaysDisplay({
 }
 
 /**
- * Displays the authenticated user's profile, sobriety journey, and sponsor/sponsee management UI.
+ * Render the authenticated user's profile, sobriety journey, and sponsor/sponsee management UI.
  *
- * Shows the user's avatar, name, email, current days sober, journey start and current streak information.
- * Provides actions to edit the sobriety date, log a slip-up, generate or join invite codes, and
- * disconnect sponsor/sponsee relationships.
+ * Provides controls to edit sobriety date, log slip-ups, generate or join invite codes, and
+ * disconnect relationships; handles relationship/task fetching, timezone-aware date handling,
+ * and creation of related notifications.
  *
- * Manages relationship and task statistics fetching, timezone-aware date handling for sobriety and
- * slip-up flows, and creates relevant notifications when connections change or slip-ups are logged.
- *
- * @returns A React element that renders the profile screen UI.
+ * @returns A React element representing the profile screen
  */
 export default function ProfileScreen() {
   const { profile, refreshProfile } = useAuth();
@@ -330,7 +344,7 @@ export default function ProfileScreen() {
       // Fetch sponsor profile separately (we can't access it via join due to RLS)
       const { data: sponsorProfile, error: sponsorError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_initial')
+        .select('id, display_name')
         .eq('id', invite.sponsor_id)
         .single();
 
@@ -440,14 +454,14 @@ export default function ProfileScreen() {
           user_id: invite.sponsor_id,
           type: 'connection_request',
           title: 'New Sponsee Connected',
-          content: `${profile.first_name} ${profile.last_initial}. has connected with you as their sponsor.`,
+          content: `${profile.display_name ?? 'Unknown'} has connected with you as their sponsor.`,
           data: { sponsee_id: profile.id },
         },
         {
           user_id: profile.id,
           type: 'connection_request',
           title: 'Connected to Sponsor',
-          content: `You are now connected with ${sponsorProfile.first_name} ${sponsorProfile.last_initial}. as your sponsor.`,
+          content: `You are now connected with ${sponsorProfile.display_name ?? 'Unknown'} as your sponsor.`,
           data: { sponsor_id: invite.sponsor_id },
         },
       ]);
@@ -455,12 +469,9 @@ export default function ProfileScreen() {
       await fetchRelationships();
 
       if (Platform.OS === 'web') {
-        window.alert(`Connected with ${sponsorProfile.first_name} ${sponsorProfile.last_initial}.`);
+        window.alert(`Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
       } else {
-        Alert.alert(
-          'Success',
-          `Connected with ${sponsorProfile.first_name} ${sponsorProfile.last_initial}.`
-        );
+        Alert.alert('Success', `Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
       }
 
       setShowInviteInput(false);
@@ -529,7 +540,7 @@ export default function ProfileScreen() {
         const notificationRecipientId = isSponsor
           ? relationship.sponsee_id
           : relationship.sponsor_id;
-        const notificationSenderName = `${profile?.first_name} ${profile?.last_initial}.`;
+        const notificationSenderName = profile?.display_name ?? 'Unknown';
 
         await supabase.from('notifications').insert([
           {
@@ -727,7 +738,7 @@ export default function ProfileScreen() {
           user_id: rel.sponsor_id,
           type: 'milestone',
           title: 'Sponsee Slip Up',
-          content: `${profile.first_name} ${profile.last_initial}. has logged a slip-up and restarted their recovery journey.`,
+          content: `${profile.display_name ?? 'Unknown'} has logged a slip-up and restarted their recovery journey.`,
           data: {
             sponsee_id: profile.id,
             slip_up_date: slipUpDate.toISOString(),
@@ -768,421 +779,448 @@ export default function ProfileScreen() {
   const styles = createStyles(theme);
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => router.push('/settings')}
-            accessibilityRole="button"
-            accessibilityLabel="Open settings"
-          >
-            <Settings size={24} color={theme.text} />
-          </TouchableOpacity>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              style={styles.settingsButton}
+              onPress={() => router.push('/settings')}
+              accessibilityRole="button"
+              accessibilityLabel="Open settings"
+            >
+              <Settings size={24} color={theme.text} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {profile?.display_name?.[0]?.toUpperCase() || '?'}
+            </Text>
+          </View>
+          <Text style={styles.name}>{profile?.display_name ?? '?'}</Text>
+          <Text style={styles.email}>{profile?.email}</Text>
         </View>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{profile?.first_name?.[0]?.toUpperCase() || '?'}</Text>
-        </View>
-        <Text style={styles.name}>
-          {profile?.first_name} {profile?.last_initial}.
-        </Text>
-        <Text style={styles.email}>{profile?.email}</Text>
-      </View>
 
-      <View style={styles.sobrietyCard}>
-        <View style={styles.sobrietyHeader}>
-          <Heart size={24} color={theme.primary} fill={theme.primary} />
-          <Text style={styles.sobrietyTitle}>Sobriety Journey</Text>
-        </View>
-        <Text style={styles.daysSober}>{loadingDaysSober ? '...' : `${daysSober} Days`}</Text>
-        <View style={styles.sobrietyDateContainer}>
-          {journeyStartDate && (
-            <Text style={styles.journeyStartDate}>
-              Journey started:{' '}
-              {parseDateAsLocal(journeyStartDate).toLocaleDateString('en-US', {
+        <View style={styles.sobrietyCard}>
+          <View style={styles.sobrietyHeader}>
+            <Heart size={24} color={theme.primary} fill={theme.primary} />
+            <Text style={styles.sobrietyTitle}>Sobriety Journey</Text>
+          </View>
+          <Text style={styles.daysSober}>{loadingDaysSober ? '...' : `${daysSober} Days`}</Text>
+          <View style={styles.sobrietyDateContainer}>
+            {journeyStartDate && (
+              <Text style={styles.journeyStartDate}>
+                Journey started:{' '}
+                {parseDateAsLocal(journeyStartDate).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Text>
+            )}
+            <TouchableOpacity style={styles.editButton} onPress={handleEditSobrietyDate}>
+              <Edit2 size={16} color={theme.primary} />
+            </TouchableOpacity>
+          </View>
+          {hasSlipUps && currentStreakStartDate && (
+            <Text style={styles.currentStreakDate}>
+              Current streak since{' '}
+              {parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
               })}
             </Text>
           )}
-          <TouchableOpacity style={styles.editButton} onPress={handleEditSobrietyDate}>
-            <Edit2 size={16} color={theme.primary} />
+          <TouchableOpacity style={styles.slipUpButton} onPress={handleLogSlipUp}>
+            <AlertCircle size={18} color={theme.white} />
+            <Text style={styles.slipUpButtonText}>Log a Slip Up</Text>
           </TouchableOpacity>
         </View>
-        {hasSlipUps && currentStreakStartDate && (
-          <Text style={styles.currentStreakDate}>
-            Current streak since{' '}
-            {parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })}
-          </Text>
-        )}
-        <TouchableOpacity style={styles.slipUpButton} onPress={handleLogSlipUp}>
-          <AlertCircle size={18} color={theme.white} />
-          <Text style={styles.slipUpButtonText}>Log a Slip Up</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your Sponsees</Text>
-        {loadingRelationships ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={theme.primary} />
-          </View>
-        ) : sponseeRelationships.length > 0 ? (
-          <>
-            {sponseeRelationships.map((rel) => (
-              <SponseeDaysDisplay
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Sponsees</Text>
+          {loadingRelationships ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          ) : sponseeRelationships.length > 0 ? (
+            <>
+              {sponseeRelationships.map((rel) => (
+                <SponseeDaysDisplay
+                  key={rel.id}
+                  relationship={rel}
+                  theme={theme}
+                  taskStats={sponseeTaskStats[rel.sponsee_id]}
+                  onDisconnect={() =>
+                    disconnectRelationship(rel.id, true, rel.sponsee?.display_name || 'Unknown')
+                  }
+                />
+              ))}
+              <TouchableOpacity style={styles.actionButton} onPress={generateInviteCode}>
+                <Share2 size={20} color={theme.primary} />
+                <Text style={styles.actionButtonText}>Generate New Invite Code</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View>
+              <Text style={styles.emptyStateText}>
+                No sponsees yet. Generate an invite code to get started.
+              </Text>
+              <TouchableOpacity style={styles.actionButton} onPress={generateInviteCode}>
+                <Share2 size={20} color={theme.primary} />
+                <Text style={styles.actionButtonText}>Generate Invite Code</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Sponsor</Text>
+          {loadingRelationships ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          ) : sponsorRelationships.length > 0 ? (
+            sponsorRelationships.map((rel) => (
+              <SponsorDaysDisplay
                 key={rel.id}
                 relationship={rel}
                 theme={theme}
-                taskStats={sponseeTaskStats[rel.sponsee_id]}
                 onDisconnect={() =>
-                  disconnectRelationship(
-                    rel.id,
-                    true,
-                    `${rel.sponsee?.first_name} ${rel.sponsee?.last_initial}.`
-                  )
+                  disconnectRelationship(rel.id, false, rel.sponsor?.display_name || 'Unknown')
                 }
               />
-            ))}
-            <TouchableOpacity style={styles.actionButton} onPress={generateInviteCode}>
-              <Share2 size={20} color={theme.primary} />
-              <Text style={styles.actionButtonText}>Generate New Invite Code</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <View>
-            <Text style={styles.emptyStateText}>
-              No sponsees yet. Generate an invite code to get started.
-            </Text>
-            <TouchableOpacity style={styles.actionButton} onPress={generateInviteCode}>
-              <Share2 size={20} color={theme.primary} />
-              <Text style={styles.actionButtonText}>Generate Invite Code</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your Sponsor</Text>
-        {loadingRelationships ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={theme.primary} />
-          </View>
-        ) : sponsorRelationships.length > 0 ? (
-          sponsorRelationships.map((rel) => (
-            <SponsorDaysDisplay
-              key={rel.id}
-              relationship={rel}
-              theme={theme}
-              onDisconnect={() =>
-                disconnectRelationship(
-                  rel.id,
-                  false,
-                  `${rel.sponsor?.first_name} ${rel.sponsor?.last_initial}.`
-                )
-              }
-            />
-          ))
-        ) : (
-          <View>
-            <Text style={styles.emptyStateText}>No sponsor connected yet</Text>
-            {!showInviteInput ? (
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => setShowInviteInput(true)}
-              >
-                <QrCode size={20} color={theme.primary} />
-                <Text style={styles.actionButtonText}>Enter Invite Code</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.inviteInputContainer}>
-                <TextInput
-                  style={styles.inviteInput}
-                  placeholder="Enter 8-character code"
-                  placeholderTextColor={theme.textTertiary}
-                  value={inviteCode}
-                  onChangeText={setInviteCode}
-                  autoCapitalize="characters"
-                  maxLength={8}
-                  editable={!isConnecting}
-                  returnKeyType="done"
-                  onSubmitEditing={joinWithInviteCode}
-                />
+            ))
+          ) : (
+            <View>
+              <Text style={styles.emptyStateText}>No sponsor connected yet</Text>
+              {!showInviteInput ? (
                 <TouchableOpacity
-                  style={[styles.inviteSubmitButton, isConnecting && styles.buttonDisabled]}
-                  onPress={joinWithInviteCode}
-                  disabled={isConnecting}
+                  style={styles.actionButton}
+                  onPress={() => setShowInviteInput(true)}
                 >
-                  {isConnecting ? (
-                    <ActivityIndicator size="small" color={theme.white} />
-                  ) : (
-                    <Text style={styles.inviteSubmitText}>Connect</Text>
-                  )}
+                  <QrCode size={20} color={theme.primary} />
+                  <Text style={styles.actionButtonText}>Enter Invite Code</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.inviteCancelButton}
-                  onPress={() => {
-                    setShowInviteInput(false);
-                    setInviteCode('');
-                  }}
-                  disabled={isConnecting}
-                >
-                  <Text style={styles.inviteCancelText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-
-      {sponsorRelationships.length > 0 && !showInviteInput && (
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => setShowInviteInput(true)}>
-            <QrCode size={20} color={theme.primary} />
-            <Text style={styles.actionButtonText}>Connect to Another Sponsor</Text>
-          </TouchableOpacity>
+              ) : (
+                <View style={styles.inviteInputContainer}>
+                  <TextInput
+                    style={styles.inviteInput}
+                    placeholder="Enter 8-character code"
+                    placeholderTextColor={theme.textTertiary}
+                    value={inviteCode}
+                    onChangeText={setInviteCode}
+                    autoCapitalize="characters"
+                    maxLength={8}
+                    editable={!isConnecting}
+                    returnKeyType="done"
+                    onSubmitEditing={joinWithInviteCode}
+                  />
+                  <TouchableOpacity
+                    style={[styles.inviteSubmitButton, isConnecting && styles.buttonDisabled]}
+                    onPress={joinWithInviteCode}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <ActivityIndicator size="small" color={theme.white} />
+                    ) : (
+                      <Text style={styles.inviteSubmitText}>Connect</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.inviteCancelButton}
+                    onPress={() => {
+                      setShowInviteInput(false);
+                      setInviteCode('');
+                    }}
+                    disabled={isConnecting}
+                  >
+                    <Text style={styles.inviteCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
         </View>
-      )}
 
-      {Platform.OS === 'web' && showSobrietyDatePicker && (
-        <Modal visible={showSobrietyDatePicker} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.datePickerModal}>
-              <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
-              <input
-                type="date"
-                value={formatDateWithTimezone(selectedSobrietyDate, userTimezone)}
-                max={formatDateWithTimezone(new Date(), userTimezone)}
-                onChange={(e) =>
-                  setSelectedSobrietyDate(parseDateAsLocal(e.target.value, userTimezone))
-                }
-                style={{
-                  padding: 12,
-                  fontSize: 16,
-                  borderRadius: 8,
-                  border: `1px solid ${theme.border}`,
-                  marginTop: 16,
-                  marginBottom: 16,
-                  width: '100%',
-                }}
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={styles.modalCancelButton}
-                  onPress={() => setShowSobrietyDatePicker(false)}
-                >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalConfirmButton}
-                  onPress={() => {
-                    updateSobrietyDate(selectedSobrietyDate);
-                    setShowSobrietyDatePicker(false);
-                  }}
-                >
-                  <Text style={styles.modalConfirmText}>Update</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+        {sponsorRelationships.length > 0 && !showInviteInput && (
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setShowInviteInput(true)}>
+              <QrCode size={20} color={theme.primary} />
+              <Text style={styles.actionButtonText}>Connect to Another Sponsor</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      )}
+        )}
 
-      {Platform.OS !== 'web' && showSobrietyDatePicker && (
-        <Modal visible={showSobrietyDatePicker} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.datePickerModal}>
-              <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
-              <DateTimePicker
-                value={selectedSobrietyDate}
-                mode="date"
-                display="spinner"
-                onChange={(event, date) => {
-                  if (date) setSelectedSobrietyDate(date);
-                }}
-                maximumDate={maximumDate}
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={styles.modalCancelButton}
-                  onPress={() => setShowSobrietyDatePicker(false)}
-                >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalConfirmButton}
-                  onPress={() => {
-                    updateSobrietyDate(selectedSobrietyDate);
-                    setShowSobrietyDatePicker(false);
-                  }}
-                >
-                  <Text style={styles.modalConfirmText}>Update</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-
-      <Modal visible={showSlipUpModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.slipUpModal}>
-            <Text style={styles.modalTitle}>Log a Slip Up</Text>
-            <Text style={styles.modalSubtitle}>
-              Recovery is a journey, not a destination. Logging a slip up is an act of courage and
-              honesty.
-            </Text>
-
-            <View style={styles.dateSection}>
-              <Text style={styles.dateLabel}>Slip Up Date</Text>
-              {Platform.OS === 'web' ? (
+        {Platform.OS === 'web' && showSobrietyDatePicker && (
+          <Modal visible={showSobrietyDatePicker} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.datePickerModal}>
+                <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
                 <input
                   type="date"
-                  value={formatDateWithTimezone(slipUpDate, userTimezone)}
+                  value={formatDateWithTimezone(selectedSobrietyDate, userTimezone)}
                   max={formatDateWithTimezone(new Date(), userTimezone)}
-                  onChange={(e) => setSlipUpDate(parseDateAsLocal(e.target.value, userTimezone))}
+                  onChange={(e) =>
+                    setSelectedSobrietyDate(parseDateAsLocal(e.target.value, userTimezone))
+                  }
                   style={{
                     padding: 12,
                     fontSize: 16,
                     borderRadius: 8,
                     border: `1px solid ${theme.border}`,
+                    marginTop: 16,
+                    marginBottom: 16,
                     width: '100%',
                   }}
                 />
-              ) : (
-                <>
+                <View style={styles.modalButtons}>
                   <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => setShowSlipUpDatePicker(true)}
+                    style={styles.modalCancelButton}
+                    onPress={() => setShowSobrietyDatePicker(false)}
                   >
-                    <Calendar size={20} color={theme.textSecondary} />
-                    <Text style={styles.dateButtonText}>
-                      {slipUpDate.toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </Text>
+                    <Text style={styles.modalCancelText}>Cancel</Text>
                   </TouchableOpacity>
-                  {showSlipUpDatePicker && (
-                    <DateTimePicker
-                      value={slipUpDate}
-                      mode="date"
-                      display="default"
-                      onChange={(event, date) => {
-                        setShowSlipUpDatePicker(false);
-                        if (date) setSlipUpDate(date);
-                      }}
-                      maximumDate={new Date()}
-                    />
-                  )}
-                </>
-              )}
+                  <TouchableOpacity
+                    style={styles.modalConfirmButton}
+                    onPress={() => {
+                      updateSobrietyDate(selectedSobrietyDate);
+                      setShowSobrietyDatePicker(false);
+                    }}
+                  >
+                    <Text style={styles.modalConfirmText}>Update</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
+          </Modal>
+        )}
 
-            <View style={styles.dateSection}>
-              <Text style={styles.dateLabel}>Recovery Restart Date</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  value={formatDateWithTimezone(recoveryDate, userTimezone)}
-                  min={formatDateWithTimezone(slipUpDate, userTimezone)}
-                  onChange={(e) => setRecoveryDate(parseDateAsLocal(e.target.value, userTimezone))}
-                  style={{
-                    padding: 12,
-                    fontSize: 16,
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    width: '100%',
+        {Platform.OS !== 'web' && showSobrietyDatePicker && (
+          <Modal visible={showSobrietyDatePicker} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.datePickerModal}>
+                <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
+                <DateTimePicker
+                  value={selectedSobrietyDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, date) => {
+                    if (date) setSelectedSobrietyDate(date);
                   }}
+                  maximumDate={maximumDate}
                 />
-              ) : (
-                <>
+                <View style={styles.modalButtons}>
                   <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => setShowRecoveryDatePicker(true)}
+                    style={styles.modalCancelButton}
+                    onPress={() => setShowSobrietyDatePicker(false)}
                   >
-                    <Calendar size={20} color={theme.textSecondary} />
-                    <Text style={styles.dateButtonText}>
-                      {recoveryDate.toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </Text>
+                    <Text style={styles.modalCancelText}>Cancel</Text>
                   </TouchableOpacity>
-                  {showRecoveryDatePicker && (
-                    <DateTimePicker
-                      value={recoveryDate}
-                      mode="date"
-                      display="default"
-                      onChange={(event, date) => {
-                        setShowRecoveryDatePicker(false);
-                        if (date) setRecoveryDate(date);
+                  <TouchableOpacity
+                    style={styles.modalConfirmButton}
+                    onPress={() => {
+                      updateSobrietyDate(selectedSobrietyDate);
+                      setShowSobrietyDatePicker(false);
+                    }}
+                  >
+                    <Text style={styles.modalConfirmText}>Update</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
+        <Modal visible={showSlipUpModal} transparent animationType="slide">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.slipUpModalOverlay}
+            keyboardVerticalOffset={0}
+          >
+            <TouchableOpacity
+              style={styles.slipUpModalBackdrop}
+              activeOpacity={1}
+              onPress={() => setShowSlipUpModal(false)}
+            />
+            <View style={styles.slipUpModal}>
+              <ScrollView
+                contentContainerStyle={styles.slipUpModalScrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+                bounces={false}
+              >
+                <Text style={styles.modalTitle}>Log a Slip Up</Text>
+                <Text style={styles.modalSubtitle}>
+                  Recovery is a journey, not a destination. Logging a slip up is an act of courage
+                  and honesty.
+                </Text>
+
+                <View style={styles.dateSection}>
+                  <Text style={styles.dateLabel}>Slip Up Date</Text>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="date"
+                      value={formatDateWithTimezone(slipUpDate, userTimezone)}
+                      max={formatDateWithTimezone(new Date(), userTimezone)}
+                      onChange={(e) =>
+                        setSlipUpDate(parseDateAsLocal(e.target.value, userTimezone))
+                      }
+                      style={{
+                        padding: 12,
+                        fontSize: 16,
+                        borderRadius: 8,
+                        border: `1px solid ${theme.border}`,
+                        width: '100%',
                       }}
-                      minimumDate={slipUpDate}
                     />
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.dateButton}
+                        onPress={() => setShowSlipUpDatePicker(true)}
+                      >
+                        <Calendar size={20} color={theme.textSecondary} />
+                        <Text style={styles.dateButtonText}>
+                          {slipUpDate.toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                      </TouchableOpacity>
+                      {showSlipUpDatePicker && (
+                        <DateTimePicker
+                          value={slipUpDate}
+                          mode="date"
+                          display="default"
+                          onChange={(event, date) => {
+                            setShowSlipUpDatePicker(false);
+                            if (date) setSlipUpDate(date);
+                          }}
+                          maximumDate={new Date()}
+                        />
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </View>
+                </View>
 
-            <View style={styles.notesSection}>
-              <Text style={styles.dateLabel}>Notes (Optional)</Text>
-              <TextInput
-                style={styles.notesInput}
-                placeholder="What happened? How are you feeling?"
-                placeholderTextColor={theme.textTertiary}
-                value={slipUpNotes}
-                onChangeText={setSlipUpNotes}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
+                <View style={styles.dateSection}>
+                  <Text style={styles.dateLabel}>Recovery Restart Date</Text>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="date"
+                      value={formatDateWithTimezone(recoveryDate, userTimezone)}
+                      min={formatDateWithTimezone(slipUpDate, userTimezone)}
+                      onChange={(e) =>
+                        setRecoveryDate(parseDateAsLocal(e.target.value, userTimezone))
+                      }
+                      style={{
+                        padding: 12,
+                        fontSize: 16,
+                        borderRadius: 8,
+                        border: `1px solid ${theme.border}`,
+                        width: '100%',
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.dateButton}
+                        onPress={() => setShowRecoveryDatePicker(true)}
+                      >
+                        <Calendar size={20} color={theme.textSecondary} />
+                        <Text style={styles.dateButtonText}>
+                          {recoveryDate.toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                      </TouchableOpacity>
+                      {showRecoveryDatePicker && (
+                        <DateTimePicker
+                          value={recoveryDate}
+                          mode="date"
+                          display="default"
+                          onChange={(event, date) => {
+                            setShowRecoveryDatePicker(false);
+                            if (date) setRecoveryDate(date);
+                          }}
+                          minimumDate={slipUpDate}
+                        />
+                      )}
+                    </>
+                  )}
+                </View>
 
-            <Text style={styles.privacyNote}>
-              This information will be visible to you and your sponsor.
-            </Text>
+                <View style={styles.notesSection}>
+                  <Text style={styles.dateLabel}>Notes (Optional)</Text>
+                  <TextInput
+                    style={styles.notesInput}
+                    placeholder="What happened? How are you feeling?"
+                    placeholderTextColor={theme.textTertiary}
+                    value={slipUpNotes}
+                    onChangeText={setSlipUpNotes}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+                </View>
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setShowSlipUpModal(false)}
-                disabled={isLoggingSlipUp}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.modalConfirmButton,
-                  styles.slipUpConfirmButton,
-                  isLoggingSlipUp && styles.buttonDisabled,
-                ]}
-                onPress={submitSlipUp}
-                disabled={isLoggingSlipUp}
-              >
-                {isLoggingSlipUp ? (
-                  <ActivityIndicator size="small" color={theme.white} />
-                ) : (
-                  <Text style={styles.modalConfirmText}>Log Slip Up</Text>
-                )}
-              </TouchableOpacity>
+                <Text style={styles.privacyNote}>
+                  This information will be visible to you and your sponsor.
+                </Text>
+              </ScrollView>
+
+              <View style={styles.slipUpModalButtonsContainer}>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={styles.modalCancelButton}
+                    onPress={() => setShowSlipUpModal(false)}
+                    disabled={isLoggingSlipUp}
+                  >
+                    <Text style={styles.modalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.modalConfirmButton,
+                      styles.slipUpConfirmButton,
+                      isLoggingSlipUp && styles.buttonDisabled,
+                    ]}
+                    onPress={submitSlipUp}
+                    disabled={isLoggingSlipUp}
+                  >
+                    {isLoggingSlipUp ? (
+                      <ActivityIndicator size="small" color={theme.white} />
+                    ) : (
+                      <Text style={styles.modalConfirmText}>Log Slip Up</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+          </KeyboardAvoidingView>
+        </Modal>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
   StyleSheet.create({
+    keyboardAvoidingContainer: {
+      flex: 1,
+    },
     container: {
       flex: 1,
       backgroundColor: theme.background,
@@ -1482,13 +1520,27 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       maxWidth: 400,
       alignItems: 'center',
     },
+    slipUpModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    slipUpModalBackdrop: {
+      flex: 1,
+    },
     slipUpModal: {
       backgroundColor: theme.surface,
-      borderRadius: 16,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '85%',
+    },
+    slipUpModalScrollContent: {
       padding: 24,
-      width: '100%',
-      maxWidth: 400,
-      maxHeight: '90%',
+      paddingBottom: 16,
+    },
+    slipUpModalButtonsContainer: {
+      padding: 24,
+      paddingTop: 16,
+      backgroundColor: theme.surface,
     },
     modalTitle: {
       fontSize: 20,

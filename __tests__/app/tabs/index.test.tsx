@@ -20,8 +20,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 const mockProfile = {
   id: 'user-123',
   email: 'test@example.com',
-  first_name: 'Test',
-  last_initial: 'U',
+  display_name: 'Test U.',
   sobriety_date: '2024-01-01',
 };
 

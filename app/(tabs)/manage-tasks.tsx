@@ -19,6 +19,14 @@ import { formatProfileName } from '@/lib/format';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 
+/**
+ * Screen component for viewing, filtering, and managing tasks assigned to a sponsor's sponsees.
+ *
+ * Renders task statistics, status and sponsee filters, grouped task lists with actions (create, delete),
+ * pull-to-refresh, and the task creation modal; data is loaded from Supabase for the current authenticated profile.
+ *
+ * @returns The Manage Tasks screen React element
+ */
 export default function ManageTasksScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
@@ -324,7 +332,7 @@ export default function ManageTasksScreen() {
                 <View style={styles.sponseeHeader}>
                   <View style={styles.sponseeAvatar}>
                     <Text style={styles.sponseeAvatarText}>
-                      {(sponsee?.first_name || '?')[0].toUpperCase()}
+                      {(sponsee?.display_name?.[0] || '?').toUpperCase()}
                     </Text>
                   </View>
                   <View style={styles.sponseeInfo}>
