@@ -232,13 +232,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
       const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
 
+      // Build display_name in "FirstName L." format
+      const displayName =
+        firstName && lastInitial ? `${firstName} ${lastInitial}.` : firstName || null;
+
       // Use plain INSERT instead of upsert. This avoids RLS issues where
       // ignoreDuplicates: true requires SELECT permission to detect conflicts.
       const { error: profileError } = await supabase.from('profiles').insert({
         id: user.id,
         email: user.email || '',
-        first_name: firstName,
-        last_initial: lastInitial,
+        display_name: displayName,
         timezone: DEVICE_TIMEZONE,
       });
 

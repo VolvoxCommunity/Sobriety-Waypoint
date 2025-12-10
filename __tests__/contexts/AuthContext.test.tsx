@@ -397,7 +397,7 @@ describe('AuthContext', () => {
     it('fetches profile when session exists', async () => {
       resetSupabaseMock({
         session: { user: { id: 'user-456', email: 'test@example.com' } },
-        profile: { id: 'user-456', email: 'test@example.com', first_name: 'Test' },
+        profile: { id: 'user-456', email: 'test@example.com', display_name: 'Test T.' },
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -440,7 +440,7 @@ describe('AuthContext', () => {
     it('fetches profile when user is logged in', async () => {
       resetSupabaseMock({
         session: { user: { id: 'user-789', email: 'test@example.com' } },
-        profile: { id: 'user-789', email: 'test@example.com', first_name: 'John' },
+        profile: { id: 'user-789', email: 'test@example.com', display_name: 'John J.' },
       });
 
       // Mock onAuthStateChange to trigger with session
@@ -646,7 +646,7 @@ describe('AuthContext', () => {
 
   describe('auth state change events', () => {
     it('handles SIGNED_IN event', async () => {
-      const mockProfile = { id: 'user-signin', email: 'test@example.com', first_name: 'John' };
+      const mockProfile = { id: 'user-signin', email: 'test@example.com', display_name: 'John J.' };
 
       mockFrom.mockImplementation(() => ({
         select: jest.fn().mockReturnThis(),
@@ -748,8 +748,7 @@ describe('AuthContext', () => {
       const insertCall = mockInsert.mock.calls[0][0];
       expect(insertCall.id).toBe('new-oauth-user');
       expect(insertCall.email).toBe('oauth@example.com');
-      expect(insertCall.first_name).toBe('John');
-      expect(insertCall.last_initial).toBe('D');
+      expect(insertCall.display_name).toBe('John D.');
     });
 
     it('handles single-word name in OAuth metadata', async () => {
@@ -794,10 +793,9 @@ describe('AuthContext', () => {
         expect(mockInsert).toHaveBeenCalled();
       });
 
-      // Single-word name: last_initial should be first letter of first name
+      // Single-word name: display_name should use first letter as initial
       const insertCall = mockInsert.mock.calls[0][0];
-      expect(insertCall.first_name).toBe('Madonna');
-      expect(insertCall.last_initial).toBe('M');
+      expect(insertCall.display_name).toBe('Madonna M.');
     });
 
     it('handles duplicate key error gracefully when profile already exists', async () => {
@@ -844,7 +842,7 @@ describe('AuthContext', () => {
       const existingProfile = {
         id: 'existing-oauth-user',
         email: 'existing@example.com',
-        first_name: 'Jane',
+        display_name: 'Jane J.',
       };
       const mockInsert = jest.fn();
 
