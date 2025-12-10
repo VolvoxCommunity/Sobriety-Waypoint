@@ -30,11 +30,11 @@ import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 
 /**
- * Render the home dashboard showing the user's sobriety summary, sponsor/sponsee relationships, recent tasks, and quick actions.
+ * Renders the home dashboard showing sobriety summary, sponsor/sponsee relationships, recent tasks, and quick actions.
  *
- * Fetches relationships and recent tasks from the backend, supports pull-to-refresh, allows disconnecting relationships and creating tasks for sponsees, and displays milestone and days-sober information.
+ * The screen fetches and displays active sponsor/sponsee relationships and recent assigned tasks, supports pull-to-refresh, allows disconnecting relationships, and provides a modal to create tasks for sponsees.
  *
- * @returns The Home screen React element.
+ * @returns The Home screen React element
  */
 export default function HomeScreen() {
   const { profile } = useAuth();

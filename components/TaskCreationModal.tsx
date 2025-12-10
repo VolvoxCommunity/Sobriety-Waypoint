@@ -28,6 +28,18 @@ interface TaskCreationModalProps {
   theme: ThemeColors;
 }
 
+/**
+ * Modal UI for assigning a new task from a sponsor to a sponsee.
+ *
+ * @param visible - Whether the modal is shown
+ * @param onClose - Callback invoked when the modal should close
+ * @param onTaskCreated - Callback invoked after a task is successfully created
+ * @param sponsorId - ID of the sponsor assigning the task
+ * @param sponsees - List of sponsee profiles to select from
+ * @param preselectedSponseeId - Optional sponsee ID to preselect when the modal opens
+ * @param theme - Theme colors used to style the modal
+ * @returns A React element that renders the task creation modal
+ */
 export default function TaskCreationModal({
   visible,
   onClose,
