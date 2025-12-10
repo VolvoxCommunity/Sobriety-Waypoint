@@ -196,6 +196,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @throws Error if profile creation fails (but not if profile check fails - auth continues)
    */
   const createOAuthProfileIfNeeded = async (user: User): Promise<void> => {
+    // Import pending Apple auth name data (set by AppleSignInButton before signInWithIdToken)
+    // Using dynamic import to avoid circular dependency issues
+    let pendingAppleName: { displayName: string } | null = null;
+    try {
+      const appleAuthModule = await import('@/lib/apple-auth-name');
+      pendingAppleName = appleAuthModule.getPendingAppleAuthName();
+    } catch {
+      // Module may not be available in test environment
+    }
+
     const { data: existingProfile, error: queryError } = await supabase
       .from('profiles')
       .select('*')
@@ -221,20 +231,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (shouldCreateProfile) {
-      // Extract name from OAuth metadata if available, otherwise leave null for onboarding
-      const fullName = user.user_metadata?.full_name;
-      const nameParts = fullName?.split(' ').filter(Boolean);
-      const firstName = nameParts?.[0] || null;
-      // Determine last initial:
-      // - Multi-word names (e.g., "John Doe"): use first letter of last word → "D"
-      // - Single-word names (e.g., "Madonna"): use first letter of first name → "M"
-      // - No name: null (collected during onboarding)
-      const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
-      const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
+      // First, check for pending Apple Sign In name data (set before signInWithIdToken)
+      // This takes priority because it's the most up-to-date data from Apple
+      let displayName: string | null = null;
 
-      // Build display_name in "FirstName L." format
-      const displayName =
-        firstName && lastInitial ? `${firstName} ${lastInitial}.` : firstName || null;
+      if (pendingAppleName?.displayName) {
+        displayName = pendingAppleName.displayName;
+        logger.info('Using pending Apple auth name for profile creation', {
+          category: LogCategory.AUTH,
+          displayName,
+        });
+      } else {
+        // Fall back to extracting from OAuth metadata (Google, etc.)
+        const fullName = user.user_metadata?.full_name;
+        const nameParts = fullName?.split(' ').filter(Boolean);
+        const firstName = nameParts?.[0] || null;
+        // Determine last initial:
+        // - Multi-word names (e.g., "John Doe"): use first letter of last word → "D"
+        // - Single-word names (e.g., "Madonna"): use first letter of first name → "M"
+        // - No name: null (collected during onboarding)
+        const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
+        const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
+
+        // Build display_name in "FirstName L." format
+        displayName = firstName && lastInitial ? `${firstName} ${lastInitial}.` : firstName || null;
+      }
 
       // Use plain INSERT instead of upsert. This avoids RLS issues where
       // ignoreDuplicates: true requires SELECT permission to detect conflicts.

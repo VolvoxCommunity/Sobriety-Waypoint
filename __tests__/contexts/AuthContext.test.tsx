@@ -137,6 +137,13 @@ jest.mock('@/lib/analytics', () => ({
   },
 }));
 
+// Mock apple-auth-name module (used for passing Apple Sign In name data)
+jest.mock('@/lib/apple-auth-name', () => ({
+  getPendingAppleAuthName: jest.fn(() => null),
+  setPendingAppleAuthName: jest.fn(),
+  clearPendingAppleAuthName: jest.fn(),
+}));
+
 // =============================================================================
 // Helper
 // =============================================================================

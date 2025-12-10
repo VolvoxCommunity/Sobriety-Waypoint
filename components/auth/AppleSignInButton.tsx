@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger, LogCategory } from '@/lib/logger';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
+import { setPendingAppleAuthName, clearPendingAppleAuthName } from '@/lib/apple-auth-name';
 
 // =============================================================================
 // Types & Interfaces
@@ -61,31 +62,17 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
         throw new Error('No identity token returned from Apple');
       }
 
-      // Exchange the Apple identity token with Supabase
-      // Supabase validates the token server-side and creates/retrieves the user
-      // Note: Nonce validation is handled internally by Supabase when it parses
-      // the identityToken JWT - we don't need to pass it separately
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: 'apple',
-        token: credential.identityToken,
-      });
-
-      if (error) throw error;
-
-      // Track successful Apple sign in
-      trackEvent(AnalyticsEvents.AUTH_LOGIN, { method: 'apple' });
-
       // Apple only provides the user's full name on the FIRST sign-in.
       // Subsequent sign-ins return null for fullName. We must capture and
-      // persist this data immediately.
-      //
-      // IMPORTANT: There's a race condition with onAuthStateChange:
-      // 1. signInWithIdToken fires SIGNED_IN event
-      // 2. onAuthStateChange calls createOAuthProfileIfNeeded with user (no name yet)
-      // 3. updateUser sets name in user_metadata (too late for profile creation)
-      //
-      // Solution: Update BOTH user_metadata (for future reference) AND the profile
-      // table directly (to fix the profile that was just created without a name).
+      // store this data BEFORE calling signInWithIdToken so that
+      // createOAuthProfileIfNeeded can use it when creating the profile.
+      let nameData: {
+        firstName: string;
+        familyName: string;
+        displayName: string;
+        fullName: string;
+      } | null = null;
+
       if (credential.fullName?.givenName || credential.fullName?.familyName) {
         const firstName = (credential.fullName.givenName ?? '').trim();
         const familyName = (credential.fullName.familyName ?? '').trim();
@@ -100,7 +87,36 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
 
         const fullName = [firstName, familyName].filter(Boolean).join(' ');
 
-        // Update user_metadata for future reference (e.g., if profile is recreated)
+        nameData = { firstName, familyName, displayName, fullName };
+
+        // Store name data so createOAuthProfileIfNeeded can access it
+        // This must happen BEFORE signInWithIdToken
+        setPendingAppleAuthName(nameData);
+      }
+
+      // Exchange the Apple identity token with Supabase
+      // Supabase validates the token server-side and creates/retrieves the user
+      // Note: Nonce validation is handled internally by Supabase when it parses
+      // the identityToken JWT - we don't need to pass it separately
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+
+      if (error) {
+        // Clean up pending name data on error
+        clearPendingAppleAuthName();
+        throw error;
+      }
+
+      // Track successful Apple sign in
+      trackEvent(AnalyticsEvents.AUTH_LOGIN, { method: 'apple' });
+
+      // If we have name data, also update user_metadata for future reference
+      // (e.g., if profile is recreated later)
+      if (nameData) {
+        const { firstName, familyName, fullName } = nameData;
+
         const { error: updateError } = await supabase.auth.updateUser({
           data: {
             full_name: fullName,
@@ -116,8 +132,8 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
           });
         }
 
-        // Also update the profile directly since it was likely created without name data
-        // due to the race condition with onAuthStateChange
+        // Also update the profile directly as a backup in case
+        // createOAuthProfileIfNeeded ran before the pending name was available
         const { data: userData } = await supabase.auth.getUser();
         const userId = userData.user?.id;
 
@@ -125,10 +141,10 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
           logger.warn('Cannot update profile: user ID not available after sign-in', {
             category: LogCategory.AUTH,
           });
-        } else if (displayName) {
+        } else if (nameData.displayName) {
           const { error: profileError } = await supabase
             .from('profiles')
-            .update({ display_name: displayName })
+            .update({ display_name: nameData.displayName })
             .eq('id', userId);
 
           if (profileError) {
@@ -139,12 +155,15 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
           } else {
             logger.info('Profile updated with Apple name data', {
               category: LogCategory.AUTH,
-              displayName,
+              displayName: nameData.displayName,
             });
             // Refresh AuthContext profile state so onboarding sees the display name
             await refreshProfile();
           }
         }
+
+        // Clean up pending name data now that profile is updated
+        clearPendingAppleAuthName();
       }
 
       logger.info('Apple Sign In successful', { category: LogCategory.AUTH });
