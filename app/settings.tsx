@@ -1085,10 +1085,10 @@ export default function SettingsScreen() {
               <Text
                 style={[
                   styles.characterCount,
-                  editDisplayName.trim().length >= 25 && styles.characterCountWarning,
+                  editDisplayName.length >= 25 && styles.characterCountWarning,
                 ]}
               >
-                {editDisplayName.trim().length}/30 characters
+                {editDisplayName.length}/30 characters
               </Text>
             </View>
 

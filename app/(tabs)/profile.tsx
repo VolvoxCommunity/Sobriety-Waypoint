@@ -66,7 +66,7 @@ function SponseeDaysDisplay({
         </View>
         <View style={createStyles(theme).relationshipInfo}>
           <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsee?.display_name}
+            {relationship.sponsee?.display_name ?? '?'}
           </Text>
           <Text style={createStyles(theme).relationshipMeta}>
             Connected {new Date(relationship.connected_at).toLocaleDateString()}
@@ -124,7 +124,7 @@ function SponsorDaysDisplay({
         </View>
         <View style={createStyles(theme).relationshipInfo}>
           <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsor?.display_name}
+            {relationship.sponsor?.display_name ?? '?'}
           </Text>
           <Text style={createStyles(theme).relationshipMeta}>
             Connected {new Date(relationship.connected_at).toLocaleDateString()}
@@ -453,14 +453,14 @@ export default function ProfileScreen() {
           user_id: invite.sponsor_id,
           type: 'connection_request',
           title: 'New Sponsee Connected',
-          content: `${profile.display_name} has connected with you as their sponsor.`,
+          content: `${profile.display_name ?? 'Unknown'} has connected with you as their sponsor.`,
           data: { sponsee_id: profile.id },
         },
         {
           user_id: profile.id,
           type: 'connection_request',
           title: 'Connected to Sponsor',
-          content: `You are now connected with ${sponsorProfile.display_name} as your sponsor.`,
+          content: `You are now connected with ${sponsorProfile.display_name ?? 'Unknown'} as your sponsor.`,
           data: { sponsor_id: invite.sponsor_id },
         },
       ]);
@@ -468,9 +468,9 @@ export default function ProfileScreen() {
       await fetchRelationships();
 
       if (Platform.OS === 'web') {
-        window.alert(`Connected with ${sponsorProfile.display_name}`);
+        window.alert(`Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
       } else {
-        Alert.alert('Success', `Connected with ${sponsorProfile.display_name}`);
+        Alert.alert('Success', `Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
       }
 
       setShowInviteInput(false);
@@ -539,7 +539,7 @@ export default function ProfileScreen() {
         const notificationRecipientId = isSponsor
           ? relationship.sponsee_id
           : relationship.sponsor_id;
-        const notificationSenderName = profile?.display_name;
+        const notificationSenderName = profile?.display_name ?? 'Unknown';
 
         await supabase.from('notifications').insert([
           {
@@ -737,7 +737,7 @@ export default function ProfileScreen() {
           user_id: rel.sponsor_id,
           type: 'milestone',
           title: 'Sponsee Slip Up',
-          content: `${profile.display_name} has logged a slip-up and restarted their recovery journey.`,
+          content: `${profile.display_name ?? 'Unknown'} has logged a slip-up and restarted their recovery journey.`,
           data: {
             sponsee_id: profile.id,
             slip_up_date: slipUpDate.toISOString(),
@@ -793,7 +793,7 @@ export default function ProfileScreen() {
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{profile?.display_name?.[0]?.toUpperCase() || '?'}</Text>
         </View>
-        <Text style={styles.name}>{profile?.display_name}</Text>
+        <Text style={styles.name}>{profile?.display_name ?? '?'}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
       </View>
 

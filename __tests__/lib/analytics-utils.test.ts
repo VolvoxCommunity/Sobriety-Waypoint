@@ -401,8 +401,9 @@ describe('Analytics Utilities', () => {
       const result = sanitizeParams(params);
       expect(result.task_id).toBe('123');
       expect(result.email).toBeUndefined();
-      // Note: Current implementation doesn't sanitize nested objects
-      // This test documents the current behavior
+      expect(result.metadata).toBeDefined();
+      expect((result.metadata as Record<string, unknown>)?.email).toBeUndefined();
+      expect((result.metadata as Record<string, unknown>)?.name).toBeUndefined();
     });
 
     it('handles array values', () => {
@@ -414,6 +415,167 @@ describe('Analytics Utilities', () => {
         task_ids: ['123', '456', '789'],
         tags: ['tag1', 'tag2'],
       });
+    });
+
+    it('strips PII from nested arrays of objects', () => {
+      const params = {
+        task_id: '123',
+        users: [
+          { id: '1', email: 'user1@test.com', name: 'User One' },
+          { id: '2', email: 'user2@test.com', name: 'User Two' },
+        ],
+      };
+      const result = sanitizeParams(params);
+      expect(result.task_id).toBe('123');
+      expect(Array.isArray(result.users)).toBe(true);
+      const users = result.users as Record<string, unknown>[];
+      expect(users[0]?.id).toBe('1');
+      expect(users[0]?.email).toBeUndefined();
+      expect(users[0]?.name).toBeUndefined();
+      expect(users[1]?.id).toBe('2');
+      expect(users[1]?.email).toBeUndefined();
+      expect(users[1]?.name).toBeUndefined();
+    });
+
+    it('strips PII from deeply nested objects', () => {
+      const params = {
+        task_id: '123',
+        level1: {
+          level2: {
+            level3: {
+              email: 'deep@nested.com',
+              name: 'Deep Nested',
+              phone: '555-1234',
+            },
+          },
+        },
+      };
+      const result = sanitizeParams(params);
+      expect(result.task_id).toBe('123');
+      const level1 = result.level1 as Record<string, unknown>;
+      const level2 = level1?.level2 as Record<string, unknown>;
+      const level3 = level2?.level3 as Record<string, unknown>;
+      expect(level3?.email).toBeUndefined();
+      expect(level3?.name).toBeUndefined();
+      expect(level3?.phone).toBeUndefined();
+    });
+
+    it('handles circular references gracefully', () => {
+      const params: Record<string, unknown> = {
+        task_id: '123',
+        metadata: {
+          email: 'should@be.removed',
+        },
+      };
+      // Create a circular reference
+      params.metadata = params;
+      const result = sanitizeParams(params);
+      expect(result.task_id).toBe('123');
+      // Circular reference should be handled (undefined or removed)
+      expect(result.metadata).toBeUndefined();
+    });
+
+    it('strips PII from arrays containing objects with nested PII', () => {
+      const params = {
+        events: [
+          { type: 'click', metadata: { email: 'user@test.com' } },
+          { type: 'view', metadata: { name: 'John Doe' } },
+        ],
+      };
+      const result = sanitizeParams(params);
+      const events = result.events as Record<string, unknown>[];
+      expect(events[0]?.type).toBe('click');
+      expect((events[0]?.metadata as Record<string, unknown>)?.email).toBeUndefined();
+      expect(events[1]?.type).toBe('view');
+      expect((events[1]?.metadata as Record<string, unknown>)?.name).toBeUndefined();
+    });
+
+    it('preserves non-PII fields in nested structures', () => {
+      const params = {
+        task_id: '123',
+        metadata: {
+          email: 'should@be.removed',
+          name: 'Should be removed',
+          description: 'This should remain',
+          count: 42,
+          is_active: true,
+        },
+      };
+      const result = sanitizeParams(params);
+      expect(result.task_id).toBe('123');
+      const metadata = result.metadata as Record<string, unknown>;
+      expect(metadata?.email).toBeUndefined();
+      expect(metadata?.name).toBeUndefined();
+      expect(metadata?.description).toBe('This should remain');
+      expect(metadata?.count).toBe(42);
+      expect(metadata?.is_active).toBe(true);
+    });
+
+    it('strips all PII field types from nested objects', () => {
+      const params = {
+        task_id: '123',
+        user_data: {
+          email: 'user@test.com',
+          name: 'John Doe',
+          display_name: 'John D.',
+          phone: '555-1234',
+          password: 'secret',
+          token: 'abc123',
+          access_token: 'token123',
+          refresh_token: 'refresh123',
+          sobriety_date: '2024-01-01',
+          relapse_date: '2024-06-01',
+          safe_field: 'keep this',
+        },
+      };
+      const result = sanitizeParams(params);
+      expect(result.task_id).toBe('123');
+      const userData = result.user_data as Record<string, unknown>;
+      expect(userData?.email).toBeUndefined();
+      expect(userData?.name).toBeUndefined();
+      expect(userData?.display_name).toBeUndefined();
+      expect(userData?.phone).toBeUndefined();
+      expect(userData?.password).toBeUndefined();
+      expect(userData?.token).toBeUndefined();
+      expect(userData?.access_token).toBeUndefined();
+      expect(userData?.refresh_token).toBeUndefined();
+      expect(userData?.sobriety_date).toBeUndefined();
+      expect(userData?.relapse_date).toBeUndefined();
+      expect(userData?.safe_field).toBe('keep this');
+    });
+
+    it('handles mixed nested structures with arrays and objects', () => {
+      const params = {
+        task_id: '123',
+        items: [
+          {
+            id: '1',
+            metadata: {
+              email: 'user1@test.com',
+              tags: ['tag1', 'tag2'],
+            },
+          },
+          {
+            id: '2',
+            metadata: {
+              name: 'User Two',
+              nested: {
+                phone: '555-1234',
+              },
+            },
+          },
+        ],
+      };
+      const result = sanitizeParams(params);
+      expect(result.task_id).toBe('123');
+      const items = result.items as Record<string, unknown>[];
+      const item1Meta = items[0]?.metadata as Record<string, unknown>;
+      expect(item1Meta?.email).toBeUndefined();
+      expect(item1Meta?.tags).toEqual(['tag1', 'tag2']);
+      const item2Meta = items[1]?.metadata as Record<string, unknown>;
+      expect(item2Meta?.name).toBeUndefined();
+      const nested = item2Meta?.nested as Record<string, unknown>;
+      expect(nested?.phone).toBeUndefined();
     });
   });
 
@@ -463,9 +625,9 @@ describe('Analytics Utilities', () => {
       expect(calculateDaysSoberBucket(500)).toBe('365+');
     });
 
-    it('returns correct type (DaysSoberBucket)', () => {
+    it('returns valid DaysSoberBucket value', () => {
       const result = calculateDaysSoberBucket(45);
-      const validBuckets: readonly string[] = ['0-7', '8-30', '31-90', '91-180', '181-365', '365+'];
+      const validBuckets: DaysSoberBucket[] = ['0-7', '8-30', '31-90', '91-180', '181-365', '365+'];
       expect(validBuckets).toContain(result);
     });
   });
