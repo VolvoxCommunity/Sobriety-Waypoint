@@ -177,6 +177,24 @@ jest.mock('lucide-react-native', () => ({
   AlertCircle: () => null,
   CheckCircle: () => null,
   Settings: () => null,
+  // Icons used by SettingsSheet
+  LogOut: () => null,
+  Moon: () => null,
+  Sun: () => null,
+  Monitor: () => null,
+  ChevronDown: () => null,
+  ChevronUp: () => null,
+  Shield: () => null,
+  FileText: () => null,
+  Github: () => null,
+  Trash2: () => null,
+  AlertTriangle: () => null,
+  RefreshCw: () => null,
+  Download: () => null,
+  Info: () => null,
+  Copy: () => null,
+  User: () => null,
+  ChevronLeft: () => null,
 }));
 
 // Mock DateTimePicker
@@ -217,6 +235,95 @@ jest.mock('@/lib/analytics', () => ({
   trackEvent: jest.fn(),
   AnalyticsEvents: {
     SLIP_UP_LOGGED: 'slip_up_logged',
+  },
+}));
+
+// Mock expo-clipboard (required by SettingsSheet)
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn(),
+}));
+
+// Mock expo-constants (required by SettingsSheet)
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: {
+    expoConfig: {
+      extra: {},
+    },
+  },
+}));
+
+// Mock expo-updates (required by SettingsSheet)
+jest.mock('expo-updates', () => ({
+  channel: null,
+  updateId: null,
+  runtimeVersion: null,
+  isEmbeddedLaunch: true,
+}));
+
+// Mock expo-device (required by SettingsSheet)
+jest.mock('expo-device', () => ({
+  modelName: 'iPhone 14 Pro',
+  osName: 'iOS',
+  osVersion: '17.0',
+}));
+
+// Mock expo-application (required by SettingsSheet)
+jest.mock('expo-application', () => ({
+  nativeBuildVersion: '1',
+  nativeApplicationVersion: '1.0.0',
+}));
+
+// Mock useAppUpdates hook (required by SettingsSheet)
+jest.mock('@/hooks/useAppUpdates', () => ({
+  useAppUpdates: () => ({
+    status: 'idle',
+    isChecking: false,
+    isDownloading: false,
+    errorMessage: null,
+    checkForUpdates: jest.fn(),
+    applyUpdate: jest.fn(),
+    isSupported: true,
+  }),
+}));
+
+// Mock validation (required by SettingsSheet)
+jest.mock('@/lib/validation', () => ({
+  validateDisplayName: jest.fn(() => null),
+}));
+
+// Mock GlassBottomSheet (required by SettingsSheet)
+jest.mock('@/components/GlassBottomSheet', () => {
+  const React = require('react');
+  const MockGlassBottomSheet = React.forwardRef(
+    (
+      { children, onDismiss }: { children: React.ReactNode; onDismiss?: () => void },
+      ref: React.Ref<{ present: () => void; dismiss: () => void }>
+    ) => {
+      React.useImperativeHandle(ref, () => ({
+        present: jest.fn(),
+        dismiss: jest.fn(),
+      }));
+      return React.createElement('View', { testID: 'glass-bottom-sheet' }, children);
+    }
+  );
+  MockGlassBottomSheet.displayName = 'GlassBottomSheet';
+  return {
+    __esModule: true,
+    default: MockGlassBottomSheet,
+  };
+});
+
+// Mock BottomSheetScrollView (required by SettingsSheet)
+jest.mock('@gorhom/bottom-sheet', () => ({
+  BottomSheetScrollView: ({ children, ...props }: { children: React.ReactNode }) => {
+    const React = require('react');
+    const { ScrollView } = require('react-native');
+    return React.createElement(
+      ScrollView,
+      { ...props, testID: 'bottom-sheet-scroll-view' },
+      children
+    );
   },
 }));
 

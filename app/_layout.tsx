@@ -159,6 +159,7 @@ function RootLayoutNav() {
         <Stack.Screen name="signup" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
+        {/* Settings route kept as fallback - primary access via bottom sheet in profile.tsx */}
         <Stack.Screen
           name="settings"
           options={{

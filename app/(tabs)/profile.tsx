@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -32,7 +32,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
 import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
-import { useRouter } from 'expo-router';
+import SettingsSheet, { SettingsSheetRef } from '@/components/SettingsSheet';
 
 /**
  * Renders a card for a sponsee showing avatar, display name, connection date, optional sobriety days and task completion, and a disconnect control.
@@ -158,7 +158,7 @@ function SponsorDaysDisplay({
 export default function ProfileScreen() {
   const { profile, refreshProfile } = useAuth();
   const { theme } = useTheme();
-  const router = useRouter();
+  const settingsSheetRef = useRef<SettingsSheetRef>(null);
   const [inviteCode, setInviteCode] = useState('');
   const [showInviteInput, setShowInviteInput] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -789,7 +789,7 @@ export default function ProfileScreen() {
           <View style={styles.headerTop}>
             <TouchableOpacity
               style={styles.settingsButton}
-              onPress={() => router.push('/settings')}
+              onPress={() => settingsSheetRef.current?.present()}
               accessibilityRole="button"
               accessibilityLabel="Open settings"
             >
@@ -1203,6 +1203,9 @@ export default function ProfileScreen() {
             </View>
           </KeyboardAvoidingView>
         </Modal>
+
+        {/* Settings Sheet */}
+        <SettingsSheet ref={settingsSheetRef} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
