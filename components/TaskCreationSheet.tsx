@@ -139,11 +139,19 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
         setTemplates([]);
         return;
       }
-      const { data } = await supabase
+      const { data, error: templateError } = await supabase
         .from('task_templates')
         .select('*')
         .eq('step_number', selectedStepNumber)
         .order('title');
+
+      if (templateError) {
+        logger.warn('Failed to fetch task templates', {
+          category: LogCategory.DATABASE,
+          error: templateError.message,
+          stepNumber: selectedStepNumber,
+        });
+      }
       setTemplates(data || []);
     }, [selectedStepNumber]);
 
@@ -210,7 +218,8 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
 
         if (insertError) throw insertError;
 
-        await supabase.from('notifications').insert({
+        // Send notification to sponsee (non-blocking - task creation succeeds even if notification fails)
+        const { error: notifyError } = await supabase.from('notifications').insert({
           user_id: selectedSponseeId,
           type: 'task_assigned',
           title: 'New Task Assigned',
@@ -222,6 +231,15 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
             task_title: customTitle.trim(),
           },
         });
+
+        if (notifyError) {
+          // Log notification failure but don't fail the task creation
+          logger.warn('Failed to send task notification', {
+            category: LogCategory.DATABASE,
+            error: notifyError.message,
+            sponseeId: selectedSponseeId,
+          });
+        }
 
         resetForm();
         onTaskCreated();

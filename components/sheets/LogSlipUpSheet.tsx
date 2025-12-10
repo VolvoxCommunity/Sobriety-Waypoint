@@ -223,7 +223,7 @@ const LogSlipUpSheet = forwardRef<LogSlipUpSheetRef, LogSlipUpSheetProps>(
           .eq('sponsee_id', profile.id)
           .eq('status', 'active');
 
-        // Create notifications for all active sponsors
+        // Create notifications for all active sponsors (non-blocking - slip-up logging succeeds even if notification fails)
         if (sponsors && sponsors.length > 0) {
           const notifications = sponsors.map((rel) => ({
             user_id: rel.sponsor_id,
@@ -236,7 +236,16 @@ const LogSlipUpSheet = forwardRef<LogSlipUpSheetRef, LogSlipUpSheetProps>(
             },
           }));
 
-          await supabase.from('notifications').insert(notifications);
+          const { error: notifyError } = await supabase.from('notifications').insert(notifications);
+
+          if (notifyError) {
+            // Log notification failure but don't fail the slip-up logging
+            logger.warn('Failed to send sponsor notifications for slip-up', {
+              category: LogCategory.DATABASE,
+              error: notifyError.message,
+              sponsorCount: sponsors.length,
+            });
+          }
         }
 
         // Guard against state updates after unmount
