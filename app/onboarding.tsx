@@ -222,6 +222,9 @@ export default function OnboardingScreen() {
       return;
     }
 
+    // Clear any previous error when validation succeeds
+    setDisplayNameError(null);
+
     setLoading(true);
     try {
       const userTimezone = getUserTimezone(profile);
