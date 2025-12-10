@@ -232,12 +232,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userId: user.id,
       });
     } else {
-      // Profile already exists
-      logger.info('createOAuthProfileIfNeeded: profile already exists, skipping creation', {
+      // Profile already exists - check if we need to update display_name
+      logger.info('createOAuthProfileIfNeeded: profile already exists', {
         category: LogCategory.AUTH,
         userId: user.id,
         existingDisplayName: existingProfile.display_name ?? 'NULL',
       });
+
+      // If profile exists but has no display_name, and we have pending Apple name, update it
+      if (!existingProfile.display_name && pendingAppleName?.displayName) {
+        logger.info('Updating existing profile with pending Apple name', {
+          category: LogCategory.AUTH,
+          displayName: pendingAppleName.displayName,
+        });
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ display_name: pendingAppleName.displayName })
+          .eq('id', user.id);
+
+        if (updateError) {
+          logger.warn('Failed to update profile with Apple name', {
+            category: LogCategory.AUTH,
+            error: updateError.message,
+          });
+        }
+      }
     }
 
     if (shouldCreateProfile) {
