@@ -145,7 +145,7 @@ function validateDisplayName(name: string): string | null {
  *   onSave={async (newName) => {
  *     await updateProfileName(newName);
  *   }}
- *   onClose={() => { /* Handle close */ }}
+ *   onClose={() => {}}
  * />
  * ```
  */

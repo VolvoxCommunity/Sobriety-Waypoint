@@ -116,7 +116,7 @@ export interface GlassBottomSheetProps {
  *     <GlassBottomSheet
  *       ref={sheetRef}
  *       snapPoints={['50%', '90%']}
- *       onDismiss={() => { /* Handle dismiss */ }}
+ *       onDismiss={() => {}}
  *     >
  *       <Text>Sheet Content</Text>
  *     </GlassBottomSheet>

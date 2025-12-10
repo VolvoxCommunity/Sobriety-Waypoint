@@ -76,7 +76,7 @@ interface TaskCreationSheetProps {
  *
  * <TaskCreationSheet
  *   ref={sheetRef}
- *   onClose={() => { /* Handle close */ }}
+ *   onClose={() => {}}
  *   onTaskCreated={handleTaskCreated}
  *   sponsorId={profile.id}
  *   sponsees={sponseeProfiles}

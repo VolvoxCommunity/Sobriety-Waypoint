@@ -104,7 +104,7 @@ interface LogSlipUpSheetProps {
  *   ref={sheetRef}
  *   profile={profile}
  *   theme={theme}
- *   onClose={() => { /* Handle close */ }}
+ *   onClose={() => {}}
  *   onSlipUpLogged={handleSlipUpLogged}
  * />
  * ```
