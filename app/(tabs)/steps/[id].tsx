@@ -20,13 +20,7 @@ import { supabase } from '@/lib/supabase';
 import { StepContent, UserStepProgress } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Standard iOS tab bar height (49pt) - used for footer padding when nested in tabs */
-const IOS_TAB_BAR_HEIGHT = 49;
+import { getTabBarScrollPadding } from '@/constants/layout';
 
 // =============================================================================
 // Component
@@ -486,7 +480,7 @@ const createStyles = (theme: ThemeColors, insets: { top: number; bottom: number 
     },
     bottomPadding: {
       // Account for native tab bar height plus safe area so content isn't hidden
-      height: Platform.OS === 'ios' ? insets.bottom + IOS_TAB_BAR_HEIGHT + 16 : 24,
+      height: getTabBarScrollPadding(insets.bottom, Platform.OS === 'ios' ? 16 : 24),
     },
     navigation: {
       flexDirection: 'row',

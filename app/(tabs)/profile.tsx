@@ -34,13 +34,7 @@ import { logger, LogCategory } from '@/lib/logger';
 import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import SettingsSheet, { SettingsSheetRef } from '@/components/SettingsSheet';
 import LogSlipUpSheet, { LogSlipUpSheetRef } from '@/components/sheets/LogSlipUpSheet';
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Standard iOS tab bar height (49pt) - used for scroll padding */
-const IOS_TAB_BAR_HEIGHT = 49;
+import { getTabBarScrollPadding } from '@/constants/layout';
 
 // =============================================================================
 // Helper Components
@@ -173,7 +167,7 @@ export default function ProfileScreen() {
   // Get safe area insets for scroll padding
   const insets = useSafeAreaInsets();
   // Account for native tab bar height on iOS
-  const scrollPadding = Platform.OS === 'ios' ? insets.bottom + IOS_TAB_BAR_HEIGHT + 16 : 16;
+  const scrollPadding = getTabBarScrollPadding(insets.bottom);
   const settingsSheetRef = useRef<SettingsSheetRef>(null);
   const logSlipUpSheetRef = useRef<LogSlipUpSheetRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);

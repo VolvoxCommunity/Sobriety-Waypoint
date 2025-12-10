@@ -28,13 +28,7 @@ import { formatProfileName } from '@/lib/format';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Standard iOS tab bar height (49pt) - used for FAB positioning */
-const IOS_TAB_BAR_HEIGHT = 49;
+import { IOS_TAB_BAR_HEIGHT } from '@/constants/layout';
 
 // =============================================================================
 // Types & Interfaces
