@@ -94,14 +94,34 @@ export default function OnboardingScreen() {
   // Track when we're waiting for profile to update after form submission
   const [awaitingProfileUpdate, setAwaitingProfileUpdate] = useState(false);
 
+  // Refresh profile on mount to catch any pending updates (e.g., Apple Sign In)
+  // Apple Sign In updates the profile AFTER navigation to onboarding happens,
+  // so we need to re-fetch to get the display_name that was just set.
+  useEffect(() => {
+    // Small delay to allow any in-flight profile updates to complete
+    const timeoutId = setTimeout(() => {
+      refreshProfile();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [refreshProfile]);
+
   // Sync display name when profile loads/updates asynchronously
   // This handles the case where profile data arrives after initial render
-  // (e.g., OAuth data or page refresh) - input should show the stored value
+  // (e.g., Apple Sign In updates profile after onboarding mounts)
   useEffect(() => {
-    // Only sync if profile has trimmed non-empty value and local state is empty
     const trimmedDisplayName = profile?.display_name?.trim();
     if (trimmedDisplayName) {
-      setDisplayName((prev) => (prev ? prev : trimmedDisplayName));
+      // Only sync from profile if user hasn't started typing (local state is empty)
+      // This prevents overwriting user's in-progress edits
+      setDisplayName((prev) => {
+        const prevTrimmed = prev.trim();
+        // If user hasn't typed anything yet, use profile value
+        if (!prevTrimmed) {
+          return trimmedDisplayName;
+        }
+        // If user has typed something, keep their input
+        return prev;
+      });
     }
   }, [profile?.display_name]);
 
