@@ -459,8 +459,10 @@ describe('OnboardingScreen', () => {
       const input = screen.getByPlaceholderText('e.g. John D.');
       fireEvent.changeText(input, 'John D.');
 
-      // Wait for validation to pass
-      await waitFor(() => {}, { timeout: 500 });
+      // Wait for validation to pass - verify the input is visible with our text
+      await waitFor(() => {
+        expect(input.props.value).toBe('John D.');
+      });
 
       // Button should be present but disabled
       expect(screen.getByText('Complete Setup')).toBeTruthy();
@@ -472,8 +474,10 @@ describe('OnboardingScreen', () => {
       const input = screen.getByPlaceholderText('e.g. John D.');
       fireEvent.changeText(input, 'John D.');
 
-      // Wait for validation to pass
-      await waitFor(() => {}, { timeout: 500 });
+      // Wait for validation to pass - verify the input has our text
+      await waitFor(() => {
+        expect(input.props.value).toBe('John D.');
+      });
 
       // Accept terms
       fireEvent.press(screen.getByText(/I agree to the/));
