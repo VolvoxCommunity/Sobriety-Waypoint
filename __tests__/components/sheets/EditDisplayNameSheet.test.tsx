@@ -81,12 +81,22 @@ const mockTheme = {
   glassBorder: 'rgba(255,255,255,0.3)',
 };
 
+// Store original Platform.OS for restoration
+const originalPlatformOS = Platform.OS;
+
 // =============================================================================
 // Tests
 // =============================================================================
 describe('EditDisplayNameSheet', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Restore Platform.OS after each test to prevent test pollution
+    Object.defineProperty(Platform, 'OS', {
+      get: () => originalPlatformOS,
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -425,7 +435,7 @@ describe('EditDisplayNameSheet', () => {
     });
 
     it('shows confirmation dialog on web when closing with unsaved changes', () => {
-      Platform.OS = 'web';
+      Object.defineProperty(Platform, 'OS', { get: () => 'web' });
       // Mock window.confirm for web platform
       const mockConfirm = jest.fn().mockReturnValue(false);
       global.window = { confirm: mockConfirm } as any;
@@ -458,7 +468,7 @@ describe('EditDisplayNameSheet', () => {
     });
 
     it('shows alert on native when closing with unsaved changes', () => {
-      Platform.OS = 'ios';
+      Object.defineProperty(Platform, 'OS', { get: () => 'ios' });
       const mockAlert = jest.spyOn(Alert, 'alert');
       const mockOnSave = jest.fn();
       const mockOnClose = jest.fn();
