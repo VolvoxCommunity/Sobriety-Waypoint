@@ -181,7 +181,7 @@ export default function TasksScreen() {
         user_id: selectedTask.sponsor_id,
         type: 'task_completed',
         title: 'Task Completed',
-        content: `${profile?.first_name} ${profile?.last_initial}. has completed: ${selectedTask.title}`,
+        content: `${profile?.display_name} has completed: ${selectedTask.title}`,
         data: {
           task_id: selectedTask.id,
           step_number: selectedTask.step_number,
@@ -708,7 +708,7 @@ export default function TasksScreen() {
                     <View style={styles.sponseeHeader}>
                       <View style={styles.sponseeAvatar}>
                         <Text style={styles.sponseeAvatarText}>
-                          {(sponsee?.first_name || '?')[0].toUpperCase()}
+                          {(sponsee?.display_name || '?')[0].toUpperCase()}
                         </Text>
                       </View>
                       <View style={styles.sponseeInfo}>

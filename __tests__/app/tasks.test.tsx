@@ -107,8 +107,7 @@ jest.mock('@/contexts/ThemeContext', () => ({
 // Mock AuthContext
 const mockProfile = {
   id: 'user-123',
-  first_name: 'John',
-  last_initial: 'D',
+  display_name: 'John D.',
   sobriety_date: '2024-01-01',
 };
 
@@ -205,9 +204,7 @@ jest.mock('@/lib/date', () => ({
 }));
 
 jest.mock('@/lib/format', () => ({
-  formatProfileName: jest.fn(
-    (profile: Profile) => `${profile.first_name} ${profile.last_initial}.`
-  ),
+  formatProfileName: jest.fn((profile: Profile) => profile.display_name),
 }));
 
 // =============================================================================
@@ -228,8 +225,7 @@ const createMockMyTasks = (): Task[] => [
     updated_at: '2024-01-01T00:00:00Z',
     sponsor: {
       id: 'sponsor-123',
-      first_name: 'Bob',
-      last_initial: 'S',
+      display_name: 'Bob S.',
       sobriety_date: '2020-01-01',
       created_at: '2020-01-01T00:00:00Z',
       updated_at: '2020-01-01T00:00:00Z',
@@ -248,8 +244,7 @@ const createMockMyTasks = (): Task[] => [
     updated_at: '2024-01-02T00:00:00Z',
     sponsor: {
       id: 'sponsor-123',
-      first_name: 'Bob',
-      last_initial: 'S',
+      display_name: 'Bob S.',
       sobriety_date: '2020-01-01',
       created_at: '2020-01-01T00:00:00Z',
       updated_at: '2020-01-01T00:00:00Z',
@@ -456,8 +451,7 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -805,8 +799,7 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -826,8 +819,7 @@ describe('TasksScreen', () => {
           updated_at: '2024-01-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-06-01',
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
@@ -929,8 +921,7 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -1083,8 +1074,7 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -1104,8 +1094,7 @@ describe('TasksScreen', () => {
           updated_at: '2024-01-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-06-01',
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
@@ -1124,8 +1113,7 @@ describe('TasksScreen', () => {
           updated_at: '2024-01-02T00:00:00Z',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-06-01',
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
@@ -1178,16 +1166,14 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
         },
         {
           id: 'sponsee-2',
-          first_name: 'Bob',
-          last_initial: 'S',
+          display_name: 'Bob S.',
           sobriety_date: '2024-03-01',
           created_at: '2024-03-01T00:00:00Z',
           updated_at: '2024-03-01T00:00:00Z',
@@ -1207,8 +1193,7 @@ describe('TasksScreen', () => {
           updated_at: '2024-01-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-06-01',
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
@@ -1279,8 +1264,7 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -1300,8 +1284,7 @@ describe('TasksScreen', () => {
           updated_at: '2024-01-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-06-01',
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
@@ -1329,8 +1312,7 @@ describe('TasksScreen', () => {
       mockSponsees = [
         {
           id: 'sponsee-1',
-          first_name: 'Jane',
-          last_initial: 'D',
+          display_name: 'Jane D.',
           sobriety_date: '2024-06-01',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -1353,8 +1335,7 @@ describe('TasksScreen', () => {
           updated_at: '2024-01-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-06-01',
             created_at: '2024-01-01T00:00:00Z',
             updated_at: '2024-01-01T00:00:00Z',
