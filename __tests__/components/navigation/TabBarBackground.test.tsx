@@ -59,12 +59,10 @@ describe('TabBarBackground', () => {
       });
     });
 
-    it('renders solid View on Android', () => {
-      const { queryByTestId, UNSAFE_root } = render(<TabBarBackground />);
-      // Should not have BlurView on Android
+    it('renders solid View on Android (no blur)', () => {
+      const { queryByTestId } = render(<TabBarBackground />);
+      // Android should NOT render BlurView - it uses a solid View instead
       expect(queryByTestId('blur-view')).toBeNull();
-      // Should render a View
-      expect(UNSAFE_root).toBeTruthy();
     });
   });
 });
