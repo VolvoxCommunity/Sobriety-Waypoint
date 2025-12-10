@@ -45,6 +45,10 @@ const MAX_DISPLAY_NAME_LENGTH = 30;
 
 /**
  * Debounce delay in milliseconds for real-time validation feedback.
+ *
+ * 300ms is chosen as a balance between providing immediate feedback to the user
+ * and avoiding excessive validation calls while typing. This value helps ensure
+ * validation is responsive but not triggered on every keystroke.
  */
 const VALIDATION_DEBOUNCE_MS = 300;
 
