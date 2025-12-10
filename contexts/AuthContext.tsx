@@ -190,134 +190,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Creates a profile for a new OAuth user if one doesn't exist.
-   * Extracts first name and last initial from user metadata and captures the device timezone.
+   * Stores pending Apple Sign In name data in Supabase user_metadata.
+   * This preserves the name across sessions so it can be used during onboarding
+   * even if the user closes the app before completing onboarding.
    *
-   * @param user - The authenticated user object from OAuth provider
-   * @throws Error if profile creation fails (but not if profile check fails - auth continues)
+   * Profile creation is now handled by onboarding.tsx using upsert.
+   *
+   * @param user - The authenticated user object
    */
-  const createOAuthProfileIfNeeded = async (user: User): Promise<void> => {
+  const storeAppleNameInMetadata = async (user: User): Promise<void> => {
     // Get pending Apple auth name data (set by AppleSignInButton before signInWithIdToken)
     const pendingAppleName = getPendingAppleAuthName();
-    logger.info('createOAuthProfileIfNeeded: checked for pending Apple name', {
-      category: LogCategory.AUTH,
-      hasPendingName: !!pendingAppleName,
-      pendingDisplayName: pendingAppleName?.displayName ?? 'NONE',
-    });
 
-    const { data: existingProfile, error: queryError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    // Track whether we should attempt profile creation
-    let shouldCreateProfile = false;
-    let queryFailed = false;
-
-    if (queryError) {
-      logger.error('Failed to check for existing profile', queryError as Error, {
-        category: LogCategory.DATABASE,
-        userId: user.id,
-      });
-      // Query failed (possibly RLS or network) - attempt INSERT anyway.
-      // We'll handle duplicate key errors explicitly below.
-      queryFailed = true;
-      shouldCreateProfile = true;
-    } else if (!existingProfile) {
-      // Query succeeded and profile doesn't exist - create it
-      shouldCreateProfile = true;
-      logger.info('createOAuthProfileIfNeeded: profile does not exist, will create', {
+    if (!pendingAppleName?.displayName) {
+      logger.info('No pending Apple name to store in metadata', {
         category: LogCategory.AUTH,
-        userId: user.id,
       });
-    } else {
-      // Profile already exists - check if we need to update display_name
-      logger.info('createOAuthProfileIfNeeded: profile already exists', {
-        category: LogCategory.AUTH,
-        userId: user.id,
-        existingDisplayName: existingProfile.display_name ?? 'NULL',
-      });
-
-      // If profile exists but has no display_name, and we have pending Apple name, update it
-      if (!existingProfile.display_name && pendingAppleName?.displayName) {
-        logger.info('Updating existing profile with pending Apple name', {
-          category: LogCategory.AUTH,
-          displayName: pendingAppleName.displayName,
-        });
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ display_name: pendingAppleName.displayName })
-          .eq('id', user.id);
-
-        if (updateError) {
-          logger.warn('Failed to update profile with Apple name', {
-            category: LogCategory.AUTH,
-            error: updateError.message,
-          });
-        }
-      }
+      return;
     }
 
-    if (shouldCreateProfile) {
-      // First, check for pending Apple Sign In name data (set before signInWithIdToken)
-      // This takes priority because it's the most up-to-date data from Apple
-      let displayName: string | null = null;
-
-      if (pendingAppleName?.displayName) {
-        displayName = pendingAppleName.displayName;
-        logger.info('Using pending Apple auth name for profile creation', {
-          category: LogCategory.AUTH,
-          displayName,
-        });
-      } else {
-        // Fall back to extracting from OAuth metadata (Google, etc.)
-        const fullName = user.user_metadata?.full_name;
-        const nameParts = fullName?.split(' ').filter(Boolean);
-        const firstName = nameParts?.[0] || null;
-        // Determine last initial:
-        // - Multi-word names (e.g., "John Doe"): use first letter of last word → "D"
-        // - Single-word names (e.g., "Madonna"): use first letter of first name → "M"
-        // - No name: null (collected during onboarding)
-        const lastName = nameParts && nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
-        const lastInitial = lastName?.[0]?.toUpperCase() || firstName?.[0]?.toUpperCase() || null;
-
-        // Build display_name in "FirstName L." format
-        displayName = firstName && lastInitial ? `${firstName} ${lastInitial}.` : firstName || null;
-      }
-
-      // Use plain INSERT instead of upsert. This avoids RLS issues where
-      // ignoreDuplicates: true requires SELECT permission to detect conflicts.
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: user.id,
-        email: user.email || '',
-        display_name: displayName,
-        timezone: DEVICE_TIMEZONE,
+    // Check if user_metadata already has the display_name
+    if (user.user_metadata?.display_name) {
+      logger.info('User metadata already has display_name, skipping update', {
+        category: LogCategory.AUTH,
+        existingDisplayName: user.user_metadata.display_name,
       });
+      return;
+    }
 
-      if (profileError) {
-        // PostgreSQL error code 23505 = unique_violation (profile already exists)
-        // This is expected when query failed but profile actually exists.
-        // Treat as success since the goal is "ensure profile exists".
-        const isUniqueViolation = profileError.code === '23505';
+    // Store the pending Apple name in user_metadata so it persists across sessions
+    logger.info('Storing Apple name in user metadata', {
+      category: LogCategory.AUTH,
+      displayName: pendingAppleName.displayName,
+    });
 
-        if (isUniqueViolation && queryFailed) {
-          // Query failed but profile exists - this is fine, profile creation not needed
-          logger.info('Profile already exists (detected via unique constraint)', {
-            category: LogCategory.DATABASE,
-            userId: user.id,
-          });
-          return;
-        }
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        display_name: pendingAppleName.displayName,
+        full_name: pendingAppleName.fullName,
+      },
+    });
 
-        // Actual error - log and throw
-        logger.error('Failed to create OAuth profile', profileError as Error, {
-          category: LogCategory.DATABASE,
-          userId: user.id,
-          errorCode: profileError.code,
-        });
-        throw profileError;
-      }
+    if (error) {
+      logger.warn('Failed to store Apple name in user metadata', {
+        category: LogCategory.AUTH,
+        error: error.message,
+      });
     }
   };
 
@@ -440,17 +358,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           try {
-            // Create profile on sign-in and session recovery events, but not token refresh.
+            // Store Apple name in user_metadata on sign-in events.
+            // Profile creation is handled by onboarding.tsx - we don't create profiles here
+            // to avoid having null entries in the database for users who don't complete onboarding.
             // - SIGNED_IN: User just authenticated (email/password or OAuth)
-            // - INITIAL_SESSION: App restart recovering a stored session - we must handle this
-            //   because profile creation could have been interrupted on a previous sign-in
-            //   (e.g., app crash, network failure). Without this, users would be stuck
-            //   on onboarding since update() on a non-existent profile affects zero rows.
-            // Note: USER_UPDATED is intentionally excluded - it fires for email/password changes,
-            // not sign-in events. TOKEN_REFRESHED is also excluded as it's just token maintenance.
-            // createOAuthProfileIfNeeded is idempotent (checks existence first).
+            // - INITIAL_SESSION: App restart recovering a stored session
+            // Note: USER_UPDATED and TOKEN_REFRESHED are excluded as they're not sign-in events.
             if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-              await createOAuthProfileIfNeeded(session.user);
+              await storeAppleNameInMetadata(session.user);
               // Check mount status after async operation to avoid state updates on unmounted component
               if (!isMountedRef.current) return;
             }
@@ -599,9 +514,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * Signs up a new user with email/password.
-   * Profile creation is handled by onAuthStateChange listener (via createOAuthProfileIfNeeded)
-   * to avoid race conditions between signUp and the auth state change callback.
-   * Name collection is handled during onboarding.
+   * Profile creation is handled by onboarding.tsx when the user completes the onboarding flow.
+   * This ensures we don't have null profile entries for users who don't complete onboarding.
    *
    * @param email - User's email address
    * @param password - User's password
@@ -617,9 +531,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Track successful sign up
     trackEvent(AnalyticsEvents.AUTH_SIGN_UP, { method: 'email' });
 
-    // Profile creation is handled by onAuthStateChange listener when SIGNED_IN event fires.
-    // This avoids race conditions where both signUp and onAuthStateChange try to create
-    // the profile simultaneously, causing duplicate key errors.
+    // Profile creation is handled by onboarding.tsx when user completes onboarding.
+    // User will be routed to onboarding since profile doesn't exist yet.
   };
 
   /**

@@ -105,17 +105,23 @@ export default function OnboardingScreen() {
     return () => clearTimeout(timeoutId);
   }, [refreshProfile]);
 
-  // Sync display name when profile loads/updates asynchronously
-  // This handles the case where profile data arrives after initial render
-  // (e.g., Apple Sign In updates profile after onboarding mounts)
+  // Sync display name from profile or user_metadata when available
+  // Priority: profile.display_name > user_metadata.display_name
+  // This handles:
+  // 1. Profile data arriving after initial render
+  // 2. Apple Sign In storing name in user_metadata (when profile doesn't exist yet)
   useEffect(() => {
-    const trimmedDisplayName = profile?.display_name?.trim();
+    // Try profile first, then fall back to user_metadata (for Apple Sign In)
+    const trimmedDisplayName =
+      profile?.display_name?.trim() ||
+      (user?.user_metadata?.display_name as string | undefined)?.trim();
+
     if (trimmedDisplayName) {
-      // Only sync from profile if user hasn't started typing (local state is empty)
+      // Only sync if user hasn't started typing (local state is empty)
       // This prevents overwriting user's in-progress edits
       setDisplayName((prev) => {
         const prevTrimmed = prev.trim();
-        // If user hasn't typed anything yet, use profile value
+        // If user hasn't typed anything yet, use the available value
         if (!prevTrimmed) {
           return trimmedDisplayName;
         }
@@ -123,7 +129,7 @@ export default function OnboardingScreen() {
         return prev;
       });
     }
-  }, [profile?.display_name]);
+  }, [profile?.display_name, user?.user_metadata?.display_name]);
 
   // Navigate to main app when profile becomes complete after submission
   // This ensures we only navigate AFTER React has processed the profile state update
@@ -216,20 +222,24 @@ export default function OnboardingScreen() {
     try {
       const userTimezone = getUserTimezone(profile);
 
-      const updateData: {
-        sobriety_date: string;
-        terms_accepted_at: string;
-        display_name: string;
-      } = {
+      const profileData = {
+        id: user.id,
+        email: user.email || '',
         // Format the sobriety date using the user's timezone
         sobriety_date: formatDateWithTimezone(sobrietyDate, userTimezone),
         // Record when the user accepted the Privacy Policy and Terms of Service
         terms_accepted_at: new Date().toISOString(),
         // Trim whitespace before saving (consistent with validation)
         display_name: displayName.trim(),
+        // Capture the user's timezone for date calculations
+        timezone: userTimezone,
       };
 
-      const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
+      // Use upsert to create the profile if it doesn't exist (OAuth users)
+      // or update it if it already exists (email/password users)
+      const { error } = await supabase.from('profiles').upsert(profileData, {
+        onConflict: 'id',
+      });
 
       if (error) throw error;
 

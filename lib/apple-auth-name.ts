@@ -4,20 +4,21 @@
  * Apple only provides the user's name on the FIRST sign-in. This data comes
  * from the native credential object, NOT from the identity token. Since
  * Supabase's signInWithIdToken only receives the token (not the credential),
- * the name data is not available in user_metadata when the profile is created.
+ * the name data is not available in user_metadata automatically.
  *
  * This module allows AppleSignInButton to store the name data BEFORE calling
- * signInWithIdToken, so that createOAuthProfileIfNeeded in AuthContext can
- * read it and include it in the initial profile creation.
+ * signInWithIdToken, so that AuthContext can store it in user_metadata for
+ * later use during onboarding.
  *
  * Flow:
  * 1. AppleSignInButton receives credential with fullName from Apple
  * 2. AppleSignInButton calls setPendingAppleAuthName() with the name data
  * 3. AppleSignInButton calls signInWithIdToken()
- * 4. onAuthStateChange fires → createOAuthProfileIfNeeded runs
- * 5. createOAuthProfileIfNeeded calls getPendingAppleAuthName() to get name
- * 6. Profile is created with display_name populated
- * 7. clearPendingAppleAuthName() is called to clean up
+ * 4. onAuthStateChange fires → storeAppleNameInMetadata runs
+ * 5. storeAppleNameInMetadata calls getPendingAppleAuthName() to get name
+ * 6. Name is stored in Supabase user_metadata (persists across sessions)
+ * 7. Onboarding screen pre-fills display name from user_metadata
+ * 8. Profile is created when user completes onboarding
  *
  * @module lib/apple-auth-name
  */
@@ -56,7 +57,7 @@ export function setPendingAppleAuthName(data: PendingAppleAuthName): void {
 
 /**
  * Get pending Apple Sign In name data.
- * Call this in createOAuthProfileIfNeeded to check if there's
+ * Call this in storeAppleNameInMetadata to check if there's
  * name data from an in-progress Apple Sign In.
  *
  * @returns The pending name data, or null if none
@@ -67,7 +68,7 @@ export function getPendingAppleAuthName(): PendingAppleAuthName | null {
 
 /**
  * Clear pending Apple Sign In name data.
- * Call this after profile creation is complete to clean up.
+ * Call this after the name has been stored in user_metadata to clean up.
  */
 export function clearPendingAppleAuthName(): void {
   pendingName = null;
