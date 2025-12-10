@@ -377,7 +377,7 @@ const createStyles = (theme: ThemeColors, insets: { top: number; bottom: number 
     errorText: {
       fontSize: 16,
       fontFamily: theme.fontRegular,
-      color: '#ef4444',
+      color: theme.danger,
       textAlign: 'center',
       marginBottom: 16,
     },
@@ -391,7 +391,7 @@ const createStyles = (theme: ThemeColors, insets: { top: number; bottom: number 
       fontSize: 14,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
     scrollView: {
       flex: 1,
@@ -503,12 +503,12 @@ const createStyles = (theme: ThemeColors, insets: { top: number; bottom: number 
       gap: 8,
     },
     completeButtonActive: {
-      backgroundColor: '#10b981',
+      backgroundColor: theme.success,
     },
     completeButtonText: {
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
   });

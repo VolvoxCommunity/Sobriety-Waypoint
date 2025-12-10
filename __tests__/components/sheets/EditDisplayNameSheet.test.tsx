@@ -56,6 +56,7 @@ const mockTheme = {
   text: '#000000',
   textSecondary: '#666666',
   textTertiary: '#999999',
+  textOnPrimary: '#FFFFFF',
   background: '#FFFFFF',
   surface: '#F5F5F5',
   card: '#FFFFFF',
@@ -72,6 +73,12 @@ const mockTheme = {
   black: '#000000',
   error: '#FF3B30',
   fontRegular: 'System',
+  fontMedium: 'System',
+  fontSemiBold: 'System',
+  fontBold: 'System',
+  glassTint: 'rgba(255,255,255,0.1)',
+  glassFallback: 'rgba(255,255,255,0.75)',
+  glassBorder: 'rgba(255,255,255,0.3)',
 };
 
 // =============================================================================
