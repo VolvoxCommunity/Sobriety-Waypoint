@@ -218,7 +218,7 @@ describe('TabsLayout', () => {
     it('renders safe area provider as root', () => {
       render(<TabsLayout />);
 
-      expect(screen.getByTestID('safe-area-provider')).toBeTruthy();
+      expect(screen.getByTestId('safe-area-provider')).toBeTruthy();
     });
   });
 
