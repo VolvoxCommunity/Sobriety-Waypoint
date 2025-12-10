@@ -91,8 +91,12 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
         const familyName = credential.fullName.familyName ?? '';
 
         // Build display name in "FirstName L." format
+        // Handle edge cases: firstName only, lastInitial only, or both
         const lastInitial = familyName?.[0]?.toUpperCase() ?? '';
-        const displayName = lastInitial ? `${firstName} ${lastInitial}.` : firstName;
+        const displayName =
+          firstName && lastInitial
+            ? `${firstName} ${lastInitial}.`
+            : firstName || (lastInitial ? `${lastInitial}.` : '');
 
         const fullName = [firstName, familyName].filter(Boolean).join(' ');
 

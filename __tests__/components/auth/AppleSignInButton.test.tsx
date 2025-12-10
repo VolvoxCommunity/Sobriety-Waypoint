@@ -645,7 +645,7 @@ describe('AppleSignInButton', () => {
       });
     });
 
-    it('handles only family name provided with initial', async () => {
+    it('handles only family name provided with initial (no leading space)', async () => {
       mockSignInAsync.mockResolvedValueOnce({
         identityToken: 'mock-identity-token',
         fullName: {
@@ -661,7 +661,7 @@ describe('AppleSignInButton', () => {
 
       await waitFor(() => {
         expect(mockProfileUpdate).toHaveBeenCalledWith({
-          display_name: ' S.',
+          display_name: 'S.',
         });
       });
     });
