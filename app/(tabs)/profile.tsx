@@ -52,12 +52,12 @@ function SponseeDaysDisplay({
       <View style={createStyles(theme).relationshipHeader}>
         <View style={createStyles(theme).avatar}>
           <Text style={createStyles(theme).avatarText}>
-            {(relationship.sponsee?.first_name || '?')[0].toUpperCase()}
+            {(relationship.sponsee?.display_name || '?')[0].toUpperCase()}
           </Text>
         </View>
         <View style={createStyles(theme).relationshipInfo}>
           <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsee?.first_name} {relationship.sponsee?.last_initial}.
+            {relationship.sponsee?.display_name}
           </Text>
           <Text style={createStyles(theme).relationshipMeta}>
             Connected {new Date(relationship.connected_at).toLocaleDateString()}
@@ -103,12 +103,12 @@ function SponsorDaysDisplay({
       <View style={createStyles(theme).relationshipHeader}>
         <View style={createStyles(theme).avatar}>
           <Text style={createStyles(theme).avatarText}>
-            {(relationship.sponsor?.first_name || '?')[0].toUpperCase()}
+            {(relationship.sponsor?.display_name || '?')[0].toUpperCase()}
           </Text>
         </View>
         <View style={createStyles(theme).relationshipInfo}>
           <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsor?.first_name} {relationship.sponsor?.last_initial}.
+            {relationship.sponsor?.display_name}
           </Text>
           <Text style={createStyles(theme).relationshipMeta}>
             Connected {new Date(relationship.connected_at).toLocaleDateString()}
@@ -330,7 +330,7 @@ export default function ProfileScreen() {
       // Fetch sponsor profile separately (we can't access it via join due to RLS)
       const { data: sponsorProfile, error: sponsorError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_initial')
+        .select('id, display_name')
         .eq('id', invite.sponsor_id)
         .single();
 
@@ -440,14 +440,14 @@ export default function ProfileScreen() {
           user_id: invite.sponsor_id,
           type: 'connection_request',
           title: 'New Sponsee Connected',
-          content: `${profile.first_name} ${profile.last_initial}. has connected with you as their sponsor.`,
+          content: `${profile.display_name} has connected with you as their sponsor.`,
           data: { sponsee_id: profile.id },
         },
         {
           user_id: profile.id,
           type: 'connection_request',
           title: 'Connected to Sponsor',
-          content: `You are now connected with ${sponsorProfile.first_name} ${sponsorProfile.last_initial}. as your sponsor.`,
+          content: `You are now connected with ${sponsorProfile.display_name} as your sponsor.`,
           data: { sponsor_id: invite.sponsor_id },
         },
       ]);
@@ -455,12 +455,9 @@ export default function ProfileScreen() {
       await fetchRelationships();
 
       if (Platform.OS === 'web') {
-        window.alert(`Connected with ${sponsorProfile.first_name} ${sponsorProfile.last_initial}.`);
+        window.alert(`Connected with ${sponsorProfile.display_name}`);
       } else {
-        Alert.alert(
-          'Success',
-          `Connected with ${sponsorProfile.first_name} ${sponsorProfile.last_initial}.`
-        );
+        Alert.alert('Success', `Connected with ${sponsorProfile.display_name}`);
       }
 
       setShowInviteInput(false);
@@ -529,7 +526,7 @@ export default function ProfileScreen() {
         const notificationRecipientId = isSponsor
           ? relationship.sponsee_id
           : relationship.sponsor_id;
-        const notificationSenderName = `${profile?.first_name} ${profile?.last_initial}.`;
+        const notificationSenderName = profile?.display_name;
 
         await supabase.from('notifications').insert([
           {
@@ -727,7 +724,7 @@ export default function ProfileScreen() {
           user_id: rel.sponsor_id,
           type: 'milestone',
           title: 'Sponsee Slip Up',
-          content: `${profile.first_name} ${profile.last_initial}. has logged a slip-up and restarted their recovery journey.`,
+          content: `${profile.display_name} has logged a slip-up and restarted their recovery journey.`,
           data: {
             sponsee_id: profile.id,
             slip_up_date: slipUpDate.toISOString(),
@@ -781,11 +778,9 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{profile?.first_name?.[0]?.toUpperCase() || '?'}</Text>
+          <Text style={styles.avatarText}>{profile?.display_name?.[0]?.toUpperCase() || '?'}</Text>
         </View>
-        <Text style={styles.name}>
-          {profile?.first_name} {profile?.last_initial}.
-        </Text>
+        <Text style={styles.name}>{profile?.display_name}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
       </View>
 
@@ -841,11 +836,7 @@ export default function ProfileScreen() {
                 theme={theme}
                 taskStats={sponseeTaskStats[rel.sponsee_id]}
                 onDisconnect={() =>
-                  disconnectRelationship(
-                    rel.id,
-                    true,
-                    `${rel.sponsee?.first_name} ${rel.sponsee?.last_initial}.`
-                  )
+                  disconnectRelationship(rel.id, true, rel.sponsee?.display_name || 'Unknown')
                 }
               />
             ))}
@@ -880,11 +871,7 @@ export default function ProfileScreen() {
               relationship={rel}
               theme={theme}
               onDisconnect={() =>
-                disconnectRelationship(
-                  rel.id,
-                  false,
-                  `${rel.sponsor?.first_name} ${rel.sponsor?.last_initial}.`
-                )
+                disconnectRelationship(rel.id, false, rel.sponsor?.display_name || 'Unknown')
               }
             />
           ))
