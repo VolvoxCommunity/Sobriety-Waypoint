@@ -53,6 +53,16 @@ export interface PendingAppleAuthName {
 // Module State
 // =============================================================================
 
+/**
+ * Module-level state for pending Apple auth name.
+ *
+ * @remarks
+ * - Tests must call clearPendingAppleAuthName() in beforeEach/afterEach
+ *   to prevent state leakage between tests.
+ * - Concurrent sign-in attempts will overwrite this value. This is acceptable
+ *   since only the most recent credential should be processed.
+ * - Cleanup happens in storeAppleNameInMetadata after storing to user_metadata.
+ */
 let pendingName: PendingAppleAuthName | null = null;
 
 // =============================================================================
