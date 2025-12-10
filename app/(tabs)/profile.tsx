@@ -994,8 +994,6 @@ const createStyles = (
     },
     settingsButton: {
       padding: 8,
-      borderRadius: 8,
-      backgroundColor: theme.primaryLight,
     },
     profileHeader: {
       alignItems: 'center',

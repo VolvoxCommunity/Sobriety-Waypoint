@@ -522,7 +522,7 @@ export default function SettingsScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: Math.max(insets.bottom, 34) + 40 },
+          { paddingBottom: Math.max(insets.bottom, 34) + 80 },
         ]}
         keyboardShouldPersistTaps="handled"
         removeClippedSubviews={false}
