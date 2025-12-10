@@ -16,23 +16,12 @@ type ProfileLike = Partial<Pick<Profile, 'display_name'>> | null | undefined;
 // =============================================================================
 
 /**
- * Formats a profile's display name.
- * Returns "?" if the profile is null/undefined or has no display name.
+ * Formats a profile's display name, returning a fallback when missing.
  *
- * @param profile - The profile object (or partial profile) to format
- * @returns Formatted name string
+ * Trims whitespace from `display_name` and returns it; if `profile` is null/undefined or `display_name` is null/undefined/empty after trimming, returns `"?"`.
  *
- * @example
- * ```ts
- * formatProfileName({ display_name: 'John D.' })
- * // Returns: "John D."
- *
- * formatProfileName({ display_name: null })
- * // Returns: "?"
- *
- * formatProfileName(null)
- * // Returns: "?"
- * ```
+ * @param profile - Partial profile that may contain `display_name`
+ * @returns The trimmed `display_name`, or `"?"` when unavailable
  */
 export function formatProfileName(profile: ProfileLike): string {
   // Handle null/undefined profile

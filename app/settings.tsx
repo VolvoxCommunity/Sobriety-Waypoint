@@ -223,22 +223,12 @@ const EXTERNAL_LINKS = {
 // Component
 // =============================================================================
 /**
- * Settings screen for managing app preferences and user account.
+ * Render the Settings screen for managing user account, appearance, app updates, legal links, and build information.
  *
- * Provides the following functionality:
- * - Theme mode selection (light/dark/system)
- * - Access to legal documents (privacy policy, terms of service)
- * - Link to source code repository
- * - Sign out functionality
- * - Account deletion
+ * Provides UI and handlers for editing the display name, signing out, deleting the account, selecting theme mode,
+ * checking/applying updates, copying build/runtime details, and opening external links.
  *
- * @returns Settings screen component with navigation header
- *
- * @example
- * ```tsx
- * // Navigated to via router.push('/settings')
- * <SettingsScreen />
- * ```
+ * @returns The Settings screen React element
  */
 export default function SettingsScreen() {
   const { signOut, deleteAccount, profile, refreshProfile } = useAuth();

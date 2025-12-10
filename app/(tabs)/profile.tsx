@@ -33,7 +33,16 @@ import { logger, LogCategory } from '@/lib/logger';
 import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import { useRouter } from 'expo-router';
 
-// Component for displaying sponsee days sober using hook
+/**
+ * Renders a card for a sponsee showing avatar, display name, connection date, optional sobriety days and task completion, and a disconnect control.
+ *
+ * @param relationship - Sponsor/sponsee relationship object; component reads `relationship.sponsee`, `relationship.connected_at`, and `relationship.sponsee.sobriety_date` when present.
+ * @param theme - Current theme object used for styling.
+ * @param onDisconnect - Callback invoked when the user presses the Disconnect button.
+ * @param taskStats - Optional task statistics for the sponsee with `total` and `completed` counts.
+ *
+ * @returns The JSX element rendering the sponsee relationship card.
+ */
 function SponseeDaysDisplay({
   relationship,
   theme,
@@ -86,7 +95,14 @@ function SponseeDaysDisplay({
   );
 }
 
-// Component for displaying sponsor days sober using hook
+/**
+ * Render a card showing a sponsor's avatar, connection date, optional sobriety info, and a disconnect action.
+ *
+ * @param relationship - Sponsor-sponsee relationship object providing sponsor display_name, sobriety_date, and connected_at
+ * @param theme - Theme object used to style the card
+ * @param onDisconnect - Callback invoked when the Disconnect button is pressed
+ * @returns A React element representing the sponsor relationship card
+ */
 function SponsorDaysDisplay({
   relationship,
   theme,
@@ -130,16 +146,13 @@ function SponsorDaysDisplay({
 }
 
 /**
- * Displays the authenticated user's profile, sobriety journey, and sponsor/sponsee management UI.
+ * Render the authenticated user's profile, sobriety journey, and sponsor/sponsee management UI.
  *
- * Shows the user's avatar, name, email, current days sober, journey start and current streak information.
- * Provides actions to edit the sobriety date, log a slip-up, generate or join invite codes, and
- * disconnect sponsor/sponsee relationships.
+ * Provides controls to edit sobriety date, log slip-ups, generate or join invite codes, and
+ * disconnect relationships; handles relationship/task fetching, timezone-aware date handling,
+ * and creation of related notifications.
  *
- * Manages relationship and task statistics fetching, timezone-aware date handling for sobriety and
- * slip-up flows, and creates relevant notifications when connections change or slip-ups are logged.
- *
- * @returns A React element that renders the profile screen UI.
+ * @returns A React element representing the profile screen
  */
 export default function ProfileScreen() {
   const { profile, refreshProfile } = useAuth();
