@@ -94,7 +94,7 @@ export default function OnboardingScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   // Track when we're waiting for profile to update after form submission
   const [awaitingProfileUpdate, setAwaitingProfileUpdate] = useState(false);
 
@@ -115,23 +115,12 @@ export default function OnboardingScreen() {
   // 1. Profile data arriving after initial render
   // 2. Apple Sign In storing name in user_metadata (when profile doesn't exist yet)
   useEffect(() => {
-    // Try profile first, then fall back to user_metadata (for Apple Sign In)
-    const trimmedDisplayName =
+    const sourceDisplayName =
       profile?.display_name?.trim() ||
       (user?.user_metadata?.display_name as string | undefined)?.trim();
 
-    if (trimmedDisplayName) {
-      // Only sync if user hasn't started typing (local state is empty)
-      // This prevents overwriting user's in-progress edits
-      setDisplayName((prev) => {
-        const prevTrimmed = prev.trim();
-        // If user hasn't typed anything yet, use the available value
-        if (!prevTrimmed) {
-          return trimmedDisplayName;
-        }
-        // If user has typed something, keep their input
-        return prev;
-      });
+    if (sourceDisplayName) {
+      setDisplayName((prev) => (prev.trim() ? prev : sourceDisplayName));
     }
   }, [profile?.display_name, user?.user_metadata?.display_name]);
 
@@ -188,8 +177,8 @@ export default function OnboardingScreen() {
    */
   const isFormValid = useMemo(() => {
     const hasValidDisplayName = displayName.trim() !== '' && displayNameError === null;
-    return hasValidDisplayName && termsAccepted;
-  }, [displayName, displayNameError, termsAccepted]);
+    return hasValidDisplayName && isTermsAccepted;
+  }, [displayName, displayNameError, isTermsAccepted]);
 
   /**
    * Character count for display name with visual feedback.
@@ -441,21 +430,38 @@ export default function OnboardingScreen() {
             {/* Terms Acceptance */}
             <TouchableOpacity
               style={styles.termsContainer}
-              onPress={() => setTermsAccepted(!termsAccepted)}
+              onPress={() => setIsTermsAccepted(!isTermsAccepted)}
               activeOpacity={0.7}
+              accessible={true}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: isTermsAccepted }}
+              accessibilityLabel="Accept terms and privacy policy"
+              accessibilityHint="Toggles acceptance of Privacy Policy and Terms of Service"
             >
-              {termsAccepted ? (
+              {isTermsAccepted ? (
                 <CheckSquare size={24} color={theme.primary} />
               ) : (
                 <Square size={24} color={theme.textSecondary} />
               )}
               <Text style={styles.termsText}>
                 I agree to the{' '}
-                <Text style={styles.termsLink} onPress={openPrivacyPolicy}>
+                <Text
+                  style={styles.termsLink}
+                  onPress={openPrivacyPolicy}
+                  accessible={true}
+                  accessibilityRole="link"
+                  accessibilityLabel="Privacy Policy link"
+                >
                   Privacy Policy
                 </Text>{' '}
                 and{' '}
-                <Text style={styles.termsLink} onPress={openTermsOfService}>
+                <Text
+                  style={styles.termsLink}
+                  onPress={openTermsOfService}
+                  accessible={true}
+                  accessibilityRole="link"
+                  accessibilityLabel="Terms of Service link"
+                >
                   Terms of Service
                 </Text>
               </Text>

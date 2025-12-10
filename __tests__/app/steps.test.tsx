@@ -440,17 +440,17 @@ describe('StepsScreen', () => {
         expect(screen.getByText('The 12 Steps')).toBeTruthy();
       });
 
-      // Verify profile.display_name is accessible and matches new schema
-      // The component uses profile.id for fetching progress, confirming profile structure is correct
-      expect(mockProfile.display_name).toBe('John D.');
-      expect(mockProfile).toHaveProperty('display_name');
-      expect(mockProfile).not.toHaveProperty('first_name');
-      expect(mockProfile).not.toHaveProperty('last_initial');
-
       // Verify component can access profile and use it (via profile.id in fetchProgress)
+      // The component uses profile.id to fetch user step progress, which confirms
+      // the profile structure is correct and the component can access profile properties
       await waitFor(() => {
         expect(screen.getByText('We admitted we were powerless')).toBeTruthy();
       });
+
+      // Verify component successfully uses profile.id by checking supabase query was called
+      // This demonstrates the component behavior rather than testing mock state
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      expect(supabase.from).toHaveBeenCalledWith('user_step_progress');
     });
 
     it('handles missing display_name gracefully', async () => {
@@ -482,9 +482,10 @@ describe('StepsScreen', () => {
         expect(screen.getByText('We admitted we were powerless')).toBeTruthy();
       });
 
-      // Verify profile exists but display_name is null
-      expect(mockProfile.display_name).toBeNull();
-      expect(mockProfile.id).toBe('user-123');
+      // Verify component successfully uses profile.id even when display_name is null
+      // This demonstrates the component handles missing display_name gracefully
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      expect(supabase.from).toHaveBeenCalledWith('user_step_progress');
     });
 
     it('handles undefined display_name gracefully', async () => {
@@ -492,7 +493,7 @@ describe('StepsScreen', () => {
       mockProfile = {
         id: 'user-123',
         email: 'test@example.com',
-        display_name: null,
+        display_name: undefined,
         sobriety_date: '2024-01-01',
         notification_preferences: {
           tasks: true,

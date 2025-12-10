@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TaskTemplate, Profile } from '@/types/database';
@@ -184,267 +185,276 @@ export default function TaskCreationModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeAllDropdowns}>
-        <TouchableOpacity
-          style={styles.modalContent}
-          activeOpacity={1}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Assign New Task</Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-              <X size={24} color={theme.textSecondary} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-            {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Sponsee *</Text>
-              <TouchableOpacity style={styles.dropdown} onPress={() => toggleDropdown('sponsee')}>
-                <Text style={[styles.dropdownText, !selectedSponseeId && styles.placeholderText]}>
-                  {selectedSponseeId
-                    ? (sponsees.find((s) => s.id === selectedSponseeId)?.display_name ??
-                      'Select sponsee')
-                    : 'Select sponsee'}
-                </Text>
-                <ChevronDown size={20} color={theme.textSecondary} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
+      >
+        <TouchableOpacity activeOpacity={1} onPress={closeAllDropdowns}>
+          <TouchableOpacity
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Assign New Task</Text>
+              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                <X size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            {activeDropdown === 'sponsee' && (
-              <View style={styles.dropdownMenuOverlay}>
-                <ScrollView style={styles.dropdownMenuScrollable}>
-                  {sponsees.map((sponsee) => (
-                    <TouchableOpacity
-                      key={sponsee.id}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setSelectedSponseeId(sponsee.id);
-                        closeAllDropdowns();
-                      }}
-                    >
-                      <Text style={styles.dropdownItemText}>{sponsee?.display_name ?? '?'}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              {error ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Sponsee *</Text>
+                <TouchableOpacity style={styles.dropdown} onPress={() => toggleDropdown('sponsee')}>
+                  <Text style={[styles.dropdownText, !selectedSponseeId && styles.placeholderText]}>
+                    {selectedSponseeId
+                      ? (sponsees.find((s) => s.id === selectedSponseeId)?.display_name ??
+                        'Unknown sponsee')
+                      : 'Select sponsee'}
+                  </Text>
+                  <ChevronDown size={20} color={theme.textSecondary} />
+                </TouchableOpacity>
               </View>
-            )}
 
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Step Number (Optional)</Text>
-              <TouchableOpacity style={styles.dropdown} onPress={() => toggleDropdown('step')}>
-                <Text style={[styles.dropdownText, !selectedStepNumber && styles.placeholderText]}>
-                  {selectedStepNumber ? `Step ${selectedStepNumber}` : 'Select step (optional)'}
-                </Text>
-                <ChevronDown size={20} color={theme.textSecondary} />
-              </TouchableOpacity>
-            </View>
+              {activeDropdown === 'sponsee' && (
+                <View style={styles.dropdownMenuOverlay}>
+                  <ScrollView style={styles.dropdownMenuScrollable}>
+                    {sponsees.map((sponsee) => (
+                      <TouchableOpacity
+                        key={sponsee.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setSelectedSponseeId(sponsee.id);
+                          closeAllDropdowns();
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>
+                          {sponsee?.display_name ?? 'Unknown sponsee'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
-            {activeDropdown === 'step' && (
-              <View style={styles.dropdownMenuOverlay}>
-                <ScrollView style={styles.dropdownMenuScrollable}>
-                  <TouchableOpacity
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setSelectedStepNumber(null);
-                      setSelectedTemplate(null);
-                      setCustomTitle('');
-                      setCustomDescription('');
-                      closeAllDropdowns();
-                    }}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Step Number (Optional)</Text>
+                <TouchableOpacity style={styles.dropdown} onPress={() => toggleDropdown('step')}>
+                  <Text
+                    style={[styles.dropdownText, !selectedStepNumber && styles.placeholderText]}
                   >
-                    <Text style={[styles.dropdownItemText, { fontStyle: 'italic' }]}>
-                      No specific step
-                    </Text>
-                  </TouchableOpacity>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((step) => (
+                    {selectedStepNumber ? `Step ${selectedStepNumber}` : 'Select step (optional)'}
+                  </Text>
+                  <ChevronDown size={20} color={theme.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              {activeDropdown === 'step' && (
+                <View style={styles.dropdownMenuOverlay}>
+                  <ScrollView style={styles.dropdownMenuScrollable}>
                     <TouchableOpacity
-                      key={step}
                       style={styles.dropdownItem}
                       onPress={() => {
-                        setSelectedStepNumber(step);
+                        setSelectedStepNumber(null);
                         setSelectedTemplate(null);
                         setCustomTitle('');
                         setCustomDescription('');
                         closeAllDropdowns();
                       }}
                     >
-                      <Text style={styles.dropdownItemText}>Step {step}</Text>
+                      <Text style={[styles.dropdownItemText, { fontStyle: 'italic' }]}>
+                        No specific step
+                      </Text>
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((step) => (
+                      <TouchableOpacity
+                        key={step}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setSelectedStepNumber(step);
+                          setSelectedTemplate(null);
+                          setCustomTitle('');
+                          setCustomDescription('');
+                          closeAllDropdowns();
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>Step {step}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Task Template (Optional)</Text>
-              <TouchableOpacity
-                style={[styles.dropdown, !selectedStepNumber && styles.dropdownDisabled]}
-                onPress={() => {
-                  if (selectedStepNumber) {
-                    toggleDropdown('template');
-                  }
-                }}
-                disabled={!selectedStepNumber}
-              >
-                <Text
-                  style={[
-                    styles.dropdownText,
-                    (!selectedStepNumber || !selectedTemplate) && styles.placeholderText,
-                  ]}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Task Template (Optional)</Text>
+                <TouchableOpacity
+                  style={[styles.dropdown, !selectedStepNumber && styles.dropdownDisabled]}
+                  onPress={() => {
+                    if (selectedStepNumber) {
+                      toggleDropdown('template');
+                    }
+                  }}
+                  disabled={!selectedStepNumber}
                 >
-                  {!selectedStepNumber
-                    ? 'Select a step first to see templates'
-                    : selectedTemplate
-                      ? selectedTemplate.title
-                      : 'Choose from template or create custom'}
-                </Text>
-                <ChevronDown size={20} color={theme.textSecondary} />
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      (!selectedStepNumber || !selectedTemplate) && styles.placeholderText,
+                    ]}
+                  >
+                    {!selectedStepNumber
+                      ? 'Select a step first to see templates'
+                      : selectedTemplate
+                        ? selectedTemplate.title
+                        : 'Choose from template or create custom'}
+                  </Text>
+                  <ChevronDown size={20} color={theme.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              {activeDropdown === 'template' && selectedStepNumber && (
+                <View style={styles.dropdownMenuOverlay}>
+                  <ScrollView style={styles.dropdownMenuScrollable}>
+                    {templates.length === 0 ? (
+                      <View style={styles.dropdownItem}>
+                        <Text style={styles.dropdownItemTextSmall}>
+                          No templates available for this step
+                        </Text>
+                      </View>
+                    ) : (
+                      templates.map((template) => (
+                        <TouchableOpacity
+                          key={template.id}
+                          style={styles.dropdownItem}
+                          onPress={() => handleTemplateSelect(template)}
+                        >
+                          <Text style={styles.dropdownItemTextBold}>{template.title}</Text>
+                          <Text style={styles.dropdownItemTextSmall} numberOfLines={2}>
+                            {template.description}
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </ScrollView>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Task Title *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={customTitle}
+                  onChangeText={setCustomTitle}
+                  placeholder="Enter task title"
+                  placeholderTextColor={theme.textTertiary}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Task Description *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={customDescription}
+                  onChangeText={setCustomDescription}
+                  placeholder="Enter task description"
+                  placeholderTextColor={theme.textTertiary}
+                  multiline
+                  numberOfLines={6}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Due Date (Optional)</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={dueDate ? formatLocalDate(dueDate) : ''}
+                    min={formatLocalDate(new Date())}
+                    onChange={(e) =>
+                      setDueDate(e.target.value ? parseDateAsLocal(e.target.value) : null)
+                    }
+                    style={{
+                      padding: 12,
+                      fontSize: 16,
+                      borderRadius: 8,
+                      border: `1px solid ${theme.border}`,
+                      backgroundColor: theme.card,
+                      color: theme.text,
+                      width: '100%',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Calendar size={20} color={theme.textSecondary} />
+                      <Text style={styles.dateButtonText}>
+                        {dueDate
+                          ? dueDate.toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          : 'Set due date'}
+                      </Text>
+                    </TouchableOpacity>
+                    {dueDate && (
+                      <TouchableOpacity
+                        style={styles.clearDateButton}
+                        onPress={() => setDueDate(null)}
+                      >
+                        <Text style={styles.clearDateText}>Clear Date</Text>
+                      </TouchableOpacity>
+                    )}
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={dueDate || new Date()}
+                        mode="date"
+                        display="default"
+                        onChange={(event, date) => {
+                          setShowDatePicker(false);
+                          if (date) setDueDate(date);
+                        }}
+                        minimumDate={new Date()}
+                      />
+                    )}
+                  </>
+                )}
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={handleClose}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Assign Task</Text>
+                )}
               </TouchableOpacity>
             </View>
-
-            {activeDropdown === 'template' && selectedStepNumber && (
-              <View style={styles.dropdownMenuOverlay}>
-                <ScrollView style={styles.dropdownMenuScrollable}>
-                  {templates.length === 0 ? (
-                    <View style={styles.dropdownItem}>
-                      <Text style={styles.dropdownItemTextSmall}>
-                        No templates available for this step
-                      </Text>
-                    </View>
-                  ) : (
-                    templates.map((template) => (
-                      <TouchableOpacity
-                        key={template.id}
-                        style={styles.dropdownItem}
-                        onPress={() => handleTemplateSelect(template)}
-                      >
-                        <Text style={styles.dropdownItemTextBold}>{template.title}</Text>
-                        <Text style={styles.dropdownItemTextSmall} numberOfLines={2}>
-                          {template.description}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </ScrollView>
-              </View>
-            )}
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Task Title *</Text>
-              <TextInput
-                style={styles.input}
-                value={customTitle}
-                onChangeText={setCustomTitle}
-                placeholder="Enter task title"
-                placeholderTextColor={theme.textTertiary}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Task Description *</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={customDescription}
-                onChangeText={setCustomDescription}
-                placeholder="Enter task description"
-                placeholderTextColor={theme.textTertiary}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Due Date (Optional)</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  value={dueDate ? formatLocalDate(dueDate) : ''}
-                  min={formatLocalDate(new Date())}
-                  onChange={(e) =>
-                    setDueDate(e.target.value ? parseDateAsLocal(e.target.value) : null)
-                  }
-                  style={{
-                    padding: 12,
-                    fontSize: 16,
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    backgroundColor: theme.card,
-                    color: theme.text,
-                    width: '100%',
-                  }}
-                />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Calendar size={20} color={theme.textSecondary} />
-                    <Text style={styles.dateButtonText}>
-                      {dueDate
-                        ? dueDate.toLocaleDateString('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
-                        : 'Set due date'}
-                    </Text>
-                  </TouchableOpacity>
-                  {dueDate && (
-                    <TouchableOpacity
-                      style={styles.clearDateButton}
-                      onPress={() => setDueDate(null)}
-                    >
-                      <Text style={styles.clearDateText}>Clear Date</Text>
-                    </TouchableOpacity>
-                  )}
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={dueDate || new Date()}
-                      mode="date"
-                      display="default"
-                      onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) setDueDate(date);
-                      }}
-                      minimumDate={new Date()}
-                    />
-                  )}
-                </>
-              )}
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleClose}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Text style={styles.submitButtonText}>Assign Task</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
-      </TouchableOpacity>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

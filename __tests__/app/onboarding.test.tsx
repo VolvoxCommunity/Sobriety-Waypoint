@@ -803,11 +803,7 @@ describe('OnboardingScreen', () => {
   });
 
   describe('Error Handling', () => {
-    it('shows timeout alert when profile update takes too long', async () => {
-      // Note: This test is disabled as fake timers don't play well with waitFor
-      // The timeout functionality is still implemented and will work in production
-      // Manual testing or E2E tests should verify this behavior
-      expect(true).toBe(true);
-    });
+    it.todo('shows timeout alert when profile update takes too long');
+    // Note: Fake timers don't play well with waitFor. Verify via E2E tests.
   });
 });

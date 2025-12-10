@@ -98,8 +98,47 @@ describe('apple-auth-name', () => {
     });
   });
 
-  describe('edge cases', () => {
-    it('handles empty strings in name data', () => {
+  describe('validation', () => {
+    it('throws TypeError when data is null', () => {
+      expect(() => {
+        setPendingAppleAuthName(null as unknown as Parameters<typeof setPendingAppleAuthName>[0]);
+      }).toThrow(TypeError);
+      expect(() => {
+        setPendingAppleAuthName(null as unknown as Parameters<typeof setPendingAppleAuthName>[0]);
+      }).toThrow('data must be a non-null object');
+    });
+
+    it('throws TypeError when data is undefined', () => {
+      expect(() => {
+        setPendingAppleAuthName(
+          undefined as unknown as Parameters<typeof setPendingAppleAuthName>[0]
+        );
+      }).toThrow(TypeError);
+      expect(() => {
+        setPendingAppleAuthName(
+          undefined as unknown as Parameters<typeof setPendingAppleAuthName>[0]
+        );
+      }).toThrow('data must be a non-null object');
+    });
+
+    it('throws TypeError when data is an array', () => {
+      expect(() => {
+        setPendingAppleAuthName([] as unknown as Parameters<typeof setPendingAppleAuthName>[0]);
+      }).toThrow(TypeError);
+    });
+
+    it('throws TypeError when data is not an object', () => {
+      expect(() => {
+        setPendingAppleAuthName(
+          'string' as unknown as Parameters<typeof setPendingAppleAuthName>[0]
+        );
+      }).toThrow(TypeError);
+      expect(() => {
+        setPendingAppleAuthName(123 as unknown as Parameters<typeof setPendingAppleAuthName>[0]);
+      }).toThrow(TypeError);
+    });
+
+    it('throws TypeError when firstName is empty string', () => {
       const nameData = {
         firstName: '',
         familyName: 'Johnson',
@@ -107,21 +146,100 @@ describe('apple-auth-name', () => {
         fullName: 'Johnson',
       };
 
-      setPendingAppleAuthName(nameData);
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).toThrow(TypeError);
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).toThrow('invalid or empty string properties');
+    });
 
+    it('throws TypeError when firstName is null', () => {
+      const nameData = {
+        firstName: null as unknown as string,
+        familyName: 'Johnson',
+        displayName: 'J.',
+        fullName: 'Johnson',
+      };
+
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).toThrow(TypeError);
+    });
+
+    it('throws TypeError when firstName is undefined', () => {
+      const nameData = {
+        firstName: undefined as unknown as string,
+        familyName: 'Johnson',
+        displayName: 'J.',
+        fullName: 'Johnson',
+      };
+
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).toThrow(TypeError);
+    });
+
+    it('throws TypeError when any required field is empty string', () => {
+      const testCases = [
+        { field: 'familyName', value: '' },
+        { field: 'displayName', value: '' },
+        { field: 'fullName', value: '' },
+      ];
+
+      testCases.forEach(({ field, value }) => {
+        const nameData = {
+          firstName: 'John',
+          familyName: 'Doe',
+          displayName: 'John D.',
+          fullName: 'John Doe',
+          [field]: value,
+        };
+
+        expect(() => {
+          setPendingAppleAuthName(nameData);
+        }).toThrow(TypeError);
+      });
+    });
+
+    it('throws TypeError when any required field is whitespace-only', () => {
+      const nameData = {
+        firstName: '   ',
+        familyName: 'Doe',
+        displayName: 'John D.',
+        fullName: 'John Doe',
+      };
+
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).toThrow(TypeError);
+    });
+
+    it('accepts valid name data with all required fields', () => {
+      const nameData = {
+        firstName: 'John',
+        familyName: 'Doe',
+        displayName: 'John D.',
+        fullName: 'John Doe',
+      };
+
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).not.toThrow();
       expect(getPendingAppleAuthName()).toEqual(nameData);
     });
 
-    it('handles firstName only (no family name)', () => {
+    it('accepts name data with single character names', () => {
       const nameData = {
-        firstName: 'Madonna',
-        familyName: '',
-        displayName: 'Madonna',
-        fullName: 'Madonna',
+        firstName: 'J',
+        familyName: 'D',
+        displayName: 'J D',
+        fullName: 'J D',
       };
 
-      setPendingAppleAuthName(nameData);
-
+      expect(() => {
+        setPendingAppleAuthName(nameData);
+      }).not.toThrow();
       expect(getPendingAppleAuthName()).toEqual(nameData);
     });
   });

@@ -24,9 +24,24 @@
  */
 
 // =============================================================================
+// Imports
+// =============================================================================
+
+import { logger, LogCategory } from '@/lib/logger';
+
+// =============================================================================
 // Types
 // =============================================================================
 
+/**
+ * Apple Sign In name data extracted from the native credential.
+ * This data is only available on the user's first sign-in with Apple.
+ *
+ * @property firstName - The user's given name
+ * @property familyName - The user's family name (surname)
+ * @property displayName - Formatted display name for UI (e.g., "John D.")
+ * @property fullName - Complete name (e.g., "John Doe")
+ */
 export interface PendingAppleAuthName {
   firstName: string;
   familyName: string;
@@ -50,9 +65,65 @@ let pendingName: PendingAppleAuthName | null = null;
  * when createOAuthProfileIfNeeded runs.
  *
  * @param data - The name data extracted from Apple credential
+ * @throws {TypeError} If data is not a valid object or contains invalid string properties
  */
 export function setPendingAppleAuthName(data: PendingAppleAuthName): void {
+  // Validate that data is an object (not null, undefined, or array)
+  if (data === null || data === undefined || typeof data !== 'object' || Array.isArray(data)) {
+    const error = new TypeError('setPendingAppleAuthName: data must be a non-null object');
+    logger.error('Failed to set pending Apple auth name: invalid data type', error, {
+      category: LogCategory.AUTH,
+      dataType: typeof data,
+      isNull: data === null,
+      isUndefined: data === undefined,
+      isArray: Array.isArray(data),
+    });
+    throw error;
+  }
+
+  // Validate all required string properties are non-empty
+  const requiredFields: (keyof PendingAppleAuthName)[] = [
+    'firstName',
+    'familyName',
+    'displayName',
+    'fullName',
+  ];
+
+  const invalidFields: string[] = [];
+
+  for (const field of requiredFields) {
+    const value = data[field];
+    if (
+      value === null ||
+      value === undefined ||
+      typeof value !== 'string' ||
+      value.trim().length === 0
+    ) {
+      invalidFields.push(field);
+    }
+  }
+
+  if (invalidFields.length > 0) {
+    const error = new TypeError(
+      `setPendingAppleAuthName: invalid or empty string properties: ${invalidFields.join(', ')}`
+    );
+    logger.warn('Failed to set pending Apple auth name: invalid or empty string properties', {
+      category: LogCategory.AUTH,
+      invalidFields,
+      providedFields: Object.keys(data),
+    });
+    throw error;
+  }
+
+  // All validation passed - store the name and log success
   pendingName = data;
+  logger.info('Pending Apple auth name set successfully', {
+    category: LogCategory.AUTH,
+    hasFirstName: !!data.firstName,
+    hasFamilyName: !!data.familyName,
+    hasDisplayName: !!data.displayName,
+    hasFullName: !!data.fullName,
+  });
 }
 
 /**

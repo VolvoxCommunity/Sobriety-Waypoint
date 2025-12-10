@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -900,41 +901,43 @@ export default function ProfileScreen() {
                 <Text style={styles.actionButtonText}>Enter Invite Code</Text>
               </TouchableOpacity>
             ) : (
-              <View style={styles.inviteInputContainer}>
-                <TextInput
-                  style={styles.inviteInput}
-                  placeholder="Enter 8-character code"
-                  placeholderTextColor={theme.textTertiary}
-                  value={inviteCode}
-                  onChangeText={setInviteCode}
-                  autoCapitalize="characters"
-                  maxLength={8}
-                  editable={!isConnecting}
-                  returnKeyType="done"
-                  onSubmitEditing={joinWithInviteCode}
-                />
-                <TouchableOpacity
-                  style={[styles.inviteSubmitButton, isConnecting && styles.buttonDisabled]}
-                  onPress={joinWithInviteCode}
-                  disabled={isConnecting}
-                >
-                  {isConnecting ? (
-                    <ActivityIndicator size="small" color={theme.white} />
-                  ) : (
-                    <Text style={styles.inviteSubmitText}>Connect</Text>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.inviteCancelButton}
-                  onPress={() => {
-                    setShowInviteInput(false);
-                    setInviteCode('');
-                  }}
-                  disabled={isConnecting}
-                >
-                  <Text style={styles.inviteCancelText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+                <View style={styles.inviteInputContainer}>
+                  <TextInput
+                    style={styles.inviteInput}
+                    placeholder="Enter 8-character code"
+                    placeholderTextColor={theme.textTertiary}
+                    value={inviteCode}
+                    onChangeText={setInviteCode}
+                    autoCapitalize="characters"
+                    maxLength={8}
+                    editable={!isConnecting}
+                    returnKeyType="done"
+                    onSubmitEditing={joinWithInviteCode}
+                  />
+                  <TouchableOpacity
+                    style={[styles.inviteSubmitButton, isConnecting && styles.buttonDisabled]}
+                    onPress={joinWithInviteCode}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <ActivityIndicator size="small" color={theme.white} />
+                    ) : (
+                      <Text style={styles.inviteSubmitText}>Connect</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.inviteCancelButton}
+                    onPress={() => {
+                      setShowInviteInput(false);
+                      setInviteCode('');
+                    }}
+                    disabled={isConnecting}
+                  >
+                    <Text style={styles.inviteCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </KeyboardAvoidingView>
             )}
           </View>
         )}
@@ -1030,7 +1033,10 @@ export default function ProfileScreen() {
       )}
 
       <Modal visible={showSlipUpModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <View style={styles.slipUpModal}>
             <Text style={styles.modalTitle}>Log a Slip Up</Text>
             <Text style={styles.modalSubtitle}>
@@ -1175,7 +1181,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
