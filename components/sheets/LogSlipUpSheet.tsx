@@ -104,7 +104,7 @@ interface LogSlipUpSheetProps {
  *   ref={sheetRef}
  *   profile={profile}
  *   theme={theme}
- *   onClose={() => console.log('Sheet closed')}
+ *   onClose={() => { /* Handle close */ }}
  *   onSlipUpLogged={handleSlipUpLogged}
  * />
  * ```
@@ -356,7 +356,7 @@ const LogSlipUpSheet = forwardRef<LogSlipUpSheetRef, LogSlipUpSheetProps>(
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={theme.white} />
               ) : (
                 <Text style={styles.submitButtonText}>Log Slip Up</Text>
               )}

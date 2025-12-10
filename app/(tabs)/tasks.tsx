@@ -551,7 +551,7 @@ export default function TasksScreen() {
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
+                      <ActivityIndicator size="small" color={theme.white} />
                     ) : (
                       <Text style={styles.submitButtonText}>Mark Complete</Text>
                     )}

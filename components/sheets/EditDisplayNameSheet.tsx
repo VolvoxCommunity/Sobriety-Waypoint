@@ -145,7 +145,7 @@ function validateDisplayName(name: string): string | null {
  *   onSave={async (newName) => {
  *     await updateProfileName(newName);
  *   }}
- *   onClose={() => console.log('Sheet closed')}
+ *   onClose={() => { /* Handle close */ }}
  * />
  * ```
  */

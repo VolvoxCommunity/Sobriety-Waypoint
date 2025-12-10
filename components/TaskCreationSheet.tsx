@@ -76,7 +76,7 @@ interface TaskCreationSheetProps {
  *
  * <TaskCreationSheet
  *   ref={sheetRef}
- *   onClose={() => console.log('Sheet closed')}
+ *   onClose={() => { /* Handle close */ }}
  *   onTaskCreated={handleTaskCreated}
  *   sponsorId={profile.id}
  *   sponsees={sponseeProfiles}
@@ -493,7 +493,7 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={theme.white} />
               ) : (
                 <Text style={styles.submitButtonText}>Assign Task</Text>
               )}

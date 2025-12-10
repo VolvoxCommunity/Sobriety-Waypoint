@@ -443,7 +443,7 @@ export default function TaskCreationModal({
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={theme.white} />
                 ) : (
                   <Text style={styles.submitButtonText}>Assign Task</Text>
                 )}
