@@ -5,6 +5,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Home, BookOpen, TrendingUp, CheckSquare, User } from 'lucide-react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import WebTopNav from '@/components/navigation/WebTopNav';
@@ -15,15 +16,29 @@ const NativeTabs =
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   Platform.OS !== 'web' ? require('@/components/navigation/NativeBottomTabs').NativeTabs : null;
 
+// Pre-load Android icons using Ionicons (only on Android)
+// These are loaded synchronously to avoid flickering during navigation
+const androidIcons =
+  Platform.OS === 'android'
+    ? {
+        home: Ionicons.getImageSourceSync('home', 24),
+        book: Ionicons.getImageSourceSync('book', 24),
+        trending: Ionicons.getImageSourceSync('trending-up', 24),
+        tasks: Ionicons.getImageSourceSync('checkbox', 24),
+        profile: Ionicons.getImageSourceSync('person', 24),
+      }
+    : null;
+
 // =============================================================================
 // Types & Interfaces
 // =============================================================================
 
-/** Tab route configuration with SF Symbols and Lucide fallbacks */
+/** Tab route configuration with SF Symbols (iOS) and Ionicons (Android) */
 interface TabRoute {
   name: string;
   title: string;
   sfSymbol: SFSymbol;
+  androidIconKey: keyof NonNullable<typeof androidIcons>;
   icon: React.ComponentType<{ size?: number; color?: string }>;
 }
 
@@ -31,36 +46,41 @@ interface TabRoute {
 // Constants
 // =============================================================================
 
-/** Tab route configuration with SF Symbols and Lucide fallbacks */
+/** Tab route configuration with SF Symbols (iOS) and Ionicons (Android) */
 const tabRoutes: TabRoute[] = [
   {
     name: 'index',
     title: 'Home',
     sfSymbol: 'house.fill',
+    androidIconKey: 'home',
     icon: Home,
   },
   {
     name: 'steps',
     title: 'Steps',
     sfSymbol: 'book.fill',
+    androidIconKey: 'book',
     icon: BookOpen,
   },
   {
     name: 'journey',
     title: 'Journey',
     sfSymbol: 'chart.line.uptrend.xyaxis',
+    androidIconKey: 'trending',
     icon: TrendingUp,
   },
   {
     name: 'tasks',
     title: 'Tasks',
     sfSymbol: 'checklist',
+    androidIconKey: 'tasks',
     icon: CheckSquare,
   },
   {
     name: 'profile',
     title: 'Profile',
     sfSymbol: 'person.fill',
+    androidIconKey: 'profile',
     icon: User,
   },
 ];
@@ -127,7 +147,11 @@ export default function TabLayout(): React.ReactElement {
           name={route.name}
           options={{
             title: route.title,
-            tabBarIcon: () => ({ sfSymbol: route.sfSymbol }),
+            // iOS uses SF Symbols, Android uses pre-loaded Ionicons
+            tabBarIcon: () =>
+              Platform.OS === 'ios'
+                ? { sfSymbol: route.sfSymbol }
+                : androidIcons![route.androidIconKey],
           }}
         />
       ))}

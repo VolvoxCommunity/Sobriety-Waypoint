@@ -159,6 +159,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     '@react-native-firebase/app',
+    'react-native-bottom-tabs', // Material 3 styling for native Android bottom tabs
   ],
   experiments: {
     typedRoutes: true,
