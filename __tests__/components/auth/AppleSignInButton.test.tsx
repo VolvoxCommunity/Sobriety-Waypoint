@@ -721,7 +721,7 @@ describe('AppleSignInButton', () => {
       expect(mockProfileUpdate).not.toHaveBeenCalled();
     });
 
-    it('logs success after updating profile with name', async () => {
+    it('logs success after completing Apple Sign In', async () => {
       mockSignInAsync.mockResolvedValueOnce({
         identityToken: 'mock-identity-token',
         fullName: {
@@ -736,9 +736,8 @@ describe('AppleSignInButton', () => {
       fireEvent.press(screen.getByTestId('apple-sign-in-button'));
 
       await waitFor(() => {
-        expect(mockLoggerInfo).toHaveBeenCalledWith('Profile updated with Apple name data', {
+        expect(mockLoggerInfo).toHaveBeenCalledWith('Apple Sign In successful', {
           category: 'auth',
-          displayName: 'Test U.',
         });
       });
     });

@@ -81,17 +81,13 @@ export function setPendingAppleAuthName(data: PendingAppleAuthName): void {
     throw error;
   }
 
-  // Validate all required string properties are non-empty
-  const requiredFields: (keyof PendingAppleAuthName)[] = [
-    'firstName',
-    'familyName',
-    'displayName',
-    'fullName',
-  ];
+  // Validate displayName and fullName are non-empty (required)
+  // firstName and familyName can be empty strings (Apple may only provide one)
+  const requiredNonEmptyFields: (keyof PendingAppleAuthName)[] = ['displayName', 'fullName'];
 
   const invalidFields: string[] = [];
 
-  for (const field of requiredFields) {
+  for (const field of requiredNonEmptyFields) {
     const value = data[field];
     if (
       value === null ||
@@ -103,11 +99,21 @@ export function setPendingAppleAuthName(data: PendingAppleAuthName): void {
     }
   }
 
+  // Validate firstName and familyName are strings (can be empty)
+  const optionalStringFields: (keyof PendingAppleAuthName)[] = ['firstName', 'familyName'];
+
+  for (const field of optionalStringFields) {
+    const value = data[field];
+    if (value === null || value === undefined || typeof value !== 'string') {
+      invalidFields.push(field);
+    }
+  }
+
   if (invalidFields.length > 0) {
     const error = new TypeError(
-      `setPendingAppleAuthName: invalid or empty string properties: ${invalidFields.join(', ')}`
+      `setPendingAppleAuthName: invalid properties: ${invalidFields.join(', ')}`
     );
-    logger.warn('Failed to set pending Apple auth name: invalid or empty string properties', {
+    logger.warn('Failed to set pending Apple auth name: invalid properties', {
       category: LogCategory.AUTH,
       invalidFields,
       providedFields: Object.keys(data),
