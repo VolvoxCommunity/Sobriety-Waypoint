@@ -5,7 +5,6 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Home, BookOpen, TrendingUp, CheckSquare, User } from 'lucide-react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import WebTopNav from '@/components/navigation/WebTopNav';
@@ -16,29 +15,27 @@ const NativeTabs =
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   Platform.OS !== 'web' ? require('@/components/navigation/NativeBottomTabs').NativeTabs : null;
 
-// Pre-load Android icons using Ionicons (only on Android)
-// These are loaded synchronously to avoid flickering during navigation
-const androidIcons =
-  Platform.OS === 'android'
-    ? {
-        home: Ionicons.getImageSourceSync('home', 24),
-        book: Ionicons.getImageSourceSync('book', 24),
-        trending: Ionicons.getImageSourceSync('trending-up', 24),
-        tasks: Ionicons.getImageSourceSync('checkbox', 24),
-        profile: Ionicons.getImageSourceSync('person', 24),
-      }
-    : null;
+// Android icons using Material Design Icons from Google Fonts CDN
+// These are loaded as remote URIs which works without native font linking
+const ANDROID_ICON_BASE = 'https://fonts.gstatic.com/s/i/materialiconsround';
+const androidIcons = {
+  home: { uri: `${ANDROID_ICON_BASE}/home/v17/24px.svg` },
+  book: { uri: `${ANDROID_ICON_BASE}/menu_book/v13/24px.svg` },
+  trending: { uri: `${ANDROID_ICON_BASE}/trending_up/v17/24px.svg` },
+  tasks: { uri: `${ANDROID_ICON_BASE}/checklist/v6/24px.svg` },
+  profile: { uri: `${ANDROID_ICON_BASE}/person/v16/24px.svg` },
+};
 
 // =============================================================================
 // Types & Interfaces
 // =============================================================================
 
-/** Tab route configuration with SF Symbols (iOS) and Ionicons (Android) */
+/** Tab route configuration with SF Symbols (iOS) and Material Icons (Android) */
 interface TabRoute {
   name: string;
   title: string;
   sfSymbol: SFSymbol;
-  androidIconKey: keyof NonNullable<typeof androidIcons>;
+  androidIconKey: keyof typeof androidIcons;
   icon: React.ComponentType<{ size?: number; color?: string }>;
 }
 
@@ -46,7 +43,7 @@ interface TabRoute {
 // Constants
 // =============================================================================
 
-/** Tab route configuration with SF Symbols (iOS) and Ionicons (Android) */
+/** Tab route configuration with SF Symbols (iOS) and Material Icons (Android) */
 const tabRoutes: TabRoute[] = [
   {
     name: 'index',
@@ -147,11 +144,11 @@ export default function TabLayout(): React.ReactElement {
           name={route.name}
           options={{
             title: route.title,
-            // iOS uses SF Symbols, Android uses pre-loaded Ionicons
+            // iOS uses SF Symbols, Android uses Material Icons via URI
             tabBarIcon: () =>
               Platform.OS === 'ios'
                 ? { sfSymbol: route.sfSymbol }
-                : androidIcons![route.androidIconKey],
+                : androidIcons[route.androidIconKey],
           }}
         />
       ))}

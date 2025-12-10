@@ -159,7 +159,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     '@react-native-firebase/app',
-    'react-native-bottom-tabs', // Material 3 styling for native Android bottom tabs
+    // Edge-to-edge with Material 3 theme for native Android bottom tabs
+    // This replaces the standalone react-native-bottom-tabs plugin when edgeToEdgeEnabled is true
+    ['react-native-edge-to-edge', { android: { parentTheme: 'Material3' } }],
   ],
   experiments: {
     typedRoutes: true,
