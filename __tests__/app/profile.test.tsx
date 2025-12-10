@@ -114,8 +114,7 @@ jest.mock('expo-router', () => ({
 // Mock AuthContext
 const mockProfile = {
   id: 'user-123',
-  first_name: 'John',
-  last_initial: 'D',
+  display_name: 'John D.',
   sobriety_date: '2024-01-01',
   email: 'john@example.com',
 };
@@ -858,8 +857,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -873,8 +871,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -1166,8 +1163,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -1203,8 +1199,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -1446,8 +1441,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -1496,8 +1490,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -1525,8 +1518,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -1575,8 +1567,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -1654,8 +1645,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -1684,8 +1674,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -1770,7 +1759,7 @@ describe('ProfileScreen', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({
-                  data: { id: 'sponsor-123', first_name: 'Jane', last_initial: 'S' },
+                  data: { id: 'sponsor-123', display_name: 'Jane S.' },
                   error: null,
                 }),
               }),
@@ -1881,7 +1870,7 @@ describe('ProfileScreen', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({
-                  data: { id: 'sponsor-123', first_name: 'Jane', last_initial: 'S' },
+                  data: { id: 'sponsor-123', display_name: 'Jane S.' },
                   error: null,
                 }),
               }),
@@ -1961,7 +1950,7 @@ describe('ProfileScreen', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({
-                  data: { id: 'sponsor-123', first_name: 'Jane', last_initial: 'S' },
+                  data: { id: 'sponsor-123', display_name: 'Jane S.' },
                   error: null,
                 }),
               }),
@@ -2041,7 +2030,7 @@ describe('ProfileScreen', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({
-                  data: { id: 'user-123', first_name: 'John', last_initial: 'D' },
+                  data: { id: 'user-123', display_name: 'John D.' },
                   error: null,
                 }),
               }),
@@ -2184,8 +2173,7 @@ describe('ProfileScreen', () => {
           status: 'active',
           sponsee: {
             id: 'sponsee-1',
-            first_name: 'Jane',
-            last_initial: 'S',
+            display_name: 'Jane S.',
             sobriety_date: '2024-06-01',
           },
         },
@@ -2332,7 +2320,7 @@ describe('ProfileScreen', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({
-                  data: { id: 'sponsor-123', first_name: 'Jane', last_initial: 'S' },
+                  data: { id: 'sponsor-123', display_name: 'Jane S.' },
                   error: null,
                 }),
               }),
@@ -2444,7 +2432,7 @@ describe('ProfileScreen', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({
-                  data: { id: 'sponsor-123', first_name: 'Jane', last_initial: 'S' },
+                  data: { id: 'sponsor-123', display_name: 'Jane S.' },
                   error: null,
                 }),
               }),
@@ -2620,8 +2608,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-02-01T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -2742,8 +2729,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -2839,8 +2825,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -2937,8 +2922,7 @@ describe('ProfileScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },

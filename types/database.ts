@@ -25,10 +25,14 @@ export type NotificationType =
 export interface Profile {
   id: string;
   email: string;
-  /** User's first name. Null until collected during onboarding. */
-  first_name: string | null;
-  /** User's last initial. Null until collected during onboarding. */
-  last_initial: string | null;
+  /**
+   * User's display name shown throughout the app.
+   * Free-form text (2-30 chars) that users can customize.
+   * May be auto-populated from OAuth sign-in (e.g., Apple Sign In) and
+   * can be edited during onboarding or in account settings.
+   * Null until explicitly set.
+   */
+  display_name: string | null;
   phone?: string;
   avatar_url?: string;
   /**

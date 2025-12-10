@@ -96,8 +96,7 @@ jest.mock('expo-router', () => ({
 // Mock AuthContext
 const mockProfile: Profile = {
   id: 'user-123',
-  first_name: 'John',
-  last_initial: 'D',
+  display_name: 'John D.',
   sobriety_date: '2024-01-01',
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
@@ -201,8 +200,7 @@ jest.mock('@/lib/logger', () => ({
 
 const createMockSponsee = (): Profile => ({
   id: 'sponsee-456',
-  first_name: 'Jane',
-  last_initial: 'S',
+  display_name: 'Jane S.',
   sobriety_date: '2024-06-01',
   created_at: '2024-06-01T00:00:00Z',
   updated_at: '2024-06-01T00:00:00Z',
@@ -210,8 +208,7 @@ const createMockSponsee = (): Profile => ({
 
 const createMockSponsor = (): Profile => ({
   id: 'sponsor-789',
-  first_name: 'Bob',
-  last_initial: 'M',
+  display_name: 'Bob M.',
   sobriety_date: '2020-01-01',
   created_at: '2020-01-01T00:00:00Z',
   updated_at: '2020-01-01T00:00:00Z',
@@ -271,7 +268,7 @@ describe('HomeScreen', () => {
       render(<HomeScreen />);
 
       await waitFor(() => {
-        expect(screen.getByText('Hello, John')).toBeTruthy();
+        expect(screen.getByText('Hello, John D.')).toBeTruthy();
       });
     });
 
@@ -570,8 +567,7 @@ describe('HomeScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -616,8 +612,7 @@ describe('HomeScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsor: {
             id: 'sponsor-123',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },
@@ -786,8 +781,7 @@ describe('HomeScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -812,7 +806,7 @@ describe('HomeScreen', () => {
 
       await waitFor(() => {
         // Verify the screen renders with greeting
-        expect(screen.getByText('Hello, John')).toBeTruthy();
+        expect(screen.getByText('Hello, John D.')).toBeTruthy();
       });
     });
 
@@ -820,7 +814,7 @@ describe('HomeScreen', () => {
       render(<HomeScreen />);
 
       await waitFor(() => {
-        expect(screen.getByText('Hello, John')).toBeTruthy();
+        expect(screen.getByText('Hello, John D.')).toBeTruthy();
       });
 
       // Find the ScrollView and trigger refresh
@@ -833,7 +827,7 @@ describe('HomeScreen', () => {
       });
 
       // After refresh, content should still be there
-      expect(screen.getByText('Hello, John')).toBeTruthy();
+      expect(screen.getByText('Hello, John D.')).toBeTruthy();
     });
   });
 
@@ -848,8 +842,7 @@ describe('HomeScreen', () => {
           connected_at: '2024-01-15T00:00:00Z',
           sponsee: {
             id: 'sponsee-456',
-            first_name: 'Jane',
-            last_initial: 'D',
+            display_name: 'Jane D.',
             sobriety_date: '2024-01-01',
           },
         },
@@ -863,8 +856,7 @@ describe('HomeScreen', () => {
           connected_at: '2024-01-10T00:00:00Z',
           sponsor: {
             id: 'sponsor-789',
-            first_name: 'Bob',
-            last_initial: 'S',
+            display_name: 'Bob S.',
             sobriety_date: '2020-01-01',
           },
         },

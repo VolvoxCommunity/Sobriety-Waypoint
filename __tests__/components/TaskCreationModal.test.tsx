@@ -112,16 +112,14 @@ const mockTheme: ThemeColors = {
 const mockSponsees: Profile[] = [
   {
     id: 'sponsee-1',
-    first_name: 'John',
-    last_initial: 'D',
+    display_name: 'John D.',
     sobriety_date: '2024-01-01',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
   },
   {
     id: 'sponsee-2',
-    first_name: 'Jane',
-    last_initial: 'S',
+    display_name: 'Jane S.',
     sobriety_date: '2024-02-01',
     created_at: '2024-02-01T00:00:00Z',
     updated_at: '2024-02-01T00:00:00Z',

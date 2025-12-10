@@ -19,8 +19,7 @@ import type { EventParams, DaysSoberBucket } from '@/types/analytics';
 const PII_FIELDS = [
   'email',
   'name',
-  'first_name',
-  'last_name',
+  'display_name',
   'phone',
   'password',
   'token',
@@ -31,27 +30,96 @@ const PII_FIELDS = [
 ] as const;
 
 /**
+ * Maximum recursion depth to prevent infinite loops.
+ * This limits how deep we traverse nested objects/arrays.
+ */
+const MAX_DEPTH = 10;
+
+/**
+ * Recursively removes PII fields from event parameters at any depth.
+ *
+ * @param value - The value to sanitize (can be object, array, or primitive)
+ * @param visited - WeakSet tracking visited objects to prevent circular references
+ * @param depth - Current recursion depth (starts at 0)
+ * @returns Sanitized value with PII fields removed
+ */
+function sanitizeValue(
+  value: unknown,
+  visited: WeakSet<object> = new WeakSet(),
+  depth: number = 0
+): unknown {
+  // Safety: prevent infinite recursion from excessive depth
+  if (depth > MAX_DEPTH) {
+    return value;
+  }
+
+  // Handle null and undefined
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  // Handle arrays - recursively sanitize each element
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeValue(item, visited, depth + 1));
+  }
+
+  // Handle objects - recursively sanitize properties
+  if (typeof value === 'object') {
+    // Detect circular references
+    if (visited.has(value)) {
+      // Return undefined for circular references to prevent infinite loops
+      return undefined;
+    }
+
+    // Add to visited set for this recursion path
+    visited.add(value);
+
+    const sanitized: Record<string, unknown> = {};
+
+    for (const [key, val] of Object.entries(value)) {
+      // Skip PII fields at any depth
+      if (PII_FIELDS.includes(key as (typeof PII_FIELDS)[number])) {
+        continue;
+      }
+
+      // Recursively sanitize nested values
+      sanitized[key] = sanitizeValue(val, visited, depth + 1);
+    }
+
+    // Remove from visited set after processing (allows same object in different branches)
+    visited.delete(value);
+
+    return sanitized;
+  }
+
+  // Primitives (string, number, boolean) pass through unchanged
+  return value;
+}
+
+/**
  * Removes PII fields from event parameters before sending to Firebase.
+ * Recursively traverses nested objects and arrays to sanitize PII at any depth.
  *
  * @param params - The event parameters to sanitize
- * @returns Sanitized parameters with PII fields removed
+ * @returns Sanitized parameters with PII fields removed at all depths
  *
  * @example
  * ```ts
  * const safe = sanitizeParams({ task_id: '123', email: 'user@test.com' });
  * // Returns: { task_id: '123' }
+ *
+ * const nested = sanitizeParams({
+ *   task_id: '123',
+ *   metadata: { email: 'user@test.com', name: 'John' }
+ * });
+ * // Returns: { task_id: '123', metadata: {} }
  * ```
  */
 export function sanitizeParams(params: EventParams | undefined): EventParams {
   if (!params) return {};
 
-  const sanitized = { ...params };
-
-  for (const field of PII_FIELDS) {
-    delete sanitized[field];
-  }
-
-  return sanitized;
+  const sanitized = sanitizeValue(params) as EventParams;
+  return sanitized || {};
 }
 
 /**
@@ -98,7 +166,7 @@ export function shouldInitializeAnalytics(): boolean {
   }
 
   // Web requires explicit configuration via environment variables
-  const measurementId = process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID;
+  const measurementId = process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim();
   return Boolean(measurementId && measurementId.length > 0);
 }
 

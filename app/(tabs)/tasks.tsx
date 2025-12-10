@@ -14,6 +14,7 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
@@ -181,7 +182,7 @@ export default function TasksScreen() {
         user_id: selectedTask.sponsor_id,
         type: 'task_completed',
         title: 'Task Completed',
-        content: `${profile?.first_name} ${profile?.last_initial}. has completed: ${selectedTask.title}`,
+        content: `${profile?.display_name} has completed: ${selectedTask.title}`,
         data: {
           task_id: selectedTask.id,
           step_number: selectedTask.step_number,
@@ -477,7 +478,10 @@ export default function TasksScreen() {
             animationType="slide"
             onRequestClose={() => setShowCompleteModal(false)}
           >
-            <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.modalOverlay}
+            >
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Complete Task</Text>
@@ -545,7 +549,7 @@ export default function TasksScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </View>
+            </KeyboardAvoidingView>
           </Modal>
         </>
       ) : (
@@ -708,7 +712,7 @@ export default function TasksScreen() {
                     <View style={styles.sponseeHeader}>
                       <View style={styles.sponseeAvatar}>
                         <Text style={styles.sponseeAvatarText}>
-                          {(sponsee?.first_name || '?')[0].toUpperCase()}
+                          {formatProfileName(sponsee)[0].toUpperCase()}
                         </Text>
                       </View>
                       <View style={styles.sponseeInfo}>

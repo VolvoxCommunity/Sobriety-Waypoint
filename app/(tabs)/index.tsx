@@ -30,11 +30,11 @@ import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 
 /**
- * Render the home dashboard showing the user's sobriety summary, sponsor/sponsee relationships, recent tasks, and quick actions.
+ * Renders the home dashboard showing sobriety summary, sponsor/sponsee relationships, recent tasks, and quick actions.
  *
- * Fetches relationships and recent tasks from the backend, supports pull-to-refresh, allows disconnecting relationships and creating tasks for sponsees, and displays milestone and days-sober information.
+ * The screen fetches and displays active sponsor/sponsee relationships and recent assigned tasks, supports pull-to-refresh, allows disconnecting relationships, and provides a modal to create tasks for sponsees.
  *
- * @returns The Home screen React element.
+ * @returns The Home screen React element
  */
 export default function HomeScreen() {
   const { profile } = useAuth();
@@ -132,7 +132,7 @@ export default function HomeScreen() {
         const notificationRecipientId = isSponsor
           ? relationship.sponsee_id
           : relationship.sponsor_id;
-        const notificationSenderName = `${profile.first_name} ${profile.last_initial}.`;
+        const notificationSenderName = profile.display_name ?? 'Someone';
 
         await supabase.from('notifications').insert([
           {
@@ -191,7 +191,7 @@ export default function HomeScreen() {
       }
     >
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {profile?.first_name || 'Friend'}</Text>
+        <Text style={styles.greeting}>Hello, {profile?.display_name || 'Friend'}</Text>
         <Text style={styles.date}>
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
@@ -240,26 +240,20 @@ export default function HomeScreen() {
               <View key={rel.id} style={styles.relationshipItem}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
-                    {(rel.sponsor?.first_name || '?')[0].toUpperCase()}
+                    {(rel.sponsor?.display_name || '?')[0].toUpperCase()}
                   </Text>
                 </View>
                 <View style={styles.relationshipInfo}>
-                  <Text style={styles.relationshipName}>
-                    {rel.sponsor?.first_name} {rel.sponsor?.last_initial}.
-                  </Text>
+                  <Text style={styles.relationshipName}>{rel.sponsor?.display_name ?? '?'}</Text>
                   <Text style={styles.relationshipMeta}>
                     Connected {new Date(rel.connected_at).toLocaleDateString()}
                   </Text>
                 </View>
                 <TouchableOpacity
                   style={styles.disconnectButton}
-                  accessibilityLabel={`Disconnect from ${rel.sponsor?.first_name} ${rel.sponsor?.last_initial}.`}
+                  accessibilityLabel={`Disconnect from ${rel.sponsor?.display_name ?? 'sponsor'}`}
                   onPress={() =>
-                    handleDisconnect(
-                      rel.id,
-                      false,
-                      `${rel.sponsor?.first_name} ${rel.sponsor?.last_initial}.`
-                    )
+                    handleDisconnect(rel.id, false, rel.sponsor?.display_name ?? 'sponsor')
                   }
                 >
                   <UserMinus size={16} color="#ef4444" />
@@ -283,13 +277,11 @@ export default function HomeScreen() {
               <View key={rel.id} style={styles.relationshipItem}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
-                    {(rel.sponsee?.first_name || '?')[0].toUpperCase()}
+                    {(rel.sponsee?.display_name || '?')[0].toUpperCase()}
                   </Text>
                 </View>
                 <View style={styles.relationshipInfo}>
-                  <Text style={styles.relationshipName}>
-                    {rel.sponsee?.first_name} {rel.sponsee?.last_initial}.
-                  </Text>
+                  <Text style={styles.relationshipName}>{rel.sponsee?.display_name ?? '?'}</Text>
                   <Text style={styles.relationshipMeta}>
                     Connected {new Date(rel.connected_at).toLocaleDateString()}
                   </Text>
@@ -305,13 +297,9 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.disconnectButton}
-                  accessibilityLabel={`Disconnect from ${rel.sponsee?.first_name} ${rel.sponsee?.last_initial}.`}
+                  accessibilityLabel={`Disconnect from ${rel.sponsee?.display_name ?? 'sponsee'}`}
                   onPress={() =>
-                    handleDisconnect(
-                      rel.id,
-                      true,
-                      `${rel.sponsee?.first_name} ${rel.sponsee?.last_initial}.`
-                    )
+                    handleDisconnect(rel.id, true, rel.sponsee?.display_name ?? 'sponsee')
                   }
                 >
                   <UserMinus size={16} color="#ef4444" />
