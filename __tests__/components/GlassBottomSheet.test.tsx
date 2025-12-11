@@ -340,8 +340,6 @@ describe('GlassBottomSheet', () => {
   // iPhone Screen Size Tests
   // ---------------------------------------------------------------------------
   describe('iPhone Screen Sizes', () => {
-    const originalDimensions = Dimensions.get('window');
-
     /**
      * Helper to mock screen dimensions for testing.
      */
