@@ -1,5 +1,5 @@
 import Toast from 'react-native-toast-message';
-import { showToast } from '@/lib/toast';
+import { showToast, toastConfig } from '@/lib/toast';
 
 // Reset mocks before each test
 beforeEach(() => {
@@ -65,5 +65,25 @@ describe('showToast', () => {
         visibilityTime: 3000,
       });
     });
+  });
+});
+
+describe('toastConfig', () => {
+  it('exports success, error, and info toast renderers', () => {
+    expect(toastConfig).toHaveProperty('success');
+    expect(toastConfig).toHaveProperty('error');
+    expect(toastConfig).toHaveProperty('info');
+  });
+
+  it('success renderer is a function', () => {
+    expect(typeof toastConfig.success).toBe('function');
+  });
+
+  it('error renderer is a function', () => {
+    expect(typeof toastConfig.error).toBe('function');
+  });
+
+  it('info renderer is a function', () => {
+    expect(typeof toastConfig.info).toBe('function');
   });
 });
