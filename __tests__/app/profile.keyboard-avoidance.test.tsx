@@ -108,6 +108,12 @@ jest.mock('expo-router', () => ({
     replace: jest.fn(),
     back: jest.fn(),
   }),
+  useNavigation: () => ({
+    setOptions: jest.fn(),
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    addListener: jest.fn(() => jest.fn()),
+  }),
 }));
 
 // Mock AuthContext
@@ -177,6 +183,24 @@ jest.mock('lucide-react-native', () => ({
   AlertCircle: () => null,
   CheckCircle: () => null,
   Settings: () => null,
+  // Icons used by SettingsSheet
+  LogOut: () => null,
+  Moon: () => null,
+  Sun: () => null,
+  Monitor: () => null,
+  ChevronDown: () => null,
+  ChevronUp: () => null,
+  Shield: () => null,
+  FileText: () => null,
+  Github: () => null,
+  Trash2: () => null,
+  AlertTriangle: () => null,
+  RefreshCw: () => null,
+  Download: () => null,
+  Info: () => null,
+  Copy: () => null,
+  User: () => null,
+  ChevronLeft: () => null,
 }));
 
 // Mock DateTimePicker
@@ -217,6 +241,106 @@ jest.mock('@/lib/analytics', () => ({
   trackEvent: jest.fn(),
   AnalyticsEvents: {
     SLIP_UP_LOGGED: 'slip_up_logged',
+  },
+}));
+
+// Mock expo-clipboard (required by SettingsSheet)
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn(),
+}));
+
+// Mock expo-constants (required by SettingsSheet)
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: {
+    expoConfig: {
+      extra: {},
+    },
+  },
+}));
+
+// Mock expo-updates (required by SettingsSheet)
+jest.mock('expo-updates', () => ({
+  channel: null,
+  updateId: null,
+  runtimeVersion: null,
+  isEmbeddedLaunch: true,
+}));
+
+// Mock expo-device (required by SettingsSheet)
+jest.mock('expo-device', () => ({
+  modelName: 'iPhone 14 Pro',
+  osName: 'iOS',
+  osVersion: '17.0',
+}));
+
+// Mock expo-application (required by SettingsSheet)
+jest.mock('expo-application', () => ({
+  nativeBuildVersion: '1',
+  nativeApplicationVersion: '1.0.0',
+}));
+
+// Mock useAppUpdates hook (required by SettingsSheet)
+jest.mock('@/hooks/useAppUpdates', () => ({
+  useAppUpdates: () => ({
+    status: 'idle',
+    isChecking: false,
+    isDownloading: false,
+    errorMessage: null,
+    checkForUpdates: jest.fn(),
+    applyUpdate: jest.fn(),
+    isSupported: true,
+  }),
+}));
+
+// Mock validation (required by SettingsSheet)
+jest.mock('@/lib/validation', () => ({
+  validateDisplayName: jest.fn(() => null),
+}));
+
+// Mock GlassBottomSheet (required by SettingsSheet)
+// Mock LogSlipUpSheet
+jest.mock('@/components/sheets/LogSlipUpSheet', () => {
+  const React = require('react');
+  const MockLogSlipUpSheet = React.forwardRef(() => null);
+  MockLogSlipUpSheet.displayName = 'LogSlipUpSheet';
+  return {
+    __esModule: true,
+    default: MockLogSlipUpSheet,
+  };
+});
+
+jest.mock('@/components/GlassBottomSheet', () => {
+  const React = require('react');
+  const MockGlassBottomSheet = React.forwardRef(
+    (
+      { children, onDismiss }: { children: React.ReactNode; onDismiss?: () => void },
+      ref: React.Ref<{ present: () => void; dismiss: () => void }>
+    ) => {
+      React.useImperativeHandle(ref, () => ({
+        present: jest.fn(),
+        dismiss: jest.fn(),
+      }));
+      return React.createElement('View', { testID: 'glass-bottom-sheet' }, children);
+    }
+  );
+  MockGlassBottomSheet.displayName = 'GlassBottomSheet';
+  return {
+    __esModule: true,
+    default: MockGlassBottomSheet,
+  };
+});
+
+// Mock BottomSheetScrollView (required by SettingsSheet)
+jest.mock('@gorhom/bottom-sheet', () => ({
+  BottomSheetScrollView: ({ children, ...props }: { children: React.ReactNode }) => {
+    const React = require('react');
+    const { ScrollView } = require('react-native');
+    return React.createElement(
+      ScrollView,
+      { ...props, testID: 'bottom-sheet-scroll-view' },
+      children
+    );
   },
 }));
 
@@ -268,7 +392,9 @@ describe('ProfileScreen Keyboard Avoidance', () => {
       render(<ProfileScreen />);
 
       await waitFor(() => {
-        expect(screen.getByText('John D.')).toBeTruthy();
+        // Name may appear in multiple places (profile header and edit sheet)
+        const nameElements = screen.getAllByText('John D.');
+        expect(nameElements.length).toBeGreaterThan(0);
       });
     });
 
@@ -277,7 +403,9 @@ describe('ProfileScreen Keyboard Avoidance', () => {
 
       // Main profile sections are rendered (days sober tested in profile.test.tsx)
       await waitFor(() => {
-        expect(screen.getByText('John D.')).toBeTruthy();
+        // Name may appear in multiple places (profile header and edit sheet)
+        const nameElements = screen.getAllByText('John D.');
+        expect(nameElements.length).toBeGreaterThan(0);
         expect(screen.getByText('Log a Slip Up')).toBeTruthy();
       });
     });
@@ -305,7 +433,7 @@ describe('ProfileScreen Keyboard Avoidance', () => {
     });
   });
 
-  describe('Slip-up Modal', () => {
+  describe('Slip-up Sheet', () => {
     it('shows slip up button', async () => {
       render(<ProfileScreen />);
 
@@ -314,30 +442,10 @@ describe('ProfileScreen Keyboard Avoidance', () => {
       });
     });
 
-    it('opens slip-up modal when button is pressed', async () => {
-      render(<ProfileScreen />);
-
-      await waitFor(() => {
-        fireEvent.press(screen.getByText('Log a Slip Up'));
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('Slip Up Date')).toBeTruthy();
-        expect(screen.getByText('Notes (Optional)')).toBeTruthy();
-      });
-    });
-
-    it('shows notes input in slip-up modal', async () => {
-      render(<ProfileScreen />);
-
-      await waitFor(() => {
-        fireEvent.press(screen.getByText('Log a Slip Up'));
-      });
-
-      await waitFor(() => {
-        const notesInput = screen.getByPlaceholderText('What happened? How are you feeling?');
-        expect(notesInput).toBeTruthy();
-      });
+    it('slip-up sheet UI tests are in LogSlipUpSheet.test.tsx', () => {
+      // The slip-up modal has been moved to LogSlipUpSheet component
+      // All UI and interaction tests are now in __tests__/components/sheets/LogSlipUpSheet.test.tsx
+      expect(true).toBe(true);
     });
   });
 
@@ -347,7 +455,9 @@ describe('ProfileScreen Keyboard Avoidance', () => {
       render(<ProfileScreen />);
 
       await waitFor(() => {
-        expect(screen.getByText('John D.')).toBeTruthy();
+        // Name may appear in multiple places (profile header and edit sheet)
+        const nameElements = screen.getAllByText('John D.');
+        expect(nameElements.length).toBeGreaterThan(0);
       });
     });
 
@@ -356,7 +466,9 @@ describe('ProfileScreen Keyboard Avoidance', () => {
       render(<ProfileScreen />);
 
       await waitFor(() => {
-        expect(screen.getByText('John D.')).toBeTruthy();
+        // Name may appear in multiple places (profile header and edit sheet)
+        const nameElements = screen.getAllByText('John D.');
+        expect(nameElements.length).toBeGreaterThan(0);
       });
     });
   });

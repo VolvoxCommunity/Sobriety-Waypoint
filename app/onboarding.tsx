@@ -4,13 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Alert,
   Platform,
   TextInput,
-  KeyboardAvoidingView,
   Linking,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
@@ -57,12 +56,11 @@ const VALIDATION_DEBOUNCE_MS = 300;
 // =============================================================================
 
 /**
- * Renders the single-page onboarding flow used after authentication to collect the user's display name and sobriety date.
+ * Render the onboarding screen shown after authentication to collect the user's display name and sobriety date.
  *
- * The component updates the user's profile with the provided display name and sobriety date,
- * refreshes profile state, and navigates to the main app once the profile is complete.
+ * Updates the user's profile with the provided values, refreshes profile state, and navigates to the main app when the profile is complete.
  *
- * @returns A React element that renders the onboarding screen
+ * @returns The React element representing the onboarding screen
  */
 export default function OnboardingScreen() {
   const { theme } = useTheme();
@@ -311,13 +309,9 @@ export default function OnboardingScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
+    <View style={styles.container}>
       <View style={styles.safeArea}>
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -492,9 +486,9 @@ export default function OnboardingScreen() {
               <Text style={styles.signOutText}>Sign Out</Text>
             </TouchableOpacity>
           </OnboardingStep>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

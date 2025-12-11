@@ -9,26 +9,38 @@ import React from 'react';
 import { render, RenderOptions } from '@testing-library/react-native';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 /**
- * Wrapper component that provides AuthContext and ThemeContext for tests.
+ * Wrapper component that provides all required contexts for tests.
+ *
+ * Includes:
+ * - KeyboardProvider (react-native-keyboard-controller)
+ * - BottomSheetModalProvider (@gorhom/bottom-sheet)
+ * - AuthProvider (authentication context)
+ * - ThemeProvider (theming context)
  *
  * @param children - React children to wrap with providers
  * @returns Component tree with providers
  */
 const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <AuthProvider>
-      <ThemeProvider>{children}</ThemeProvider>
-    </AuthProvider>
+    <KeyboardProvider>
+      <BottomSheetModalProvider>
+        <AuthProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </AuthProvider>
+      </BottomSheetModalProvider>
+    </KeyboardProvider>
   );
 };
 
 /**
- * Renders a React component with all required providers (AuthContext and ThemeContext).
+ * Renders a React component with all required providers.
  *
  * This is the standard way to render components in tests. It ensures components
- * have access to both authentication and theme contexts.
+ * have access to keyboard handling, bottom sheets, authentication, and theme contexts.
  *
  * @param ui - The component to render
  * @param options - Optional render options

@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,19 +14,21 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Task, Profile } from '@/types/database';
 import { CheckCircle, Circle, X, Calendar, Plus, Clock, Trash2 } from 'lucide-react-native';
 import SegmentedControl from '@/components/SegmentedControl';
-import TaskCreationModal from '@/components/TaskCreationModal';
+import TaskCreationSheet, { TaskCreationSheetRef } from '@/components/TaskCreationSheet';
 import { formatProfileName } from '@/lib/format';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
+import { IOS_TAB_BAR_HEIGHT } from '@/constants/layout';
 
 // =============================================================================
 // Types & Interfaces
@@ -48,6 +50,9 @@ type ViewMode = 'my-tasks' | 'manage';
 export default function TasksScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
+  // Get safe area insets for scroll padding
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
 
   // =============================================================================
   // State
@@ -66,9 +71,9 @@ export default function TasksScreen() {
   // Manage state
   const [manageTasks, setManageTasks] = useState<Task[]>([]);
   const [sponsees, setSponsees] = useState<Profile[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [preselectedSponseeId, setPreselectedSponseeId] = useState<string | undefined>(undefined);
   const [filterStatus, setFilterStatus] = useState<'all' | 'assigned' | 'completed'>('all');
+  const taskSheetRef = useRef<TaskCreationSheetRef>(null);
   const [selectedSponseeFilter, setSelectedSponseeFilter] = useState<string>('all');
 
   // =============================================================================
@@ -369,6 +374,7 @@ export default function TasksScreen() {
 
           <ScrollView
             style={styles.content}
+            contentContainerStyle={{ paddingBottom: tabBarHeight }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -478,10 +484,7 @@ export default function TasksScreen() {
             animationType="slide"
             onRequestClose={() => setShowCompleteModal(false)}
           >
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              style={styles.modalOverlay}
-            >
+            <KeyboardAvoidingView style={styles.modalOverlay}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Complete Task</Text>
@@ -542,7 +545,7 @@ export default function TasksScreen() {
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
+                      <ActivityIndicator size="small" color={theme.white} />
                     ) : (
                       <Text style={styles.submitButtonText}>Mark Complete</Text>
                     )}
@@ -677,6 +680,7 @@ export default function TasksScreen() {
           {/* Manage Tasks Content */}
           <ScrollView
             style={styles.content}
+            contentContainerStyle={{ paddingBottom: tabBarHeight }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -726,7 +730,7 @@ export default function TasksScreen() {
                         style={styles.addTaskButton}
                         onPress={() => {
                           setPreselectedSponseeId(sponseeId);
-                          setShowCreateModal(true);
+                          taskSheetRef.current?.present();
                         }}
                       >
                         <Plus size={20} color={theme.primary} />
@@ -815,18 +819,17 @@ export default function TasksScreen() {
               style={styles.fab}
               onPress={() => {
                 setPreselectedSponseeId(undefined);
-                setShowCreateModal(true);
+                taskSheetRef.current?.present();
               }}
             >
               <Plus size={24} color="#ffffff" />
             </TouchableOpacity>
           )}
 
-          {/* Task Creation Modal */}
-          <TaskCreationModal
-            visible={showCreateModal}
+          {/* Task Creation Sheet */}
+          <TaskCreationSheet
+            ref={taskSheetRef}
             onClose={() => {
-              setShowCreateModal(false);
               setPreselectedSponseeId(undefined);
             }}
             onTaskCreated={fetchManageData}
@@ -1288,7 +1291,8 @@ const createStyles = (theme: ThemeColors) =>
     fab: {
       position: 'absolute',
       right: 20,
-      bottom: 20,
+      // Position above the native tab bar on iOS
+      bottom: Platform.OS === 'ios' ? IOS_TAB_BAR_HEIGHT + 20 : 20,
       width: 56,
       height: 56,
       borderRadius: 28,
