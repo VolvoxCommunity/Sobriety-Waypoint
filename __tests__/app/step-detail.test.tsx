@@ -20,14 +20,14 @@ import { StepContent, Profile } from '@/types/database';
 
 // Mock expo-router for route params and navigation
 const mockBack = jest.fn();
-const mockReplace = jest.fn();
+const mockPush = jest.fn();
 let mockRouteId = 'step-1';
 
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ id: mockRouteId }),
   useRouter: () => ({
     back: mockBack,
-    replace: mockReplace,
+    push: mockPush,
   }),
 }));
 
@@ -214,7 +214,7 @@ describe('StepDetailScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockBack.mockClear();
-    mockReplace.mockClear();
+    mockPush.mockClear();
     mockTrackEvent.mockClear();
     // Default mock setup
     mockRouteId = 'step-1';
@@ -369,7 +369,7 @@ describe('StepDetailScreen', () => {
 
       fireEvent.press(screen.getByText('Previous'));
 
-      expect(mockReplace).toHaveBeenCalledWith('/steps/step-1');
+      expect(mockPush).toHaveBeenCalledWith('/steps/step-1');
     });
 
     it('navigates to next step when Next is pressed', async () => {
@@ -381,7 +381,7 @@ describe('StepDetailScreen', () => {
 
       fireEvent.press(screen.getByText('Next'));
 
-      expect(mockReplace).toHaveBeenCalledWith('/steps/step-2');
+      expect(mockPush).toHaveBeenCalledWith('/steps/step-2');
     });
 
     it('disables Previous button on first step', async () => {
@@ -394,7 +394,7 @@ describe('StepDetailScreen', () => {
       fireEvent.press(screen.getByText('Previous'));
 
       // Should not navigate since it's the first step
-      expect(mockReplace).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
     });
 
     it('disables Next button on last step', async () => {
@@ -409,7 +409,7 @@ describe('StepDetailScreen', () => {
       fireEvent.press(screen.getByText('Next'));
 
       // Should not navigate since it's the last step
-      expect(mockReplace).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 

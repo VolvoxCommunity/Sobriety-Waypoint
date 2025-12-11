@@ -154,14 +154,14 @@ export default function StepDetailScreen() {
   const handlePreviousStep = () => {
     if (hasPrevious) {
       const prevStep = allSteps[currentIndex - 1];
-      router.replace(`/steps/${prevStep.id}`);
+      router.push(`/steps/${prevStep.id}`);
     }
   };
 
   const handleNextStep = () => {
     if (hasNext) {
       const nextStep = allSteps[currentIndex + 1];
-      router.replace(`/steps/${nextStep.id}`);
+      router.push(`/steps/${nextStep.id}`);
     }
   };
 
