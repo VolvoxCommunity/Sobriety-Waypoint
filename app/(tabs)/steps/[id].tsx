@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -212,9 +212,9 @@ export default function StepDetailScreen() {
   };
 
   // ---------------------------------------------------------------------------
-  // Styles
+  // Memoized Values
   // ---------------------------------------------------------------------------
-  const styles = createStyles(theme, insets);
+  const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
 
   // ---------------------------------------------------------------------------
   // Render
