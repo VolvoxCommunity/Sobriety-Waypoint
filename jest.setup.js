@@ -490,3 +490,62 @@ jest.mock('react-native-toast-message', () => {
     hide,
   };
 });
+
+// Mock lucide-react-native icons
+jest.mock('lucide-react-native', () => {
+  const React = require('react');
+  const createMockIcon = (name) => {
+    const MockIcon = ({ size, color, strokeWidth, ...props }) =>
+      React.createElement('MockIcon', { name, size, color, strokeWidth, ...props });
+    MockIcon.displayName = name;
+    return MockIcon;
+  };
+  return {
+    __esModule: true,
+    Check: createMockIcon('Check'),
+    X: createMockIcon('X'),
+    Info: createMockIcon('Info'),
+    ChevronRight: createMockIcon('ChevronRight'),
+    ChevronLeft: createMockIcon('ChevronLeft'),
+    ChevronDown: createMockIcon('ChevronDown'),
+    ChevronUp: createMockIcon('ChevronUp'),
+    Plus: createMockIcon('Plus'),
+    Minus: createMockIcon('Minus'),
+    Settings: createMockIcon('Settings'),
+    User: createMockIcon('User'),
+    LogOut: createMockIcon('LogOut'),
+    Trash: createMockIcon('Trash'),
+    Edit: createMockIcon('Edit'),
+    Calendar: createMockIcon('Calendar'),
+    Clock: createMockIcon('Clock'),
+    Bell: createMockIcon('Bell'),
+    Search: createMockIcon('Search'),
+    Home: createMockIcon('Home'),
+    Star: createMockIcon('Star'),
+    Heart: createMockIcon('Heart'),
+    Mail: createMockIcon('Mail'),
+    Phone: createMockIcon('Phone'),
+    Map: createMockIcon('Map'),
+    AlertCircle: createMockIcon('AlertCircle'),
+    AlertTriangle: createMockIcon('AlertTriangle'),
+    CheckCircle: createMockIcon('CheckCircle'),
+    XCircle: createMockIcon('XCircle'),
+    Eye: createMockIcon('Eye'),
+    EyeOff: createMockIcon('EyeOff'),
+    Lock: createMockIcon('Lock'),
+    Unlock: createMockIcon('Unlock'),
+    Copy: createMockIcon('Copy'),
+    Share: createMockIcon('Share'),
+    Download: createMockIcon('Download'),
+    Upload: createMockIcon('Upload'),
+    RefreshCw: createMockIcon('RefreshCw'),
+    RotateCcw: createMockIcon('RotateCcw'),
+    ArrowLeft: createMockIcon('ArrowLeft'),
+    ArrowRight: createMockIcon('ArrowRight'),
+    ArrowUp: createMockIcon('ArrowUp'),
+    ArrowDown: createMockIcon('ArrowDown'),
+    Menu: createMockIcon('Menu'),
+    MoreHorizontal: createMockIcon('MoreHorizontal'),
+    MoreVertical: createMockIcon('MoreVertical'),
+  };
+});
