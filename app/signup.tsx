@@ -99,7 +99,13 @@ export default function SignupScreen() {
   return (
     <View style={styles.container}>
       <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          testID="back-button"
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
           <ArrowLeft size={24} color={theme.text} />
         </TouchableOpacity>
 

@@ -4,18 +4,14 @@
  * Tests the main tabs layout including:
  * - Platform-specific rendering (native vs web)
  * - Tab navigator configuration
- *
- * Note: The actual _layout.tsx imports SVG files which Jest can't process without
- * additional transformer configuration. These tests verify the platform-conditional
- * rendering logic by mocking the component itself.
+ * - Route rendering
  */
 
 // =============================================================================
 // Mocks (must be declared before imports)
 // =============================================================================
 
-// Mock the entire _layout module to avoid SVG import issues
-// The actual _layout.tsx requires SVG files which Jest can't process without extra setup
+// Mock SVG asset imports - these are required by the actual _layout.tsx
 // =============================================================================
 // Imports (after mocks)
 // =============================================================================
@@ -23,26 +19,114 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { Platform } from 'react-native';
+
+// Import after mocks are set up
 import TabsLayout from '@/app/(tabs)/_layout';
 
-jest.mock('@/app/(tabs)/_layout', () => {
-  const React = require('react');
-  const { View, Platform } = require('react-native');
+jest.mock('@/assets/icons/home.svg', () => 'mock-home-icon');
+jest.mock('@/assets/icons/book-open.svg', () => 'mock-book-icon');
+jest.mock('@/assets/icons/trending-up.svg', () => 'mock-trending-icon');
+jest.mock('@/assets/icons/check-square.svg', () => 'mock-tasks-icon');
+jest.mock('@/assets/icons/user.svg', () => 'mock-profile-icon');
 
-  // Simulate the component based on platform
+// Mock WebTopNav component
+jest.mock('@/components/navigation/WebTopNav', () => {
+  const React = require('react');
+  const { View } = require('react-native');
   return {
     __esModule: true,
-    default: function MockTabsLayout() {
-      if (Platform.OS === 'web') {
-        return React.createElement(View, { testID: 'web-top-nav' });
-      }
-      return React.createElement(View, { testID: 'native-bottom-tabs' });
-    },
+    default: ({ items }: { items: { route: string; label: string }[] }) =>
+      React.createElement(View, { testID: 'web-top-nav', 'data-items': JSON.stringify(items) }),
   };
 });
 
+// Mock NativeBottomTabs component
+jest.mock('@/components/navigation/NativeBottomTabs', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const MockScreen = ({ name, options }: { name: string; options?: object }) =>
+    React.createElement(View, {
+      testID: `tab-screen-${name}`,
+      'data-options': JSON.stringify(options),
+    });
+
+  const MockNativeTabs = ({ children, ...props }: { children: React.ReactNode }) =>
+    React.createElement(View, { testID: 'native-bottom-tabs', ...props }, children);
+
+  MockNativeTabs.Screen = MockScreen;
+
+  return {
+    __esModule: true,
+    NativeTabs: MockNativeTabs,
+  };
+});
+
+// Mock expo-router Tabs
+jest.mock('expo-router', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const MockScreen = ({ name, options }: { name: string; options?: object }) =>
+    React.createElement(View, {
+      testID: `expo-tab-screen-${name}`,
+      'data-options': JSON.stringify(options),
+    });
+
+  const MockTabs = ({
+    children,
+    screenOptions,
+  }: {
+    children: React.ReactNode;
+    screenOptions?: object;
+  }) =>
+    React.createElement(
+      View,
+      { testID: 'expo-tabs', 'data-screen-options': JSON.stringify(screenOptions) },
+      children
+    );
+
+  MockTabs.Screen = MockScreen;
+
+  return {
+    __esModule: true,
+    useRouter: () => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+    }),
+    useNavigation: () => ({
+      setOptions: jest.fn(),
+    }),
+    Tabs: MockTabs,
+  };
+});
+
+// Mock lucide-react-native icons
+jest.mock('lucide-react-native', () => ({
+  Home: () => null,
+  BookOpen: () => null,
+  TrendingUp: () => null,
+  CheckSquare: () => null,
+  User: () => null,
+}));
+
 // Store original Platform.OS
 const originalPlatform = Platform.OS;
+
+// =============================================================================
+// Test Helpers
+// =============================================================================
+
+/**
+ * Helper to set Platform.OS for testing
+ */
+function setPlatform(os: 'ios' | 'android' | 'web') {
+  Object.defineProperty(Platform, 'OS', {
+    get: () => os,
+    configurable: true,
+  });
+}
 
 // =============================================================================
 // Test Suite
@@ -52,10 +136,7 @@ describe('TabsLayout', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Default to iOS
-    Object.defineProperty(Platform, 'OS', {
-      get: () => 'ios',
-      configurable: true,
-    });
+    setPlatform('ios');
   });
 
   afterAll(() => {
@@ -68,10 +149,7 @@ describe('TabsLayout', () => {
 
   describe('native platforms (iOS/Android)', () => {
     it('renders NativeBottomTabs on iOS', () => {
-      Object.defineProperty(Platform, 'OS', {
-        get: () => 'ios',
-        configurable: true,
-      });
+      setPlatform('ios');
 
       render(<TabsLayout />);
 
@@ -80,24 +158,31 @@ describe('TabsLayout', () => {
     });
 
     it('renders NativeBottomTabs on Android', () => {
-      Object.defineProperty(Platform, 'OS', {
-        get: () => 'android',
-        configurable: true,
-      });
+      setPlatform('android');
 
       render(<TabsLayout />);
 
       expect(screen.getByTestId('native-bottom-tabs')).toBeTruthy();
       expect(screen.queryByTestId('web-top-nav')).toBeNull();
     });
+
+    it('renders all tab screens on native', () => {
+      setPlatform('ios');
+
+      render(<TabsLayout />);
+
+      expect(screen.getByTestId('tab-screen-index')).toBeTruthy();
+      expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(screen.getByTestId('tab-screen-journey')).toBeTruthy();
+      expect(screen.getByTestId('tab-screen-tasks')).toBeTruthy();
+      expect(screen.getByTestId('tab-screen-profile')).toBeTruthy();
+      expect(screen.getByTestId('tab-screen-manage-tasks')).toBeTruthy();
+    });
   });
 
   describe('web platform', () => {
     beforeEach(() => {
-      Object.defineProperty(Platform, 'OS', {
-        get: () => 'web',
-        configurable: true,
-      });
+      setPlatform('web');
     });
 
     it('renders WebTopNav on web', () => {
@@ -106,23 +191,52 @@ describe('TabsLayout', () => {
       expect(screen.getByTestId('web-top-nav')).toBeTruthy();
       expect(screen.queryByTestId('native-bottom-tabs')).toBeNull();
     });
+
+    it('renders Expo Tabs on web (hidden)', () => {
+      render(<TabsLayout />);
+
+      expect(screen.getByTestId('expo-tabs')).toBeTruthy();
+    });
+
+    it('renders all expo tab screens on web', () => {
+      render(<TabsLayout />);
+
+      expect(screen.getByTestId('expo-tab-screen-index')).toBeTruthy();
+      expect(screen.getByTestId('expo-tab-screen-steps')).toBeTruthy();
+      expect(screen.getByTestId('expo-tab-screen-journey')).toBeTruthy();
+      expect(screen.getByTestId('expo-tab-screen-tasks')).toBeTruthy();
+      expect(screen.getByTestId('expo-tab-screen-profile')).toBeTruthy();
+      expect(screen.getByTestId('expo-tab-screen-manage-tasks')).toBeTruthy();
+    });
   });
 
   describe('platform switching', () => {
     it('switches from native to web navigation when platform changes', () => {
+      setPlatform('ios');
       const { rerender } = render(<TabsLayout />);
 
       expect(screen.getByTestId('native-bottom-tabs')).toBeTruthy();
 
       // Change platform
-      Object.defineProperty(Platform, 'OS', {
-        get: () => 'web',
-        configurable: true,
-      });
+      setPlatform('web');
 
       rerender(<TabsLayout />);
 
       expect(screen.getByTestId('web-top-nav')).toBeTruthy();
+    });
+
+    it('switches from web to native navigation when platform changes', () => {
+      setPlatform('web');
+      const { rerender } = render(<TabsLayout />);
+
+      expect(screen.getByTestId('web-top-nav')).toBeTruthy();
+
+      // Change platform
+      setPlatform('ios');
+
+      rerender(<TabsLayout />);
+
+      expect(screen.getByTestId('native-bottom-tabs')).toBeTruthy();
     });
   });
 
@@ -132,32 +246,24 @@ describe('TabsLayout', () => {
 
       expect(toJSON()).toBeTruthy();
     });
-  });
 
-  describe('edge cases', () => {
-    it('handles rapid platform changes', () => {
+    it('renders consistently after re-render', () => {
       const { rerender } = render(<TabsLayout />);
 
-      Object.defineProperty(Platform, 'OS', {
-        get: () => 'web',
-        configurable: true,
-      });
-      rerender(<TabsLayout />);
-
-      Object.defineProperty(Platform, 'OS', {
-        get: () => 'ios',
-        configurable: true,
-      });
       rerender(<TabsLayout />);
 
       expect(screen.getByTestId('native-bottom-tabs')).toBeTruthy();
     });
   });
 
-  describe('re-render behavior', () => {
-    it('renders consistently after re-render', () => {
+  describe('edge cases', () => {
+    it('handles rapid platform changes', () => {
       const { rerender } = render(<TabsLayout />);
 
+      setPlatform('web');
+      rerender(<TabsLayout />);
+
+      setPlatform('ios');
       rerender(<TabsLayout />);
 
       expect(screen.getByTestId('native-bottom-tabs')).toBeTruthy();
