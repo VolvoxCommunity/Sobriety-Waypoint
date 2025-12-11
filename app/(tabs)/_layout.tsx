@@ -8,12 +8,9 @@ import { Home, BookOpen, TrendingUp, CheckSquare, User } from 'lucide-react-nati
 import { useTheme } from '@/contexts/ThemeContext';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import WebTopNav from '@/components/navigation/WebTopNav';
-
-// Conditionally import native tabs only on mobile to avoid web bundling issues
-// react-native-bottom-tabs uses native codegen which isn't available on web
-const NativeTabs =
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  Platform.OS !== 'web' ? require('@/components/navigation/NativeBottomTabs').NativeTabs : null;
+// Platform-specific import: .native.tsx on mobile, .web.tsx (stub) on web
+// This prevents bundler from including native-only code on web
+import { NativeTabs } from '@/components/navigation/NativeBottomTabs';
 
 // Android icons using local Lucide SVG files
 // Loaded via require() which Metro bundles as native image assets

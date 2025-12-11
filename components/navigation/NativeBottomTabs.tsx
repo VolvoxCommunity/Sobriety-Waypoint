@@ -25,6 +25,9 @@ import { ParamListBase, TabNavigationState } from '@react-navigation/native';
  * - Platform-consistent behavior
  * - Native blur effects on iOS
  * - Proper safe area handling
+ *
+ * Note: This file is only bundled on native platforms.
+ * On web, NativeBottomTabs.web.tsx is used instead (via Metro's platform extensions).
  */
 const BottomTabNavigator = createNativeBottomTabNavigator().Navigator;
 
