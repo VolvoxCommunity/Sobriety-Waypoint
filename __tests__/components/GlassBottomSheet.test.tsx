@@ -77,7 +77,11 @@ describe('GlassBottomSheet', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    Platform.OS = originalPlatformOS;
+    // Restore Platform.OS using Object.defineProperty for robustness across Jest environments
+    Object.defineProperty(Platform, 'OS', {
+      get: () => originalPlatformOS,
+      configurable: true,
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -113,7 +117,10 @@ describe('GlassBottomSheet', () => {
   // ---------------------------------------------------------------------------
   describe('Platform-Specific Behavior', () => {
     it('should use standard backdrop on iOS', () => {
-      Platform.OS = 'ios';
+      Object.defineProperty(Platform, 'OS', {
+        get: () => 'ios',
+        configurable: true,
+      });
       const { getByTestId } = renderWithProviders(<GlassBottomSheet {...defaultProps} />);
       // We use BottomSheetBackdrop on all platforms for proper gesture handling
       // iOS gets a lighter opacity (0.3) for a glass-like effect
@@ -121,7 +128,10 @@ describe('GlassBottomSheet', () => {
     });
 
     it('should use standard backdrop on Android', () => {
-      Platform.OS = 'android';
+      Object.defineProperty(Platform, 'OS', {
+        get: () => 'android',
+        configurable: true,
+      });
       const { getByTestId } = renderWithProviders(<GlassBottomSheet {...defaultProps} />);
       // Android uses the same backdrop component but with higher opacity (0.5)
       expect(getByTestId('bottom-sheet-backdrop')).toBeTruthy();
