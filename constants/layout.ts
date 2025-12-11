@@ -16,6 +16,18 @@ import { Platform } from 'react-native';
 export const IOS_TAB_BAR_HEIGHT = 49;
 
 /**
+ * Default extra padding above tab bar on iOS.
+ * Used to add comfortable spacing between content and the tab bar.
+ */
+export const IOS_TAB_BAR_EXTRA_PADDING = 16;
+
+/**
+ * Default extra padding above navigation on Android.
+ * Android typically needs more padding since tab bar height is not fixed.
+ */
+export const ANDROID_TAB_BAR_EXTRA_PADDING = 24;
+
+/**
  * Calculates the bottom padding needed for scrollable content above the tab bar.
  *
  * @param bottomInset - The bottom safe area inset from useSafeAreaInsets()
