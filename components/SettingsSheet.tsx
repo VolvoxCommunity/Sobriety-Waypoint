@@ -57,6 +57,7 @@ import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { logger, LogCategory } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { validateDisplayName } from '@/lib/validation';
+import { hexWithAlpha } from '@/lib/format';
 import GlassBottomSheet, { GlassBottomSheetRef } from '@/components/GlassBottomSheet';
 import packageJson from '../package.json';
 
@@ -1465,7 +1466,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       borderRadius: 16,
       padding: 16,
       borderWidth: 1,
-      borderColor: theme.primary + '30',
+      borderColor: hexWithAlpha(theme.primary, 0.19),
     },
     buildInfoHeaderExpanded: {
       borderBottomLeftRadius: 0,
