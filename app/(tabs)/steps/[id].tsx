@@ -56,6 +56,7 @@ export default function StepDetailScreen() {
   const [progress, setProgress] = useState<UserStepProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [togglingCompletion, setTogglingCompletion] = useState(false);
 
   // Track mounted state to prevent state updates after unmount
   const isMountedRef = useRef(true);
@@ -166,8 +167,9 @@ export default function StepDetailScreen() {
   };
 
   const handleToggleCompletion = async () => {
-    if (!profile || !step) return;
+    if (!profile || !step || togglingCompletion) return;
 
+    setTogglingCompletion(true);
     try {
       if (progress) {
         // Remove completion
@@ -202,6 +204,10 @@ export default function StepDetailScreen() {
       logger.error('Step completion toggle failed', err as Error, {
         category: LogCategory.DATABASE,
       });
+    } finally {
+      if (isMountedRef.current) {
+        setTogglingCompletion(false);
+      }
     }
   };
 
@@ -291,10 +297,20 @@ export default function StepDetailScreen() {
         <View style={styles.actionSection}>
           {/* Completion Button */}
           <Pressable
-            style={[styles.completeButton, isCompleted && styles.completeButtonActive]}
+            style={[
+              styles.completeButton,
+              isCompleted && styles.completeButtonActive,
+              togglingCompletion && styles.completeButtonDisabled,
+            ]}
             onPress={handleToggleCompletion}
+            disabled={togglingCompletion}
           >
-            {isCompleted ? (
+            {togglingCompletion ? (
+              <>
+                <ActivityIndicator size="small" color="#ffffff" />
+                <Text style={styles.completeButtonText}>Updating...</Text>
+              </>
+            ) : isCompleted ? (
               <>
                 <CheckCircle size={20} color="#ffffff" />
                 <Text style={styles.completeButtonText}>Marked as Complete</Text>
@@ -523,6 +539,9 @@ const createStyles = (theme: ThemeColors, insets: { top: number; bottom: number 
     },
     completeButtonActive: {
       backgroundColor: theme.success,
+    },
+    completeButtonDisabled: {
+      opacity: 0.7,
     },
     completeButtonText: {
       fontSize: 16,

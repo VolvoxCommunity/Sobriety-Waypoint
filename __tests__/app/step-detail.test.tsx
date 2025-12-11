@@ -223,6 +223,51 @@ describe('StepDetailScreen', () => {
     mockProgressData = null;
     mockInsertResult = { data: { id: 'new-progress' }, error: null };
     mockDeleteResult = { error: null };
+
+    // Reset supabase mock implementation to default behavior
+    const { supabase } = jest.requireMock('@/lib/supabase');
+    supabase.from.mockImplementation((table: string) => {
+      if (table === 'steps_content') {
+        return {
+          select: jest.fn().mockReturnValue({
+            order: jest
+              .fn()
+              .mockImplementation(() =>
+                Promise.resolve({ data: mockStepsData, error: mockStepsError })
+              ),
+          }),
+        };
+      }
+      if (table === 'user_step_progress') {
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                maybeSingle: jest
+                  .fn()
+                  .mockImplementation(() =>
+                    Promise.resolve({ data: mockProgressData, error: null })
+                  ),
+              }),
+            }),
+          }),
+          insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockImplementation(() => Promise.resolve(mockInsertResult)),
+            }),
+          }),
+          delete: jest.fn().mockReturnValue({
+            eq: jest.fn().mockImplementation(() => Promise.resolve(mockDeleteResult)),
+          }),
+        };
+      }
+      return {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+      };
+    });
+
     mockProfile = {
       id: 'user-123',
       email: 'test@example.com',
@@ -466,6 +511,135 @@ describe('StepDetailScreen', () => {
       await waitFor(() => {
         expect(supabase.from).toHaveBeenCalledWith('user_step_progress');
       });
+    });
+
+    it('shows loading state while toggling completion', async () => {
+      mockProgressData = null;
+
+      // Create a delayed mock to observe loading state
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      let resolveInsert: (value: unknown) => void;
+      const insertPromise = new Promise((resolve) => {
+        resolveInsert = resolve;
+      });
+
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'steps_content') {
+          return {
+            select: jest.fn().mockReturnValue({
+              order: jest.fn().mockResolvedValue({ data: mockSteps, error: null }),
+            }),
+          };
+        }
+        if (table === 'user_step_progress') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+              }),
+            }),
+            insert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockImplementation(() => insertPromise),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+        };
+      });
+
+      render(<StepDetailScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Mark as Complete')).toBeTruthy();
+      });
+
+      // Press the button
+      fireEvent.press(screen.getByText('Mark as Complete'));
+
+      // Should show loading state
+      await waitFor(() => {
+        expect(screen.getByText('Updating...')).toBeTruthy();
+      });
+
+      // Resolve the promise
+      resolveInsert!({ data: { id: 'new-progress' }, error: null });
+
+      // Should return to normal state
+      await waitFor(() => {
+        expect(screen.queryByText('Updating...')).toBeNull();
+      });
+    });
+
+    it('prevents duplicate taps during completion toggle', async () => {
+      mockProgressData = null;
+
+      // Create a delayed mock that tracks insert calls
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      let resolveInsert: (value: unknown) => void;
+      const insertPromise = new Promise((resolve) => {
+        resolveInsert = resolve;
+      });
+      const insertMock = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockImplementation(() => insertPromise),
+        }),
+      });
+
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'steps_content') {
+          return {
+            select: jest.fn().mockReturnValue({
+              order: jest.fn().mockResolvedValue({ data: mockSteps, error: null }),
+            }),
+          };
+        }
+        if (table === 'user_step_progress') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+              }),
+            }),
+            insert: insertMock,
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+        };
+      });
+
+      render(<StepDetailScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Mark as Complete')).toBeTruthy();
+      });
+
+      // Get the button and press it multiple times
+      const button = screen.getByText('Mark as Complete').parent?.parent;
+      fireEvent.press(button!);
+
+      // Wait for loading state
+      await waitFor(() => {
+        expect(screen.getByText('Updating...')).toBeTruthy();
+      });
+
+      // Try to press again while in loading state - get the loading button
+      const loadingButton = screen.getByText('Updating...').parent?.parent;
+      fireEvent.press(loadingButton!);
+      fireEvent.press(loadingButton!);
+
+      // Insert should only have been called once despite multiple presses
+      expect(insertMock).toHaveBeenCalledTimes(1);
+
+      // Resolve to clean up
+      resolveInsert!({ data: { id: 'new-progress' }, error: null });
     });
   });
 
