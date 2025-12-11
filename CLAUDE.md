@@ -160,6 +160,44 @@ git add . && git commit -m "test(auth): add coverage for password reset"
 git push
 ```
 
+**Pushing Guidelines:**
+
+Before pushing, verify:
+
+1. **All tasks complete** - Every task in the session passes validation
+2. **All commits ready** - Review with `git log --oneline` to confirm commit history
+3. **No uncommitted changes** - Run `git status` to verify clean working tree
+4. **Branch is up to date** - Pull latest if working on shared branch: `git pull --rebase`
+
+**When NOT to push:**
+
+- Tests are failing or coverage dropped below 80%
+- Typecheck or lint errors exist
+- Visual verification was skipped for UI changes
+- You're mid-task and work is incomplete
+- There are merge conflicts that need resolution
+
+**Handling Push Failures:**
+
+```bash
+# If push is rejected due to remote changes:
+git pull --rebase origin <branch>
+# Resolve any conflicts, then:
+git push
+
+# If rebase has conflicts:
+# 1. Fix conflicts in affected files
+# 2. git add <fixed-files>
+# 3. git rebase --continue
+# 4. git push
+```
+
+**Force Push Warning:**
+
+- **NEVER** force push to `main` or `develop` branches
+- Force push (`git push --force`) rewrites history and can break other developers' work
+- Only use `--force-with-lease` on personal feature branches after rebase
+
 **Visual Verification (CRITICAL):**
 
 Before committing ANY UI or functional changes, you MUST verify them visually:
