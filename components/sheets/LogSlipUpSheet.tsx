@@ -368,8 +368,16 @@ const LogSlipUpSheet = forwardRef<LogSlipUpSheetRef, LogSlipUpSheetProps>(
                     mode="date"
                     display="default"
                     onChange={(event, date) => {
+                      // On Android with display="default", the native dialog auto-closes
+                      // on OK/Cancel press. We must hide the picker component to prevent
+                      // it from reopening. On iOS, display="default" also shows a dialog.
+                      //
+                      // IMPORTANT: Update the date BEFORE hiding the picker to ensure
+                      // the state update completes before the component unmounts.
+                      if (date) {
+                        setSlipUpDate(date);
+                      }
                       setShowDatePicker(false);
-                      if (date) setSlipUpDate(date);
                     }}
                     maximumDate={new Date()}
                   />
