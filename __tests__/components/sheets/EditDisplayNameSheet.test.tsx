@@ -441,7 +441,7 @@ describe('EditDisplayNameSheet', () => {
     });
 
     it('shows confirmation dialog on web when closing with unsaved changes', () => {
-      Object.defineProperty(Platform, 'OS', { get: () => 'web' });
+      Object.defineProperty(Platform, 'OS', { get: () => 'web', configurable: true });
       // Mock window.confirm for web platform
       const mockConfirm = jest.fn().mockReturnValue(false);
       global.window = { confirm: mockConfirm } as any;
@@ -474,7 +474,7 @@ describe('EditDisplayNameSheet', () => {
     });
 
     it('shows alert on native when closing with unsaved changes', () => {
-      Object.defineProperty(Platform, 'OS', { get: () => 'ios' });
+      Object.defineProperty(Platform, 'OS', { get: () => 'ios', configurable: true });
       const mockAlert = jest.spyOn(Alert, 'alert');
       const mockOnSave = jest.fn();
       const mockOnClose = jest.fn();

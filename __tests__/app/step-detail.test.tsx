@@ -458,6 +458,33 @@ describe('StepDetailScreen', () => {
     });
   });
 
+  describe('error handling', () => {
+    it('handles fetch exception gracefully', async () => {
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      supabase.from.mockImplementation(() => {
+        throw new Error('Network error');
+      });
+
+      render(<StepDetailScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('An unexpected error occurred')).toBeTruthy();
+      });
+    });
+
+    it('shows retry button on error', async () => {
+      mockStepsError = new Error('Failed to fetch');
+      mockStepsData = null;
+
+      render(<StepDetailScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load step content')).toBeTruthy();
+        expect(screen.getByText('Retry')).toBeTruthy();
+      });
+    });
+  });
+
   describe('step completion', () => {
     it('shows Mark as Complete button when step is not completed', async () => {
       mockProgressData = null;

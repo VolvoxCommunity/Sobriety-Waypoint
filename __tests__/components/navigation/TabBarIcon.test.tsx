@@ -39,7 +39,7 @@ describe('TabBarIcon', () => {
     });
   });
 
-  it('renders SymbolView with correct props on iOS', () => {
+  it('renders SymbolView with semibold weight when focused on iOS', () => {
     setPlatformOS('ios');
     const { getByTestId } = render(
       <TabBarIcon sfSymbol="house.fill" fallbackIcon={() => <></>} focused={true} color="#10b981" />
@@ -50,6 +50,22 @@ describe('TabBarIcon', () => {
     expect(getByTestId('symbol-name')).toHaveTextContent('house.fill');
     expect(getByTestId('symbol-color')).toHaveTextContent('#10b981');
     expect(getByTestId('symbol-weight')).toHaveTextContent('semibold');
+  });
+
+  it('renders SymbolView with regular weight when not focused on iOS', () => {
+    setPlatformOS('ios');
+    const { getByTestId } = render(
+      <TabBarIcon
+        sfSymbol="house.fill"
+        fallbackIcon={() => <></>}
+        focused={false}
+        color="#666666"
+      />
+    );
+
+    // Verify SymbolView uses regular weight when not focused
+    expect(getByTestId('symbol-view')).toBeTruthy();
+    expect(getByTestId('symbol-weight')).toHaveTextContent('regular');
   });
 
   it('renders fallback Lucide icon with correct color on Android', () => {

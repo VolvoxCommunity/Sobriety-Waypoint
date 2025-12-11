@@ -275,10 +275,33 @@ describe('GlassBottomSheet', () => {
   // ---------------------------------------------------------------------------
   // Web-Specific Tests
   // ---------------------------------------------------------------------------
-  // Note: These tests are skipped in the react-native test environment because
-  // the document object is not available. The web-specific keyboard behavior
-  // (Escape key to dismiss) is tested manually on web platform.
-  // The component logic is covered by other tests.
+  describe('Web Platform Behavior', () => {
+    beforeEach(() => {
+      Object.defineProperty(Platform, 'OS', {
+        get: () => 'web',
+        configurable: true,
+      });
+    });
+
+    it('should render on web platform', () => {
+      const { getByTestId } = renderWithProviders(<GlassBottomSheet {...defaultProps} />);
+      expect(getByTestId('bottom-sheet-modal')).toBeTruthy();
+    });
+
+    it('should use standard backdrop on web', () => {
+      const { getByTestId } = renderWithProviders(<GlassBottomSheet {...defaultProps} />);
+      expect(getByTestId('bottom-sheet-backdrop')).toBeTruthy();
+    });
+
+    it('should expose imperative API on web', () => {
+      const ref = createRef<GlassBottomSheetRef>();
+      renderWithProviders(<GlassBottomSheet ref={ref} {...defaultProps} />);
+
+      expect(ref.current?.present).toBeDefined();
+      expect(ref.current?.dismiss).toBeDefined();
+      expect(ref.current?.snapToIndex).toBeDefined();
+    });
+  });
 
   // ---------------------------------------------------------------------------
   // Dismiss Callback Tests
@@ -293,6 +316,23 @@ describe('GlassBottomSheet', () => {
       // The onDismiss callback is passed to the component
       // This test verifies the prop is properly accepted
       expect(onDismiss).not.toHaveBeenCalled();
+    });
+
+    it('should work without onDismiss callback (optional prop)', () => {
+      const ref = createRef<GlassBottomSheetRef>();
+
+      // Render without onDismiss - should not throw
+      const { getByTestId } = renderWithProviders(
+        <GlassBottomSheet ref={ref} snapPoints={['50%']}>
+          <Text>Content</Text>
+        </GlassBottomSheet>
+      );
+
+      expect(getByTestId('bottom-sheet-modal')).toBeTruthy();
+
+      // Call present and dismiss - should work without onDismiss callback
+      ref.current?.present();
+      ref.current?.dismiss();
     });
   });
 
