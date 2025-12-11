@@ -471,3 +471,16 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }) => children,
   SafeAreaView: ({ children }) => children,
 }));
+
+// Mock react-native-toast-message
+jest.mock('react-native-toast-message', () => {
+  const React = require('react');
+  return {
+    __esModule: true,
+    default: ({ children, ...props }) => React.createElement('Toast', props, children),
+    BaseToast: ({ children, ...props }) => React.createElement('BaseToast', props, children),
+    ErrorToast: ({ children, ...props }) => React.createElement('ErrorToast', props, children),
+    show: jest.fn(),
+    hide: jest.fn(),
+  };
+});
