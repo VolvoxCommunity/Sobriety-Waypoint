@@ -93,6 +93,40 @@ function RootLayoutNav() {
     }
   }, [pathname]);
 
+  /**
+   * Maps the current pathname to a human-readable page title.
+   * Used for the browser tab title on web.
+   */
+  const getPageTitle = (): string => {
+    const titles: Record<string, string> = {
+      '/': 'Home',
+      '/login': 'Sign In',
+      '/signup': 'Sign Up',
+      '/onboarding': 'Get Started',
+      '/journey': 'Journey',
+      '/tasks': 'Tasks',
+      '/manage-tasks': 'Manage Tasks',
+      '/profile': 'Profile',
+      '/settings': 'Settings',
+      '/steps': '12 Steps',
+    };
+
+    // Check for exact match first
+    if (titles[pathname]) {
+      return `${titles[pathname]} | Sobriety Waypoint`;
+    }
+
+    // Handle dynamic routes like /steps/[id]
+    if (pathname.startsWith('/steps/')) {
+      return 'Step Details | Sobriety Waypoint';
+    }
+
+    // Default fallback
+    return 'Sobriety Waypoint';
+  };
+
+  const pageTitle = getPageTitle();
+
   useEffect(() => {
     // Wait for both auth loading to complete AND navigator to be ready
     if (loading || !navigatorReady) return;
@@ -121,9 +155,10 @@ function RootLayoutNav() {
   }, [user, profile, segments, loading, router, navigatorReady]);
 
   // SEO meta tags rendered unconditionally for search engine and social media crawlers
+  // Title updates dynamically based on current route for better browser tab UX
   const seoHead = (
     <Head>
-      <title>Sobriety Waypoint</title>
+      <title>{pageTitle}</title>
       <meta name="description" content="Your companion on the journey to recovery" />
 
       {/* Open Graph / Facebook */}
