@@ -96,6 +96,7 @@ describe('EditDisplayNameSheet', () => {
     // Restore Platform.OS after each test to prevent test pollution
     Object.defineProperty(Platform, 'OS', {
       get: () => originalPlatformOS,
+      configurable: true,
     });
   });
 
