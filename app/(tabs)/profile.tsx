@@ -2,18 +2,16 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Alert,
   Share,
   Platform,
   ActivityIndicator,
   Modal,
-  InteractionManager,
+  ScrollView,
 } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -35,6 +33,9 @@ import { logger, LogCategory } from '@/lib/logger';
 import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import SettingsSheet, { SettingsSheetRef } from '@/components/SettingsSheet';
 import LogSlipUpSheet, { LogSlipUpSheetRef } from '@/components/sheets/LogSlipUpSheet';
+import EnterInviteCodeSheet, {
+  EnterInviteCodeSheetRef,
+} from '@/components/sheets/EnterInviteCodeSheet';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 
 // =============================================================================
@@ -163,17 +164,15 @@ function SponsorDaysDisplay({
  * @returns A React element representing the profile screen
  */
 export default function ProfileScreen() {
-  const { profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   // Account for native tab bar height and safe area
   const scrollPadding = useTabBarPadding();
   const settingsSheetRef = useRef<SettingsSheetRef>(null);
   const logSlipUpSheetRef = useRef<LogSlipUpSheetRef>(null);
+  const inviteCodeSheetRef = useRef<EnterInviteCodeSheetRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
-  const [inviteCode, setInviteCode] = useState('');
-  const [showInviteInput, setShowInviteInput] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [sponsorRelationships, setSponsorRelationships] = useState<SponsorSponseeRelationship[]>(
     []
   );
@@ -313,21 +312,19 @@ export default function ProfileScreen() {
     }
   };
 
-  const joinWithInviteCode = async () => {
-    if (!inviteCode.trim() || !profile) return;
-
-    const trimmedCode = inviteCode.trim().toUpperCase();
-
-    if (trimmedCode.length !== 8) {
-      if (Platform.OS === 'web') {
-        window.alert('Invite code must be 8 characters');
-      } else {
-        Alert.alert('Error', 'Invite code must be 8 characters');
-      }
-      return;
+  /**
+   * Handles connecting to a sponsor using an invite code.
+   * Called from the EnterInviteCodeSheet component.
+   *
+   * @param inviteCode - The 8-character invite code from the sponsor
+   * @throws Error if connection fails (handled by the sheet)
+   */
+  const joinWithInviteCode = async (inviteCode: string) => {
+    if (!profile || !user) {
+      throw new Error('Please sign in to connect with a sponsor');
     }
 
-    setIsConnecting(true);
+    const trimmedCode = inviteCode.trim().toUpperCase();
 
     try {
       const { data: invite, error: fetchError } = await supabase
@@ -337,13 +334,7 @@ export default function ProfileScreen() {
         .maybeSingle();
 
       if (fetchError || !invite) {
-        if (Platform.OS === 'web') {
-          window.alert('Invalid or expired invite code');
-        } else {
-          Alert.alert('Error', 'Invalid or expired invite code');
-        }
-        setIsConnecting(false);
-        return;
+        throw new Error('Invalid or expired invite code');
       }
 
       // Fetch sponsor profile separately (we can't access it via join due to RLS)
@@ -361,68 +352,39 @@ export default function ProfileScreen() {
             category: LogCategory.DATABASE,
           }
         );
-        if (Platform.OS === 'web') {
-          window.alert('Unable to fetch sponsor information');
-        } else {
-          Alert.alert('Error', 'Unable to fetch sponsor information');
-        }
-        setIsConnecting(false);
-        return;
+        throw new Error('Unable to fetch sponsor information');
       }
 
       if (new Date(invite.expires_at) < new Date()) {
-        if (Platform.OS === 'web') {
-          window.alert('This invite code has expired');
-        } else {
-          Alert.alert('Error', 'This invite code has expired');
-        }
-        setIsConnecting(false);
-        return;
+        throw new Error('This invite code has expired');
       }
 
       if (invite.used_by) {
-        if (Platform.OS === 'web') {
-          window.alert('This invite code has already been used');
-        } else {
-          Alert.alert('Error', 'This invite code has already been used');
-        }
-        setIsConnecting(false);
-        return;
+        throw new Error('This invite code has already been used');
       }
 
-      if (invite.sponsor_id === profile.id) {
-        if (Platform.OS === 'web') {
-          window.alert('You cannot connect to yourself as a sponsor');
-        } else {
-          Alert.alert('Error', 'You cannot connect to yourself as a sponsor');
-        }
-        setIsConnecting(false);
-        return;
+      if (invite.sponsor_id === user.id || invite.sponsor_id === profile.id) {
+        throw new Error('You cannot connect to yourself as a sponsor');
       }
 
       const { data: existingRelationship } = await supabase
         .from('sponsor_sponsee_relationships')
         .select('id')
         .eq('sponsor_id', invite.sponsor_id)
-        .eq('sponsee_id', profile.id)
+        .eq('sponsee_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
       if (existingRelationship) {
-        if (Platform.OS === 'web') {
-          window.alert('You are already connected to this sponsor');
-        } else {
-          Alert.alert('Error', 'You are already connected to this sponsor');
-        }
-        setIsConnecting(false);
-        return;
+        throw new Error('You are already connected to this sponsor');
       }
 
+      // Use user.id for sponsee_id to satisfy RLS policy: sponsee_id = auth.uid()
       const { error: relationshipError } = await supabase
         .from('sponsor_sponsee_relationships')
         .insert({
           sponsor_id: invite.sponsor_id,
-          sponsee_id: profile.id,
+          sponsee_id: user.id,
           status: 'active',
         });
 
@@ -430,28 +392,22 @@ export default function ProfileScreen() {
         logger.error('Sponsor-sponsee relationship creation failed', relationshipError as Error, {
           category: LogCategory.DATABASE,
         });
-        const errorMessage =
-          relationshipError.message || 'Failed to connect with sponsor. Please try again.';
-        if (Platform.OS === 'web') {
-          window.alert(`Failed to connect: ${errorMessage}`);
-        } else {
-          Alert.alert('Error', `Failed to connect: ${errorMessage}`);
-        }
-        setIsConnecting(false);
-        return;
+        throw new Error(
+          relationshipError.message || 'Failed to connect with sponsor. Please try again.'
+        );
       }
 
+      // Use user.id (auth.uid()) instead of profile.id to satisfy RLS policy
+      // The WITH CHECK clause requires: used_by = auth.uid()
       const { error: updateError } = await supabase
         .from('invite_codes')
-        .update({ used_by: profile.id, used_at: new Date().toISOString() })
+        .update({ used_by: user.id, used_at: new Date().toISOString() })
         .eq('id', invite.id);
 
       if (updateError) {
         logger.error('Invite code update failed', updateError as Error, {
           category: LogCategory.DATABASE,
         });
-        // Note: This error usually indicates a missing RLS policy in Supabase.
-        // Run scripts/fix_invite_codes_rls.sql to fix it.
       }
 
       await supabase.from('notifications').insert([
@@ -460,10 +416,10 @@ export default function ProfileScreen() {
           type: 'connection_request',
           title: 'New Sponsee Connected',
           content: `${profile.display_name ?? 'Unknown'} has connected with you as their sponsor.`,
-          data: { sponsee_id: profile.id },
+          data: { sponsee_id: user.id },
         },
         {
-          user_id: profile.id,
+          user_id: user.id,
           type: 'connection_request',
           title: 'Connected to Sponsor',
           content: `You are now connected with ${sponsorProfile.display_name ?? 'Unknown'} as your sponsor.`,
@@ -473,27 +429,20 @@ export default function ProfileScreen() {
 
       await fetchRelationships();
 
+      // Show success message
       if (Platform.OS === 'web') {
         window.alert(`Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
       } else {
         Alert.alert('Success', `Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
       }
-
-      setShowInviteInput(false);
-      setInviteCode('');
     } catch (error: unknown) {
       logger.error('Join with invite code failed', error as Error, {
         category: LogCategory.DATABASE,
       });
-      const message =
-        error instanceof Error ? error.message : 'Network error. Please check your connection.';
-      if (Platform.OS === 'web') {
-        window.alert(message);
-      } else {
-        Alert.alert('Error', message);
-      }
-    } finally {
-      setIsConnecting(false);
+      // Re-throw the error so the sheet can display it
+      throw error instanceof Error
+        ? error
+        : new Error('Network error. Please check your connection.');
     }
   };
 
@@ -589,70 +538,90 @@ export default function ProfileScreen() {
     setShowSobrietyDatePicker(true);
   };
 
-  const updateSobrietyDate = async (newDate: Date) => {
-    if (!profile) return;
+  const updateSobrietyDate = useCallback(
+    async (newDate: Date) => {
+      if (!profile) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selectedDate = new Date(newDate);
-    selectedDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(newDate);
+      selectedDate.setHours(0, 0, 0, 0);
 
-    if (selectedDate > today) {
-      if (Platform.OS === 'web') {
-        window.alert('Sobriety date cannot be in the future');
-      } else {
-        Alert.alert('Invalid Date', 'Sobriety date cannot be in the future');
+      if (selectedDate > today) {
+        if (Platform.OS === 'web') {
+          window.alert('Sobriety date cannot be in the future');
+        } else {
+          Alert.alert('Invalid Date', 'Sobriety date cannot be in the future');
+        }
+        return;
       }
-      return;
-    }
 
-    const confirmMessage = `Update your sobriety date to ${newDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}?`;
+      const confirmMessage = `Update your sobriety date to ${newDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}?`;
 
-    const confirmed =
-      Platform.OS === 'web'
-        ? window.confirm(confirmMessage)
-        : await new Promise<boolean>((resolve) => {
-            Alert.alert('Confirm Date Change', confirmMessage, [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => resolve(false),
-              },
-              { text: 'Update', onPress: () => resolve(true) },
-            ]);
-          });
+      const confirmed =
+        Platform.OS === 'web'
+          ? window.confirm(confirmMessage)
+          : await new Promise<boolean>((resolve) => {
+              Alert.alert('Confirm Date Change', confirmMessage, [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                  onPress: () => resolve(false),
+                },
+                { text: 'Update', onPress: () => resolve(true) },
+              ]);
+            });
 
-    if (!confirmed) return;
+      if (!confirmed) return;
 
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          sobriety_date: formatDateWithTimezone(newDate, userTimezone),
-        })
-        .eq('id', profile.id);
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            sobriety_date: formatDateWithTimezone(newDate, userTimezone),
+          })
+          .eq('id', profile.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      await refreshProfile();
+        await refreshProfile();
 
-      if (Platform.OS === 'web') {
-        window.alert('Sobriety date updated successfully');
-      } else {
-        Alert.alert('Success', 'Sobriety date updated successfully');
+        if (Platform.OS === 'web') {
+          window.alert('Sobriety date updated successfully');
+        } else {
+          Alert.alert('Success', 'Sobriety date updated successfully');
+        }
+      } catch (error: unknown) {
+        logger.error('Sobriety date update failed', error as Error, {
+          category: LogCategory.DATABASE,
+        });
+        const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
+        if (Platform.OS === 'web') {
+          window.alert(message);
+        } else {
+          Alert.alert('Error', message);
+        }
       }
-    } catch (error: unknown) {
-      logger.error('Sobriety date update failed', error as Error, {
-        category: LogCategory.DATABASE,
-      });
-      const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
-      if (Platform.OS === 'web') {
-        window.alert(message);
-      } else {
-        Alert.alert('Error', message);
+    },
+    [profile, userTimezone, refreshProfile]
+  );
+
+  /**
+   * Shared handler for confirming a sobriety date selection.
+   * Closes the date picker and triggers the update.
+   * Used by both iOS (Update button) and Android (native OK) date pickers.
+   *
+   * @param date - The selected date to update, or undefined to cancel
+   */
+  const handleSobrietyDateConfirm = useCallback(
+    (date: Date | undefined) => {
+      setShowSobrietyDatePicker(false);
+      if (date) {
+        updateSobrietyDate(date);
       }
-    }
-  };
+    },
+    [updateSobrietyDate]
+  );
 
   const handleLogSlipUp = () => {
     logSlipUpSheetRef.current?.present();
@@ -663,21 +632,26 @@ export default function ProfileScreen() {
   };
 
   /**
-   * Shows the invite code input and scrolls to the bottom so it's visible.
-   * Uses InteractionManager to wait for the state update to render before scrolling.
+   * Opens the invite code entry sheet.
    */
-  const handleShowInviteInput = () => {
-    setShowInviteInput(true);
-    // Wait for interactions to complete (state update rendered) before scrolling
-    InteractionManager.runAfterInteractions(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    });
+  const handleShowInviteCodeSheet = () => {
+    inviteCodeSheetRef.current?.present();
   };
 
   const styles = createStyles(theme, insets);
 
   return (
-    <KeyboardAvoidingView style={styles.keyboardAvoidingContainer}>
+    <KeyboardAwareScrollView
+      ref={scrollViewRef}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.background }]}
+      contentContainerStyle={{
+        paddingBottom: scrollPadding,
+        flexGrow: 1,
+        backgroundColor: theme.background,
+      }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={true}
+    >
       {/* Navigation Header Bar */}
       <View style={styles.navigationHeader}>
         <Text style={styles.navigationTitle} nativeID="profile-title">
@@ -695,13 +669,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: scrollPadding }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={true}
-      >
+      <View style={styles.container}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -806,55 +774,17 @@ export default function ProfileScreen() {
           ) : (
             <View>
               <Text style={styles.emptyStateText}>No sponsor connected yet</Text>
-              {!showInviteInput ? (
-                <TouchableOpacity style={styles.actionButton} onPress={handleShowInviteInput}>
-                  <QrCode size={20} color={theme.primary} />
-                  <Text style={styles.actionButtonText}>Enter Invite Code</Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.inviteInputContainer}>
-                  <TextInput
-                    style={styles.inviteInput}
-                    placeholder="Enter 8-character code"
-                    placeholderTextColor={theme.textTertiary}
-                    value={inviteCode}
-                    onChangeText={setInviteCode}
-                    autoCapitalize="characters"
-                    maxLength={8}
-                    editable={!isConnecting}
-                    returnKeyType="done"
-                    onSubmitEditing={joinWithInviteCode}
-                  />
-                  <TouchableOpacity
-                    style={[styles.inviteSubmitButton, isConnecting && styles.buttonDisabled]}
-                    onPress={joinWithInviteCode}
-                    disabled={isConnecting}
-                  >
-                    {isConnecting ? (
-                      <ActivityIndicator size="small" color={theme.white} />
-                    ) : (
-                      <Text style={styles.inviteSubmitText}>Connect</Text>
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.inviteCancelButton}
-                    onPress={() => {
-                      setShowInviteInput(false);
-                      setInviteCode('');
-                    }}
-                    disabled={isConnecting}
-                  >
-                    <Text style={styles.inviteCancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+              <TouchableOpacity style={styles.actionButton} onPress={handleShowInviteCodeSheet}>
+                <QrCode size={20} color={theme.primary} />
+                <Text style={styles.actionButtonText}>Enter Invite Code</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
 
-        {sponsorRelationships.length > 0 && !showInviteInput && (
+        {sponsorRelationships.length > 0 && (
           <View style={styles.section}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleShowInviteInput}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleShowInviteCodeSheet}>
               <QrCode size={20} color={theme.primary} />
               <Text style={styles.actionButtonText}>Connect to Another Sponsor</Text>
             </TouchableOpacity>
@@ -905,7 +835,10 @@ export default function ProfileScreen() {
           </Modal>
         )}
 
-        {Platform.OS !== 'web' && showSobrietyDatePicker && (
+        {/* iOS: Custom modal with spinner picker requires explicit "Update" button
+            because the spinner UI allows continuous scrolling without clear confirmation.
+            This matches iOS platform conventions for date selection. */}
+        {Platform.OS === 'ios' && showSobrietyDatePicker && (
           <Modal visible={showSobrietyDatePicker} transparent animationType="slide">
             <View style={styles.modalOverlay}>
               <View style={styles.datePickerModal}>
@@ -922,16 +855,13 @@ export default function ProfileScreen() {
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
                     style={styles.modalCancelButton}
-                    onPress={() => setShowSobrietyDatePicker(false)}
+                    onPress={() => handleSobrietyDateConfirm(undefined)}
                   >
                     <Text style={styles.modalCancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.modalConfirmButton}
-                    onPress={() => {
-                      updateSobrietyDate(selectedSobrietyDate);
-                      setShowSobrietyDatePicker(false);
-                    }}
+                    onPress={() => handleSobrietyDateConfirm(selectedSobrietyDate)}
                   >
                     <Text style={styles.modalConfirmText}>Update</Text>
                   </TouchableOpacity>
@@ -939,6 +869,19 @@ export default function ProfileScreen() {
               </View>
             </View>
           </Modal>
+        )}
+
+        {/* Android: Native dialog has built-in OK/Cancel buttons. Pressing OK confirms
+            the selection immediately, which matches Android platform conventions.
+            The dialog auto-closes on any action, so we sync state accordingly. */}
+        {Platform.OS === 'android' && showSobrietyDatePicker && (
+          <DateTimePicker
+            value={selectedSobrietyDate}
+            mode="date"
+            display="default"
+            onChange={(event, date) => handleSobrietyDateConfirm(date)}
+            maximumDate={maximumDate}
+          />
         )}
 
         {/* Settings Sheet */}
@@ -956,8 +899,17 @@ export default function ProfileScreen() {
             onSlipUpLogged={handleSlipUpLogged}
           />
         )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* Enter Invite Code Sheet */}
+        {profile && user && (
+          <EnterInviteCodeSheet
+            ref={inviteCodeSheetRef}
+            theme={theme}
+            onSubmit={joinWithInviteCode}
+          />
+        )}
+      </View>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -1131,48 +1083,6 @@ const createStyles = (
       fontWeight: '600',
       color: theme.text,
       marginLeft: 12,
-    },
-    inviteInputContainer: {
-      backgroundColor: theme.card,
-      padding: 16,
-      borderRadius: 12,
-      shadowColor: theme.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    inviteInput: {
-      backgroundColor: theme.borderLight,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      marginBottom: 12,
-      color: theme.text,
-    },
-    inviteSubmitButton: {
-      backgroundColor: theme.primary,
-      borderRadius: 8,
-      padding: 12,
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    inviteSubmitText: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.white,
-    },
-    inviteCancelButton: {
-      padding: 12,
-      alignItems: 'center',
-    },
-    inviteCancelText: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.textSecondary,
     },
     loadingContainer: {
       padding: 20,

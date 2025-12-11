@@ -2,7 +2,7 @@
 // Imports
 // =============================================================================
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, ViewStyle } from 'react-native';
+import { BackHandler, Platform, ViewStyle } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -103,6 +103,17 @@ export interface GlassBottomSheetProps {
    * @optional
    */
   keyboardBehavior?: 'interactive' | 'extend' | 'fillParent';
+
+  /**
+   * Keyboard blur behavior configuration for iOS.
+   *
+   * - `'none'` - No action when keyboard blurs
+   * - `'restore'` - Restore sheet position when keyboard dismisses (recommended for iOS)
+   *
+   * @default 'none'
+   * @optional
+   */
+  keyboardBlurBehavior?: 'none' | 'restore';
 }
 
 // =============================================================================
@@ -139,7 +150,16 @@ export interface GlassBottomSheetProps {
  * ```
  */
 const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
-  ({ snapPoints, children, onDismiss, keyboardBehavior = 'interactive' }, ref) => {
+  (
+    {
+      snapPoints,
+      children,
+      onDismiss,
+      keyboardBehavior = 'interactive',
+      keyboardBlurBehavior = 'none',
+    },
+    ref
+  ) => {
     // ---------------------------------------------------------------------------
     // Hooks
     // ---------------------------------------------------------------------------
@@ -162,6 +182,22 @@ const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
 
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen]);
+
+    // ---------------------------------------------------------------------------
+    // Android Hardware Back Button Handler
+    // ---------------------------------------------------------------------------
+    useEffect(() => {
+      // Only add BackHandler listener on Android platform when sheet is open
+      if (Platform.OS !== 'android' || !isOpen) return;
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        // Dismiss the sheet and return true to indicate event was handled
+        bottomSheetRef.current?.dismiss();
+        return true;
+      });
+
+      return () => subscription.remove();
     }, [isOpen]);
 
     // ---------------------------------------------------------------------------
@@ -258,6 +294,7 @@ const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
         backgroundStyle={backgroundStyle}
         handleIndicatorStyle={handleIndicatorStyle}
         keyboardBehavior={keyboardBehavior}
+        keyboardBlurBehavior={keyboardBlurBehavior}
         onDismiss={handleDismiss}
         enablePanDownToClose={true}
         enableDismissOnClose={true}

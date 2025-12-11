@@ -169,6 +169,18 @@ describe('validation utilities', () => {
       it('counts trimmed length', () => {
         expect(validateDisplayName('  J  ')).toBe('Display name must be at least 2 characters');
       });
+
+      it('rejects input containing only special characters', () => {
+        expect(validateDisplayName('!!!!')).toBe(
+          'Display name can only contain letters, spaces, periods, and hyphens'
+        );
+        expect(validateDisplayName('@#$%')).toBe(
+          'Display name can only contain letters, spaces, periods, and hyphens'
+        );
+        expect(validateDisplayName('****')).toBe(
+          'Display name can only contain letters, spaces, periods, and hyphens'
+        );
+      });
     });
 
     describe('boundary conditions', () => {

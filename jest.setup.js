@@ -128,6 +128,30 @@ jest.mock('react-native', () => {
       clearInteractionHandle: jest.fn(),
       setDeadline: jest.fn(),
     },
+    // BackHandler mock for Android back button testing
+    // Tests can access the listeners via global.__backHandlerListeners
+    BackHandler: {
+      addEventListener: jest.fn((event, handler) => {
+        if (event === 'hardwareBackPress') {
+          if (!global.__backHandlerListeners) {
+            global.__backHandlerListeners = [];
+          }
+          global.__backHandlerListeners.push(handler);
+        }
+        return {
+          remove: jest.fn(() => {
+            if (global.__backHandlerListeners) {
+              const index = global.__backHandlerListeners.indexOf(handler);
+              if (index > -1) {
+                global.__backHandlerListeners.splice(index, 1);
+              }
+            }
+          }),
+        };
+      }),
+      removeEventListener: jest.fn(),
+      exitApp: jest.fn(),
+    },
   };
 });
 
@@ -136,6 +160,56 @@ global.processColor = (color) => color;
 
 // Define __DEV__ for tests
 global.__DEV__ = false;
+
+// Mock document for web platform tests (keyboard event handling, DOM access, etc.)
+// This provides a more complete mock to avoid errors when code accesses document properties.
+// Note: Jest is configured to use the 'node' environment (see CLAUDE.md), so jsdom is not available.
+// This manual mock provides basic document functionality for compatibility in tests.
+global.document = {
+  // Event handling
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+
+  // DOM queries (return null/empty to simulate no matches)
+  getElementById: jest.fn(() => null),
+  getElementsByClassName: jest.fn(() => []),
+  getElementsByTagName: jest.fn(() => []),
+  querySelector: jest.fn(() => null),
+  querySelectorAll: jest.fn(() => []),
+
+  // Document properties
+  body: {
+    appendChild: jest.fn(),
+    removeChild: jest.fn(),
+    style: {},
+  },
+  head: {
+    appendChild: jest.fn(),
+    removeChild: jest.fn(),
+  },
+  documentElement: {
+    style: {},
+  },
+
+  // Element creation
+  createElement: jest.fn((tagName) => ({
+    tagName,
+    style: {},
+    setAttribute: jest.fn(),
+    getAttribute: jest.fn(),
+    appendChild: jest.fn(),
+    removeChild: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+  })),
+  createTextNode: jest.fn((text) => ({ textContent: text })),
+
+  // Document state
+  readyState: 'complete',
+  visibilityState: 'visible',
+  hidden: false,
+};
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
