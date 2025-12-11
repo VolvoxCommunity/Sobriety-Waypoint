@@ -1,14 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, {
-  useState,
-  useCallback,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useEffect,
-} from 'react';
+import React, { useState, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { ThemeColors } from '@/contexts/ThemeContext';
@@ -111,16 +104,7 @@ const EnterInviteCodeSheet = forwardRef<EnterInviteCodeSheetRef, EnterInviteCode
     const [error, setError] = useState<string | null>(null);
 
     const sheetRef = useRef<GlassBottomSheetRef>(null);
-    const isMountedRef = useRef(true);
     const didSubmitSuccessfullyRef = useRef(false);
-
-    // Track mounted state to prevent state updates after unmount
-    useEffect(() => {
-      isMountedRef.current = true;
-      return () => {
-        isMountedRef.current = false;
-      };
-    }, []);
 
     // ---------------------------------------------------------------------------
     // Imperative API
@@ -187,21 +171,14 @@ const EnterInviteCodeSheet = forwardRef<EnterInviteCodeSheetRef, EnterInviteCode
 
       try {
         await onSubmit(inviteCode);
-        // Guard against state updates after unmount
-        if (!isMountedRef.current) return;
         // Mark as successful submission before dismissing
         // This prevents onClose from being called (per documented contract)
         didSubmitSuccessfullyRef.current = true;
-        // Dismiss sheet on success
         sheetRef.current?.dismiss();
       } catch (err: unknown) {
-        // Guard against state updates after unmount
-        if (!isMountedRef.current) return;
         setError(err instanceof Error ? err.message : 'Failed to connect. Please try again.');
       } finally {
-        if (isMountedRef.current) {
-          setIsSubmitting(false);
-        }
+        setIsSubmitting(false);
       }
     }, [inviteCode, isSubmitting, onSubmit]);
 
