@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
@@ -25,28 +26,31 @@ import {
   ClipboardList,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import TaskCreationModal from '@/components/TaskCreationModal';
+import TaskCreationSheet, { TaskCreationSheetRef } from '@/components/TaskCreationSheet';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 
 /**
- * Renders the home dashboard showing sobriety summary, sponsor/sponsee relationships, recent tasks, and quick actions.
+ * Render the home dashboard that displays sobriety summary, active sponsor/sponsee relationships, recent assigned tasks, and quick actions.
  *
- * The screen fetches and displays active sponsor/sponsee relationships and recent assigned tasks, supports pull-to-refresh, allows disconnecting relationships, and provides a modal to create tasks for sponsees.
+ * The screen fetches active relationships and recent tasks, supports pull-to-refresh, allows disconnecting relationships, and opens the task creation sheet for sponsees.
  *
  * @returns The Home screen React element
  */
 export default function HomeScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
+  // Get safe area insets for scroll padding
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
   const [relationships, setRelationships] = useState<SponsorSponseeRelationship[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedSponseeId, setSelectedSponseeId] = useState<string>('');
   const [sponseeProfiles, setSponseeProfiles] = useState<Profile[]>([]);
   const router = useRouter();
   const { daysSober, currentStreakStartDate, loading: loadingDaysSober } = useDaysSober();
+  const taskSheetRef = useRef<TaskCreationSheetRef>(null);
 
   const fetchData = useCallback(async () => {
     if (!profile) return;
@@ -186,6 +190,7 @@ export default function HomeScreen() {
     <ScrollView
       testID="home-scroll-view"
       style={styles.container}
+      contentContainerStyle={{ paddingBottom: tabBarHeight }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
       }
@@ -290,7 +295,7 @@ export default function HomeScreen() {
                   style={styles.assignTaskButton}
                   onPress={() => {
                     setSelectedSponseeId(rel.sponsee_id);
-                    setShowTaskModal(true);
+                    taskSheetRef.current?.present();
                   }}
                 >
                   <Plus size={16} color={theme.primary} />
@@ -309,10 +314,9 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <TaskCreationModal
-        visible={showTaskModal}
+      <TaskCreationSheet
+        ref={taskSheetRef}
         onClose={() => {
-          setShowTaskModal(false);
           setSelectedSponseeId('');
         }}
         onTaskCreated={fetchData}

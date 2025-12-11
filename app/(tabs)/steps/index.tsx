@@ -1,26 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Platform, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StepContent, UserStepProgress } from '@/types/database';
-import { X, CheckCircle, Circle } from 'lucide-react-native';
+import { CheckCircle } from 'lucide-react-native';
 import { logger, LogCategory } from '@/lib/logger';
-import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
 
 /**
- * Screen that displays the 12 steps, the current user's completion progress, and a modal with step details and reflection prompts.
+ * Display the list of the 12 steps with per-step completion indicators and navigation to each step's detail screen.
  *
- * Fetches steps content and the user's progress from the database, shows loading/error/empty states, lets the user open a step to view detailed content and reflection questions, and toggle completion for a step.
+ * Renders a header, handles loading/error/empty states, and shows a scrollable list of step cards; tapping a card navigates to /steps/{id}.
  *
- * @returns The component's rendered React element for the Steps screen.
+ * @returns The rendered Steps list screen component
  */
 export default function StepsScreen() {
   const { theme } = useTheme();
   const { profile } = useAuth();
+  const router = useRouter();
+  // Get safe area insets for scroll padding
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
   const [steps, setSteps] = useState<StepContent[]>([]);
   const [progress, setProgress] = useState<Record<number, UserStepProgress>>({});
-  const [selectedStep, setSelectedStep] = useState<StepContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,61 +86,20 @@ export default function StepsScreen() {
     }
   };
 
+  // Refetch progress when returning from detail screen
   useEffect(() => {
     fetchSteps();
     fetchProgress();
   }, [fetchProgress]);
 
   /**
-   * Handler for when a step is selected/viewed.
-   * Tracks analytics and opens the step detail modal.
+   * Handler for when a step is selected.
+   * Navigates to the dedicated step detail screen.
    *
    * @param step - The step that was selected
    */
   const handleStepPress = (step: StepContent) => {
-    setSelectedStep(step);
-    // Track step viewed event
-    trackEvent(AnalyticsEvents.STEP_VIEWED, { step_number: step.step_number });
-  };
-
-  const toggleStepCompletion = async (stepNumber: number) => {
-    if (!profile) return;
-
-    const existingProgress = progress[stepNumber];
-
-    try {
-      if (existingProgress) {
-        const { error: deleteError } = await supabase
-          .from('user_step_progress')
-          .delete()
-          .eq('id', existingProgress.id);
-
-        if (deleteError) throw deleteError;
-
-        const newProgress = { ...progress };
-        delete newProgress[stepNumber];
-        setProgress(newProgress);
-      } else {
-        const { data, error: insertError } = await supabase
-          .from('user_step_progress')
-          .insert({
-            user_id: profile.id,
-            step_number: stepNumber,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-
-        setProgress({ ...progress, [stepNumber]: data });
-      }
-    } catch (err) {
-      logger.error('Step completion toggle failed', err as Error, {
-        category: LogCategory.DATABASE,
-      });
-    }
+    router.push(`/steps/${step.id}`);
   };
 
   const styles = createStyles(theme);
@@ -148,7 +111,7 @@ export default function StepsScreen() {
         <Text style={styles.headerSubtitle}>Your path to recovery</Text>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: tabBarHeight }}>
         {loading && (
           <View style={styles.centerContainer}>
             <Text style={styles.loadingText}>Loading steps...</Text>
@@ -157,9 +120,9 @@ export default function StepsScreen() {
         {error && (
           <View style={styles.centerContainer}>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={fetchSteps}>
+            <Pressable style={styles.retryButton} onPress={fetchSteps}>
               <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
         {!loading && !error && steps.length === 0 && (
@@ -172,7 +135,7 @@ export default function StepsScreen() {
           steps.map((step) => {
             const isCompleted = !!progress[step.step_number];
             return (
-              <TouchableOpacity
+              <Pressable
                 key={step.id}
                 style={[styles.stepCard, isCompleted && styles.stepCardCompleted]}
                 onPress={() => handleStepPress(step)}
@@ -192,71 +155,10 @@ export default function StepsScreen() {
                     </View>
                   )}
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
       </ScrollView>
-
-      <Modal
-        visible={selectedStep !== null}
-        animationType="slide"
-        onRequestClose={() => setSelectedStep(null)}
-      >
-        <View style={styles.modal}>
-          <View style={styles.modalHeader}>
-            <View style={styles.modalHeaderContent}>
-              <Text style={styles.modalStepNumber}>Step {selectedStep?.step_number}</Text>
-              <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedStep(null)}>
-                <X size={24} color={theme.textSecondary} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{selectedStep?.title}</Text>
-            <Text style={styles.modalDescription}>{selectedStep?.description}</Text>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Understanding This Step</Text>
-              <Text style={styles.sectionContent}>{selectedStep?.detailed_content}</Text>
-            </View>
-
-            {selectedStep?.reflection_prompts && selectedStep.reflection_prompts.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Reflection Questions</Text>
-                {selectedStep.reflection_prompts.map((prompt, index) => (
-                  <View key={index} style={styles.promptItem}>
-                    <Text style={styles.promptBullet}>•</Text>
-                    <Text style={styles.promptText}>{prompt}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={[
-                styles.completeButton,
-                selectedStep && progress[selectedStep.step_number] && styles.completeButtonActive,
-              ]}
-              onPress={() => selectedStep && toggleStepCompletion(selectedStep.step_number)}
-            >
-              {selectedStep && progress[selectedStep.step_number] ? (
-                <>
-                  <CheckCircle size={20} color="#ffffff" />
-                  <Text style={styles.completeButtonText}>Marked as Complete</Text>
-                </>
-              ) : (
-                <>
-                  <Circle size={20} color="#ffffff" />
-                  <Text style={styles.completeButtonText}>Mark as Complete</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -340,83 +242,6 @@ const createStyles = (theme: ThemeColors) =>
       color: theme.textSecondary,
       lineHeight: 20,
     },
-    modal: {
-      flex: 1,
-      backgroundColor: theme.card,
-    },
-    modalHeader: {
-      padding: 24,
-      paddingTop: 60,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    modalHeaderContent: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    closeButton: {
-      padding: 4,
-    },
-    modalStepNumber: {
-      fontSize: 20,
-      fontFamily: theme.fontRegular,
-      fontWeight: '700',
-      color: theme.primary,
-    },
-    modalContent: {
-      flex: 1,
-      padding: 24,
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontFamily: theme.fontRegular,
-      fontWeight: '700',
-      color: theme.text,
-      marginBottom: 12,
-      lineHeight: 28,
-    },
-    modalDescription: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      lineHeight: 24,
-      marginBottom: 24,
-    },
-    section: {
-      marginBottom: 32,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.text,
-      marginBottom: 12,
-    },
-    sectionContent: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      lineHeight: 26,
-    },
-    promptItem: {
-      flexDirection: 'row',
-      marginBottom: 12,
-    },
-    promptBullet: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      color: theme.primary,
-      marginRight: 12,
-      fontWeight: '700',
-    },
-    promptText: {
-      flex: 1,
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      lineHeight: 24,
-    },
     centerContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -465,30 +290,5 @@ const createStyles = (theme: ThemeColors) =>
       fontFamily: theme.fontRegular,
       color: '#10b981',
       fontWeight: '600',
-    },
-    modalFooter: {
-      padding: 20,
-      borderTopWidth: 1,
-      borderTopColor: theme.border,
-      backgroundColor: theme.card,
-    },
-    completeButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.primary,
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      borderRadius: 12,
-      gap: 8,
-    },
-    completeButtonActive: {
-      backgroundColor: '#10b981',
-    },
-    completeButtonText: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: '#ffffff',
     },
   });

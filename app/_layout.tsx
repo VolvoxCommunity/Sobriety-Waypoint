@@ -36,6 +36,9 @@ import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { View, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { X } from 'lucide-react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useFonts } from 'expo-font';
 import {
   JetBrainsMono_400Regular,
@@ -90,6 +93,53 @@ function RootLayoutNav() {
     }
   }, [pathname]);
 
+  /**
+   * Maps the current pathname to a human-readable page title.
+   * Used for the browser tab title on web.
+   *
+   * Note: Dynamic routes like /steps/[id] use UUIDs in the URL, so we show
+   * a generic "Step Details" title. The actual step number (1-12) is only
+   * available from the database after the step data is fetched.
+   */
+  const getPageTitle = (): string => {
+    // Guard against null pathname (can occur on first render before router is ready)
+    if (!pathname) {
+      return 'Sobriety Waypoint';
+    }
+
+    const titles: Record<string, string> = {
+      '/': 'Home',
+      '/login': 'Sign In',
+      '/signup': 'Sign Up',
+      '/onboarding': 'Get Started',
+      '/journey': 'Journey',
+      '/tasks': 'Tasks',
+      '/manage-tasks': 'Manage Tasks',
+      '/profile': 'Profile',
+      '/settings': 'Settings',
+      '/steps': 'Steps',
+    };
+
+    // Check for exact match first
+    if (titles[pathname]) {
+      return `${titles[pathname]} | Sobriety Waypoint`;
+    }
+
+    // Handle dynamic routes like /steps/[id]
+    // Note: The URL contains the step's UUID, not the step number (1-12).
+    // The step number is only available from the database, so we use a generic title here.
+    // This could be enhanced in the future by adding the step number to the route params
+    // or using a separate metadata API to fetch the step number for more specific titles (better for SEO).
+    if (pathname.startsWith('/steps/')) {
+      return 'Step Details | Sobriety Waypoint';
+    }
+
+    // Default fallback
+    return 'Sobriety Waypoint';
+  };
+
+  const pageTitle = getPageTitle();
+
   useEffect(() => {
     // Wait for both auth loading to complete AND navigator to be ready
     if (loading || !navigatorReady) return;
@@ -118,9 +168,10 @@ function RootLayoutNav() {
   }, [user, profile, segments, loading, router, navigatorReady]);
 
   // SEO meta tags rendered unconditionally for search engine and social media crawlers
+  // Title updates dynamically based on current route for better browser tab UX
   const seoHead = (
     <Head>
-      <title>Sobriety Waypoint</title>
+      <title>{pageTitle}</title>
       <meta name="description" content="Your companion on the journey to recovery" />
 
       {/* Open Graph / Facebook */}
@@ -157,6 +208,7 @@ function RootLayoutNav() {
         <Stack.Screen name="signup" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
+        {/* Settings route kept as fallback - primary access via bottom sheet in profile.tsx */}
         <Stack.Screen
           name="settings"
           options={{
@@ -212,17 +264,26 @@ export default wrapRootComponent(function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <RootLayoutNav />
-        </AuthProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={styles.container}>
+      <ErrorBoundary>
+        <KeyboardProvider>
+          <BottomSheetModalProvider>
+            <ThemeProvider>
+              <AuthProvider>
+                <RootLayoutNav />
+              </AuthProvider>
+            </ThemeProvider>
+          </BottomSheetModalProvider>
+        </KeyboardProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 });
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

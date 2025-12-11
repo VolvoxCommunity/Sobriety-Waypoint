@@ -9,8 +9,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { supabase } from '@/lib/supabase';
 import { TaskTemplate, Profile } from '@/types/database';
 import { ThemeColors } from '@/contexts/ThemeContext';
@@ -185,10 +185,7 @@ export default function TaskCreationModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalOverlay}
-      >
+      <KeyboardAvoidingView style={styles.modalOverlay}>
         <TouchableOpacity activeOpacity={1} onPress={closeAllDropdowns}>
           <TouchableOpacity
             style={styles.modalContent}
@@ -446,7 +443,7 @@ export default function TaskCreationModal({
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={theme.white} />
                 ) : (
                   <Text style={styles.submitButtonText}>Assign Task</Text>
                 )}

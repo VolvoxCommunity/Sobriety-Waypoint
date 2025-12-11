@@ -174,6 +174,17 @@ describe('SignupScreen', () => {
 
       expect(mockBack).toHaveBeenCalled();
     });
+
+    it('navigates back when back button is pressed', () => {
+      render(<SignupScreen />);
+
+      // The back button is a TouchableOpacity with an ArrowLeft icon
+      // Find it by its role or structure - it's the first TouchableOpacity
+      const backButton = screen.getByTestId('back-button');
+      fireEvent.press(backButton);
+
+      expect(mockBack).toHaveBeenCalled();
+    });
   });
 
   describe('Form Validation', () => {
