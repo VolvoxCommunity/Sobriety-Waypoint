@@ -300,7 +300,7 @@ const createStyles = (theme: ThemeColors) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       fontWeight: '600',
-      color: '#ffffff',
+      color: theme.white,
     },
   });
 
