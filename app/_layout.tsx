@@ -1,5 +1,7 @@
 // Initialize Sentry before anything else using centralized configuration
 import { initializeSentry, navigationIntegration, wrapRootComponent } from '@/lib/sentry';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/lib/toast';
 
 // Initialize Sentry once with centralized configuration from lib/sentry.ts
 // This handles environment detection, privacy hooks, and all integrations
@@ -271,6 +273,7 @@ export default wrapRootComponent(function RootLayout() {
             <ThemeProvider>
               <AuthProvider>
                 <RootLayoutNav />
+                <Toast config={toastConfig} position="top" topOffset={60} />
               </AuthProvider>
             </ThemeProvider>
           </BottomSheetModalProvider>
