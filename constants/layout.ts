@@ -31,7 +31,7 @@ export const ANDROID_TAB_BAR_EXTRA_PADDING = 24;
  * Calculates the bottom padding needed for scrollable content above the tab bar.
  *
  * @param bottomInset - The bottom safe area inset from useSafeAreaInsets()
- * @param extraPadding - Additional padding to add (defaults to 16)
+ * @param extraPadding - Additional padding to add (defaults to platform-specific value)
  * @returns The calculated padding for iOS, or extraPadding for other platforms
  *
  * @example
@@ -40,6 +40,11 @@ export const ANDROID_TAB_BAR_EXTRA_PADDING = 24;
  * const paddingBottom = getTabBarScrollPadding(insets.bottom);
  * ```
  */
-export function getTabBarScrollPadding(bottomInset: number, extraPadding: number = 16): number {
+export function getTabBarScrollPadding(
+  bottomInset: number,
+  extraPadding: number = Platform.OS === 'ios'
+    ? IOS_TAB_BAR_EXTRA_PADDING
+    : ANDROID_TAB_BAR_EXTRA_PADDING
+): number {
   return Platform.OS === 'ios' ? bottomInset + IOS_TAB_BAR_HEIGHT + extraPadding : extraPadding;
 }
