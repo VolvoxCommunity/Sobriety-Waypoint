@@ -11,6 +11,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import Toast from 'react-native-toast-message';
 import SignupScreen from '@/app/signup';
 
 // =============================================================================
@@ -281,8 +282,7 @@ describe('SignupScreen', () => {
       });
     });
 
-    it('shows error alert when Google sign in fails', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows error toast when Google sign in fails', async () => {
       mockSignInWithGoogle.mockRejectedValueOnce(new Error('Google auth failed'));
 
       render(<SignupScreen />);
@@ -290,12 +290,13 @@ describe('SignupScreen', () => {
       fireEvent.press(screen.getByText('Continue with Google'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Google auth failed');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Google auth failed' })
+        );
       });
     });
 
     it('handles non-Error objects in Google sign in catch', async () => {
-      const { Alert } = jest.requireMock('react-native');
       mockSignInWithGoogle.mockRejectedValueOnce('string error');
 
       render(<SignupScreen />);
@@ -303,14 +304,15 @@ describe('SignupScreen', () => {
       fireEvent.press(screen.getByText('Continue with Google'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to sign in with Google');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to sign in with Google' })
+        );
       });
     });
   });
 
   describe('Form Validation Errors', () => {
-    it('shows alert when email is empty', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows toast when email is empty', async () => {
       render(<SignupScreen />);
 
       const passwordInputs = screen.getAllByPlaceholderText('••••••••');
@@ -321,12 +323,13 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Please fill in all fields' })
+        );
       });
     });
 
-    it('shows alert when password is empty', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows toast when password is empty', async () => {
       render(<SignupScreen />);
 
       const emailInput = screen.getByPlaceholderText('your@email.com');
@@ -339,12 +342,13 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Please fill in all fields' })
+        );
       });
     });
 
-    it('shows alert when confirm password is empty', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows toast when confirm password is empty', async () => {
       render(<SignupScreen />);
 
       const emailInput = screen.getByPlaceholderText('your@email.com');
@@ -357,12 +361,13 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Please fill in all fields' })
+        );
       });
     });
 
-    it('shows alert when passwords do not match', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows toast when passwords do not match', async () => {
       render(<SignupScreen />);
 
       const emailInput = screen.getByPlaceholderText('your@email.com');
@@ -376,12 +381,13 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Passwords do not match');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Passwords do not match' })
+        );
       });
     });
 
-    it('shows alert when password is too short', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows toast when password is too short', async () => {
       render(<SignupScreen />);
 
       const emailInput = screen.getByPlaceholderText('your@email.com');
@@ -395,14 +401,15 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Password must be at least 6 characters');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Password must be at least 6 characters' })
+        );
       });
     });
   });
 
   describe('Sign Up Error Handling', () => {
-    it('shows error alert when sign up fails', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows error toast when sign up fails', async () => {
       mockSignUp.mockRejectedValueOnce(new Error('Email already registered'));
 
       render(<SignupScreen />);
@@ -418,12 +425,13 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Email already registered');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Email already registered' })
+        );
       });
     });
 
     it('handles non-Error objects in sign up catch', async () => {
-      const { Alert } = jest.requireMock('react-native');
       mockSignUp.mockRejectedValueOnce('string error');
 
       render(<SignupScreen />);
@@ -439,7 +447,9 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to create account');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to create account' })
+        );
       });
     });
   });
