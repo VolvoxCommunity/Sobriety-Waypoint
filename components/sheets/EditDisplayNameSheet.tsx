@@ -23,6 +23,7 @@ import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { ThemeColors } from '@/contexts/ThemeContext';
 import { X } from 'lucide-react-native';
 import GlassBottomSheet, { GlassBottomSheetRef } from '@/components/GlassBottomSheet';
+import { validateDisplayName } from '@/lib/validation';
 
 // =============================================================================
 // Types & Interfaces
@@ -82,40 +83,6 @@ export interface EditDisplayNameSheetProps {
    * @optional
    */
   onClose?: () => void;
-}
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Validate a display name and return a specific error message when it fails validation.
- *
- * @param name - The display name to validate
- * @returns An error message describing the validation failure, or `null` if the name is valid
- */
-function validateDisplayName(name: string): string | null {
-  const trimmed = name.trim();
-
-  if (trimmed.length === 0) {
-    return 'Display name cannot be empty';
-  }
-
-  if (trimmed.length < 2) {
-    return 'Display name must be at least 2 characters';
-  }
-
-  if (trimmed.length > 30) {
-    return 'Display name must be 30 characters or less';
-  }
-
-  // Check for invalid characters (allow letters, numbers, spaces, hyphens, apostrophes)
-  const validNamePattern = /^[a-zA-Z0-9\s'-]+$/;
-  if (!validNamePattern.test(trimmed)) {
-    return 'Display name contains invalid characters';
-  }
-
-  return null;
 }
 
 // =============================================================================

@@ -208,7 +208,7 @@ describe('EditDisplayNameSheet', () => {
       fireEvent.changeText(input, '');
       fireEvent.press(saveButton);
 
-      expect(getByText('Display name cannot be empty')).toBeTruthy();
+      expect(getByText('Display name is required')).toBeTruthy();
       expect(mockOnSave).not.toHaveBeenCalled();
     });
 
@@ -224,7 +224,7 @@ describe('EditDisplayNameSheet', () => {
       fireEvent.changeText(input, '   ');
       fireEvent.press(saveButton);
 
-      expect(getByText('Display name cannot be empty')).toBeTruthy();
+      expect(getByText('Display name is required')).toBeTruthy();
       expect(mockOnSave).not.toHaveBeenCalled();
     });
 
@@ -272,11 +272,13 @@ describe('EditDisplayNameSheet', () => {
       fireEvent.changeText(input, 'John@Doe');
       fireEvent.press(saveButton);
 
-      expect(getByText('Display name contains invalid characters')).toBeTruthy();
+      expect(
+        getByText('Display name can only contain letters, spaces, periods, and hyphens')
+      ).toBeTruthy();
       expect(mockOnSave).not.toHaveBeenCalled();
     });
 
-    it('accepts valid display names with letters, numbers, spaces, hyphens, and apostrophes', async () => {
+    it('accepts valid display names with letters, spaces, periods, and hyphens', async () => {
       const mockOnSave = jest.fn().mockResolvedValue(undefined);
       const { getByTestId, queryByText } = render(
         <EditDisplayNameSheet currentDisplayName="John Doe" theme={mockTheme} onSave={mockOnSave} />
@@ -285,14 +287,17 @@ describe('EditDisplayNameSheet', () => {
       const input = getByTestId('display-name-input');
       const saveButton = getByTestId('save-button');
 
-      const validNames = ["John-Paul O'Brien", 'Jane Smith 2', "D'Angelo", 'Bob-123'];
+      // Valid names per lib/validation.ts: letters (any language), spaces, periods, hyphens
+      const validNames = ['John-Paul Smith', 'Jane M. Doe', 'Dr. Jones', 'María García'];
 
       for (const name of validNames) {
         fireEvent.changeText(input, name);
         fireEvent.press(saveButton);
 
         await waitFor(() => {
-          expect(queryByText('Display name contains invalid characters')).toBeNull();
+          expect(
+            queryByText('Display name can only contain letters, spaces, periods, and hyphens')
+          ).toBeNull();
         });
 
         mockOnSave.mockClear();
