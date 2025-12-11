@@ -190,6 +190,8 @@ jest.mock('lucide-react-native', () => ({
   Copy: () => null,
   User: () => null,
   ChevronLeft: () => null,
+  X: () => null,
+  Settings: () => null,
 }));
 
 // Mock GlassBottomSheet
@@ -260,9 +262,25 @@ describe('SettingsSheet', () => {
       ref.current?.dismiss();
       expect(mockDismiss).toHaveBeenCalled();
     });
+
+    it('should dismiss when close button is pressed', () => {
+      render(<SettingsSheet />);
+
+      const closeButton = screen.getByTestId('close-icon-button');
+      fireEvent.press(closeButton);
+
+      expect(mockDismiss).toHaveBeenCalled();
+    });
   });
 
   describe('Rendering', () => {
+    it('should render header with title and close button', () => {
+      render(<SettingsSheet />);
+
+      expect(screen.getByText('Settings')).toBeTruthy();
+      expect(screen.getByTestId('close-icon-button')).toBeTruthy();
+    });
+
     it('should render settings sections', () => {
       render(<SettingsSheet />);
 

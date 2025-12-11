@@ -47,6 +47,8 @@ import {
   Copy,
   User,
   ChevronLeft,
+  X,
+  Settings,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import Constants from 'expo-constants';
@@ -304,6 +306,14 @@ const SettingsSheet = forwardRef<SettingsSheetRef>((props, ref) => {
   // ---------------------------------------------------------------------------
   // Callbacks
   // ---------------------------------------------------------------------------
+  /**
+   * Handler for close button press.
+   * Triggers the sheet dismiss animation.
+   */
+  const handlePressClose = useCallback(() => {
+    sheetRef.current?.dismiss();
+  }, []);
+
   const toggleBuildInfo = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsBuildInfoExpanded((prev) => !prev);
@@ -566,6 +576,22 @@ const SettingsSheet = forwardRef<SettingsSheetRef>((props, ref) => {
   return (
     <>
       <GlassBottomSheet ref={sheetRef} snapPoints={['90%']}>
+        <View style={styles.header}>
+          <View style={styles.headerIcon}>
+            <Settings size={24} color={theme.primary} />
+          </View>
+          <Text style={styles.title}>Settings</Text>
+          <TouchableOpacity
+            onPress={handlePressClose}
+            style={styles.closeButton}
+            testID="close-icon-button"
+            accessibilityLabel="Close"
+            accessibilityRole="button"
+          >
+            <X size={24} color={theme.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
         <BottomSheetScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
@@ -1191,6 +1217,30 @@ SettingsSheet.displayName = 'SettingsSheet';
  */
 const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
   StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    headerIcon: {
+      width: 24,
+    },
+    title: {
+      fontSize: 20,
+      fontFamily: theme.fontRegular,
+      fontWeight: '700',
+      color: theme.text,
+      flex: 1,
+      textAlign: 'center',
+    },
+    closeButton: {
+      padding: 4,
+    },
     scrollView: {
       flex: 1,
     },
