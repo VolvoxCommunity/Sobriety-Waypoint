@@ -399,7 +399,7 @@ Since this app has auth guards, test these scenarios:
 
 **Step-by-Step Example:**
 
-```
+```text
 # Example: Verifying a new button on the profile screen
 
 1. Start dev server: pnpm web
