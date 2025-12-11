@@ -11,6 +11,20 @@ import {
 import { useTheme } from '@/contexts/ThemeContext';
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Backdrop opacity for iOS - lighter for glass-like effect with blur.
+ */
+const IOS_BACKDROP_OPACITY = 0.3;
+
+/**
+ * Backdrop opacity for Android/other platforms - higher opacity since no blur is used.
+ */
+const DEFAULT_BACKDROP_OPACITY = 0.5;
+
+// =============================================================================
 // Types & Interfaces
 // =============================================================================
 
@@ -189,7 +203,7 @@ const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
       (props: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop
           {...props}
-          opacity={Platform.OS === 'ios' ? 0.3 : 0.5}
+          opacity={Platform.OS === 'ios' ? IOS_BACKDROP_OPACITY : DEFAULT_BACKDROP_OPACITY}
           appearsOnIndex={0}
           disappearsOnIndex={-1}
           pressBehavior="close"
