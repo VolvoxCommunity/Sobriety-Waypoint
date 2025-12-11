@@ -868,14 +868,16 @@ export default function ProfileScreen() {
         )}
 
         {/* Enter Invite Code Sheet */}
-        <EnterInviteCodeSheet
-          ref={inviteCodeSheetRef}
-          theme={theme}
-          onSubmit={joinWithInviteCode}
-          onClose={() => {
-            // Sheet dismissed without submitting
-          }}
-        />
+        {profile && user && (
+          <EnterInviteCodeSheet
+            ref={inviteCodeSheetRef}
+            theme={theme}
+            onSubmit={joinWithInviteCode}
+            onClose={() => {
+              // Sheet dismissed without submitting
+            }}
+          />
+        )}
       </View>
     </KeyboardAwareScrollView>
   );
