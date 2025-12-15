@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -224,8 +224,6 @@ export default function TasksScreen() {
     }
   };
 
-  const getMyTasksByStatus = (status: string) => myTasks.filter((t) => t.status === status);
-
   // =============================================================================
   // Manage Handlers
   // =============================================================================
@@ -277,7 +275,27 @@ export default function TasksScreen() {
     }
   };
 
-  const getFilteredTasks = () => {
+  // =============================================================================
+  // Derived State / Memoization
+  // =============================================================================
+
+  // Memoize styles to prevent recreation on every render
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  // Memoize task stats and filtered lists to avoid expensive array operations on every render
+  // This improves responsiveness, especially when switching tabs or typing in inputs
+
+  const myTasksStats = useMemo(() => {
+    const pending = myTasks.filter((t) => t.status !== 'completed').length;
+    const completed = myTasks.filter((t) => t.status === 'completed').length;
+    return { pending, completed };
+  }, [myTasks]);
+
+  const assignedTasks = useMemo(() => myTasks.filter((t) => t.status === 'assigned'), [myTasks]);
+
+  const completedTasks = useMemo(() => myTasks.filter((t) => t.status === 'completed'), [myTasks]);
+
+  const filteredManageTasks = useMemo(() => {
     let filtered = manageTasks;
 
     if (filterStatus !== 'all') {
@@ -289,9 +307,9 @@ export default function TasksScreen() {
     }
 
     return filtered;
-  };
+  }, [manageTasks, filterStatus, selectedSponseeFilter]);
 
-  const getManageTaskStats = () => {
+  const manageStats = useMemo(() => {
     const now = new Date();
     const total = manageTasks.length;
     const assigned = manageTasks.filter((t) => t.status === 'assigned').length;
@@ -302,40 +320,23 @@ export default function TasksScreen() {
     ).length;
 
     return { total, assigned, inProgress, completed, overdue };
-  };
+  }, [manageTasks]);
 
-  const isOverdue = (task: Task) => {
-    if (!task.due_date || task.status === 'completed') return false;
-    return new Date(task.due_date) < new Date();
-  };
-
-  const groupTasksBySponsee = () => {
-    const filtered = getFilteredTasks();
+  const groupedTasks = useMemo(() => {
     const grouped: { [key: string]: Task[] } = {};
-    filtered.forEach((task) => {
+    filteredManageTasks.forEach((task) => {
       if (!grouped[task.sponsee_id]) {
         grouped[task.sponsee_id] = [];
       }
       grouped[task.sponsee_id].push(task);
     });
     return grouped;
-  };
+  }, [filteredManageTasks]);
 
-  // =============================================================================
-  // Stats Calculation
-  // =============================================================================
-
-  const getMyTasksStats = () => {
-    const pending = myTasks.filter((t) => t.status !== 'completed').length;
-    const completed = myTasks.filter((t) => t.status === 'completed').length;
-    return { pending, completed };
-  };
-
-  const myTasksStats = getMyTasksStats();
-  const manageStats = getManageTaskStats();
-  const groupedTasks = groupTasksBySponsee();
-
-  const styles = createStyles(theme);
+  const isOverdue = useCallback((task: Task) => {
+    if (!task.due_date || task.status === 'completed') return false;
+    return new Date(task.due_date) < new Date();
+  }, []);
 
   // =============================================================================
   // Render
@@ -384,10 +385,10 @@ export default function TasksScreen() {
             }
           >
             {/* Pending Tasks */}
-            {getMyTasksByStatus('assigned').length > 0 && (
+            {assignedTasks.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>New Tasks</Text>
-                {getMyTasksByStatus('assigned').map((task) => (
+                {assignedTasks.map((task) => (
                   <View key={task.id} style={styles.taskCard}>
                     <View style={styles.taskHeader}>
                       {task.step_number && (
@@ -429,7 +430,7 @@ export default function TasksScreen() {
             )}
 
             {/* Completed Tasks */}
-            {getMyTasksByStatus('completed').length > 0 && (
+            {completedTasks.length > 0 && (
               <View style={styles.section}>
                 <TouchableOpacity
                   style={styles.sectionHeader}
@@ -438,13 +439,11 @@ export default function TasksScreen() {
                   accessibilityLabel={`${showCompletedTasks ? 'Hide' : 'Show'} completed tasks`}
                   accessibilityState={{ expanded: showCompletedTasks }}
                 >
-                  <Text style={styles.sectionTitle}>
-                    Completed ({getMyTasksByStatus('completed').length})
-                  </Text>
+                  <Text style={styles.sectionTitle}>Completed ({completedTasks.length})</Text>
                   <Text style={styles.toggleText}>{showCompletedTasks ? 'Hide' : 'Show'}</Text>
                 </TouchableOpacity>
                 {showCompletedTasks &&
-                  getMyTasksByStatus('completed').map((task) => (
+                  completedTasks.map((task) => (
                     <View key={task.id} style={[styles.taskCard, styles.completedCard]}>
                       <View style={styles.taskHeader}>
                         {task.step_number && (
@@ -717,7 +716,7 @@ export default function TasksScreen() {
                   profile.
                 </Text>
               </View>
-            ) : getFilteredTasks().length === 0 ? (
+            ) : filteredManageTasks.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>No Tasks</Text>
                 <Text style={styles.emptyText}>
