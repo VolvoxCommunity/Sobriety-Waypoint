@@ -222,6 +222,39 @@ describe('Supabase Module', () => {
         }
       });
 
+      it('chunks large values on iOS to avoid SecureStore 2048-byte limit', async () => {
+        jest.resetModules();
+        (Platform as any).OS = 'ios';
+        global.window = {} as Window & typeof globalThis;
+
+        // Simulate iOS SecureStore throwing when attempting to store >2048 bytes.
+        (SecureStore.setItemAsync as jest.Mock).mockImplementation(async (_key: string, value: string) => {
+          if (value.length > 2048) {
+            throw new Error('SecureStore value too large');
+          }
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { createClient } = require('@supabase/supabase-js');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        require('@/lib/supabase');
+
+        const storageAdapter = (createClient as jest.Mock).mock.calls[0]?.[2]?.auth?.storage;
+
+        const largeValue = 'x'.repeat(5000);
+        if (storageAdapter) {
+          await expect(storageAdapter.setItem('test-key', largeValue)).resolves.toBeUndefined();
+
+          // Ensure we never attempted to store the full oversized value as a single item.
+          expect(SecureStore.setItemAsync).not.toHaveBeenCalledWith('test-key', largeValue);
+
+          // We should have stored multiple smaller values instead.
+          const storedValues = (SecureStore.setItemAsync as jest.Mock).mock.calls.map((call) => call[1]);
+          expect(storedValues.length).toBeGreaterThan(1);
+          storedValues.forEach((v) => expect(v.length).toBeLessThanOrEqual(2048));
+        }
+      });
+
       it('stores value in localStorage on web platform', async () => {
         jest.resetModules();
         (Platform as any).OS = 'web';
