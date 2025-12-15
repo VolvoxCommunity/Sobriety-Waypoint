@@ -11,8 +11,17 @@
 // Mocks
 // =============================================================================
 
-// Mock react-native-url-polyfill before anything else
-import { Platform } from 'react-native';
+/**
+ * Returns the mocked `Platform` object from `react-native`.
+ *
+ * Note: Tests frequently use `jest.resetModules()`, so we avoid importing Platform
+ * statically to ensure we're mutating the same module instance that the code under
+ * test will read.
+ */
+function getPlatform(): any {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('react-native').Platform;
+}
 
 jest.mock('react-native-url-polyfill/auto', () => ({}));
 
@@ -39,7 +48,6 @@ jest.mock('@supabase/supabase-js', () => ({
 describe('Supabase Module', () => {
   const originalEnv = process.env;
   const originalWindow = global.window;
-  const originalPlatform = Platform.OS;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -47,11 +55,17 @@ describe('Supabase Module', () => {
     // Ensure env vars are set for tests
     process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+
+    // Default platform for tests unless overridden.
+    getPlatform().OS = 'ios';
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    (Platform as any).OS = originalPlatform;
+
+    // Restore default platform between tests.
+    getPlatform().OS = 'ios';
+
     // Restore window
     if (originalWindow) {
       global.window = originalWindow;
@@ -105,7 +119,7 @@ describe('Supabase Module', () => {
     describe('getItem', () => {
       it('returns null in SSR environment (no window)', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'web';
+        getPlatform().OS = 'web';
         // Simulate SSR by removing window
         const originalWindow = global.window;
         // @ts-expect-error - Intentionally setting window to undefined for SSR test
@@ -132,7 +146,7 @@ describe('Supabase Module', () => {
 
       it('uses SecureStore on native platform', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'ios';
+        getPlatform().OS = 'ios';
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const SecureStore = require('expo-secure-store');
         (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('stored-value');
@@ -159,7 +173,7 @@ describe('Supabase Module', () => {
 
       it('uses localStorage on web platform', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'web';
+        getPlatform().OS = 'web';
 
         // Mock window and localStorage
         const mockLocalStorage = {
@@ -195,7 +209,7 @@ describe('Supabase Module', () => {
     describe('setItem', () => {
       it('resolves to undefined in SSR environment', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'web';
+        getPlatform().OS = 'web';
         const originalWindow = global.window;
         // @ts-expect-error - Intentionally setting window to undefined for SSR test
         delete global.window;
@@ -220,7 +234,7 @@ describe('Supabase Module', () => {
 
       it('stores value in SecureStore on native platform', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'ios';
+        getPlatform().OS = 'ios';
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const SecureStore = require('expo-secure-store');
         (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
@@ -244,7 +258,7 @@ describe('Supabase Module', () => {
 
       it('chunks large values on iOS to avoid SecureStore 2048-byte limit', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'ios';
+        getPlatform().OS = 'ios';
         global.window = {} as Window & typeof globalThis;
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -287,7 +301,7 @@ describe('Supabase Module', () => {
 
       it('stores value in localStorage on web platform', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'web';
+        getPlatform().OS = 'web';
 
         const mockLocalStorage = {
           getItem: jest.fn(),
@@ -321,7 +335,7 @@ describe('Supabase Module', () => {
     describe('removeItem', () => {
       it('resolves to undefined in SSR environment', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'web';
+        getPlatform().OS = 'web';
         const originalWindow = global.window;
         // @ts-expect-error - Intentionally setting window to undefined for SSR test
         delete global.window;
@@ -346,7 +360,7 @@ describe('Supabase Module', () => {
 
       it('removes value from SecureStore on native platform', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'ios';
+        getPlatform().OS = 'ios';
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const SecureStore = require('expo-secure-store');
         (SecureStore.deleteItemAsync as jest.Mock).mockResolvedValue(undefined);
@@ -370,7 +384,7 @@ describe('Supabase Module', () => {
 
       it('removes value from localStorage on web platform', async () => {
         jest.resetModules();
-        (Platform as any).OS = 'web';
+        getPlatform().OS = 'web';
 
         const mockLocalStorage = {
           getItem: jest.fn(),
