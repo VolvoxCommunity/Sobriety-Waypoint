@@ -7,7 +7,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Platform,
   Linking,
   ActivityIndicator,
@@ -46,6 +45,7 @@ import { logger, LogCategory } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { validateDisplayName } from '@/lib/validation';
 import { hexWithAlpha } from '@/lib/format';
+import { showAlert, showConfirm } from '@/lib/alert';
 import packageJson from '../../package.json';
 
 import type { SettingsContentProps } from './types';
@@ -135,44 +135,27 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
    * automatically redirects to /login when user becomes null.
    */
   const handleSignOut = async () => {
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm('Are you sure you want to sign out?');
-      if (confirmed) {
-        try {
-          // Dismiss container first, then sign out
-          // Auth guard in _layout.tsx handles redirect to /login
-          onDismiss?.();
-          await signOut();
-        } catch (error: unknown) {
-          const err = error instanceof Error ? error : new Error('Unknown error');
-          logger.error('Sign out failed', err, {
-            category: LogCategory.AUTH,
-          });
-          window.alert('Error signing out: ' + err.message);
-        }
+    const confirmed = await showConfirm(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      'Sign Out',
+      'Cancel',
+      true // destructive
+    );
+
+    if (confirmed) {
+      try {
+        // Dismiss container first, then sign out
+        // Auth guard in _layout.tsx handles redirect to /login
+        onDismiss?.();
+        await signOut();
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error('Unknown error');
+        logger.error('Sign out failed', err, {
+          category: LogCategory.AUTH,
+        });
+        showAlert('Error', 'Failed to sign out: ' + err.message);
       }
-    } else {
-      Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Dismiss container first, then sign out
-              // Auth guard in _layout.tsx handles redirect to /login
-              onDismiss?.();
-              await signOut();
-            } catch (error: unknown) {
-              const err = error instanceof Error ? error : new Error('Unknown error');
-              logger.error('Sign out failed', err, {
-                category: LogCategory.AUTH,
-              });
-              Alert.alert('Error', 'Failed to sign out: ' + err.message);
-            }
-          },
-        },
-      ]);
     }
   };
 
@@ -184,79 +167,44 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
     const warningMessage =
       'This will permanently delete your account and all associated data including your sobriety journey, tasks, connections, and messages. This action cannot be undone.';
 
-    if (Platform.OS === 'web') {
-      const firstConfirm = window.confirm(
-        `Delete Account?\n\n${warningMessage}\n\nAre you sure you want to continue?`
-      );
-      if (!firstConfirm) return;
+    const firstConfirm = await showConfirm(
+      'Delete Account?',
+      warningMessage + '\n\nAre you sure you want to continue?',
+      'Delete Account',
+      'Cancel',
+      true // destructive
+    );
 
-      const secondConfirm = window.confirm(
-        'FINAL WARNING: This is your last chance to cancel. Click OK to permanently delete your account.'
-      );
-      if (!secondConfirm) return;
+    if (!firstConfirm) return;
 
-      setIsDeleting(true);
-      try {
-        // Dismiss container first to avoid navigation conflicts
-        onDismiss?.();
-        await deleteAccount();
-        window.alert('Your account has been deleted. We wish you well on your journey.');
-        // Auth guard in _layout.tsx handles redirect to /login
-      } catch (error: unknown) {
-        const err = error instanceof Error ? error : new Error('Unknown error occurred');
-        logger.error('Account deletion failed in settings', err, {
-          category: LogCategory.AUTH,
-        });
-        window.alert('Error deleting account: ' + err.message);
-      } finally {
-        setIsDeleting(false);
-      }
-    } else {
-      Alert.alert('Delete Account?', warningMessage + '\n\nAre you sure you want to continue?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete Account',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Final Confirmation',
-              'This is your last chance to cancel. Are you absolutely sure you want to permanently delete your account?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Yes, Delete My Account',
-                  style: 'destructive',
-                  onPress: async () => {
-                    setIsDeleting(true);
-                    try {
-                      // Dismiss container first to avoid navigation conflicts
-                      onDismiss?.();
-                      await deleteAccount();
-                      // Auth guard in _layout.tsx handles redirect to /login
-                      // Show success message after a brief delay to allow navigation
-                      setTimeout(() => {
-                        Alert.alert(
-                          'Account Deleted',
-                          'Your account has been deleted. We wish you well on your journey.'
-                        );
-                      }, 100);
-                    } catch (error: unknown) {
-                      const err =
-                        error instanceof Error ? error : new Error('Unknown error occurred');
-                      logger.error('Account deletion failed in settings', err, {
-                        category: LogCategory.AUTH,
-                      });
-                      Alert.alert('Error', 'Failed to delete account: ' + err.message);
-                    } finally {
-                      setIsDeleting(false);
-                    }
-                  },
-                },
-              ]
-            );
-          },
-        },
-      ]);
+    const secondConfirm = await showConfirm(
+      'Final Confirmation',
+      'This is your last chance to cancel. Are you absolutely sure you want to permanently delete your account?',
+      'Yes, Delete My Account',
+      'Cancel',
+      true // destructive
+    );
+
+    if (!secondConfirm) return;
+
+    setIsDeleting(true);
+    try {
+      // Dismiss container first to avoid navigation conflicts
+      onDismiss?.();
+      await deleteAccount();
+      // Auth guard in _layout.tsx handles redirect to /login
+      showAlert(
+        'Account Deleted',
+        'Your account has been deleted. We wish you well on your journey.'
+      );
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+      logger.error('Account deletion failed in settings', err, {
+        category: LogCategory.AUTH,
+      });
+      showAlert('Error', 'Failed to delete account: ' + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -314,11 +262,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       logger.error('Name save attempted with null profile', new Error(errorMessage), {
         category: LogCategory.DATABASE,
       });
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + errorMessage);
-      } else {
-        Alert.alert('Error', errorMessage);
-      }
+      showAlert('Error', errorMessage);
       return;
     }
 
@@ -344,11 +288,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       setIsEditNameModalVisible(false);
       setNameValidationError(null);
 
-      if (Platform.OS === 'web') {
-        window.alert('Display name updated successfully');
-      } else {
-        Alert.alert('Success', 'Display name updated successfully');
-      }
+      showAlert('Success', 'Display name updated successfully');
     } catch (error: unknown) {
       // Handle both Error objects and Supabase error objects with message property
       const errorMessage =
@@ -361,11 +301,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       logger.error('Display name update failed', err, {
         category: LogCategory.DATABASE,
       });
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + errorMessage);
-      } else {
-        Alert.alert('Error', errorMessage);
-      }
+      showAlert('Error', errorMessage);
     } finally {
       setIsSavingName(false);
     }

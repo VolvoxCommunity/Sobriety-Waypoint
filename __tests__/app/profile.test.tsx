@@ -268,7 +268,7 @@ jest.mock('expo-device', () => ({
 // Mock expo-application (required by SettingsSheet)
 jest.mock('expo-application', () => ({
   nativeBuildVersion: '1',
-  nativeApplicationVersion: '1.0.0',
+  nativeApplicationVersion: '1.1.0',
 }));
 
 // Mock useAppUpdates hook (required by SettingsSheet)
@@ -1441,7 +1441,11 @@ describe('ProfileScreen', () => {
       fireEvent.press(screen.getByText('Generate Invite Code'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to generate invite code');
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error',
+          'Failed to generate invite code',
+          undefined
+        );
       });
     });
   });
@@ -1698,7 +1702,7 @@ describe('ProfileScreen', () => {
       fireEvent.press(screen.getByText('Disconnect'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Success', 'Successfully disconnected');
+        expect(Alert.alert).toHaveBeenCalledWith('Success', 'Successfully disconnected', undefined);
       });
     });
   });
@@ -1891,7 +1895,7 @@ describe('ProfileScreen', () => {
       fireEvent.press(screen.getByText('Disconnect'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to disconnect.');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to disconnect.', undefined);
       });
     });
   });
@@ -2138,7 +2142,11 @@ describe('ProfileScreen', () => {
         await capturedOnSubmit!('TEST1234');
 
         // Should show success alert
-        expect(Alert.alert).toHaveBeenCalledWith('Success', 'Connected with Test Sponsor');
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Success',
+          'Connected with Test Sponsor',
+          undefined
+        );
       });
     });
 

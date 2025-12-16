@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,6 +28,7 @@ import { useRouter } from 'expo-router';
 import TaskCreationSheet, { TaskCreationSheetRef } from '@/components/TaskCreationSheet';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
+import { showAlert, showConfirm } from '@/lib/alert';
 
 /**
  * Render the home dashboard that displays sobriety summary, active sponsor/sponsee relationships, recent assigned tasks, and quick actions.
@@ -55,29 +55,51 @@ export default function HomeScreen() {
   const fetchData = useCallback(async () => {
     if (!profile) return;
 
-    const { data: asSponsor } = await supabase
+    const { data: asSponsor, error: asSponsorError } = await supabase
       .from('sponsor_sponsee_relationships')
       .select('*, sponsee:sponsee_id(*)')
       .eq('sponsor_id', profile.id)
       .eq('status', 'active');
 
-    const { data: asSponsee } = await supabase
+    if (asSponsorError) {
+      logger.error('Failed to fetch sponsor relationships', asSponsorError as Error, {
+        category: LogCategory.DATABASE,
+      });
+      return;
+    }
+
+    const { data: asSponsee, error: asSponseeError } = await supabase
       .from('sponsor_sponsee_relationships')
       .select('*, sponsor:sponsor_id(*)')
       .eq('sponsee_id', profile.id)
       .eq('status', 'active');
 
+    if (asSponseeError) {
+      logger.error('Failed to fetch sponsee relationships', asSponseeError as Error, {
+        category: LogCategory.DATABASE,
+      });
+      return;
+    }
+
     setRelationships([...(asSponsor || []), ...(asSponsee || [])]);
     const profiles = (asSponsor || []).map((rel) => rel.sponsee).filter(Boolean) as Profile[];
     setSponseeProfiles(profiles);
 
-    const { data: tasksData } = await supabase
+    const { data: tasksData, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
       .eq('sponsee_id', profile.id)
       .eq('status', 'assigned')
       .order('created_at', { ascending: false })
       .limit(3);
+
+    if (tasksError) {
+      logger.error('Failed to fetch tasks', tasksError as Error, {
+        category: LogCategory.DATABASE,
+      });
+      return;
+    }
+
     setTasks(tasksData || []);
   }, [profile]);
 
@@ -100,23 +122,13 @@ export default function HomeScreen() {
       ? `Disconnect from ${otherUserName}? This will end the sponsee relationship.`
       : `Disconnect from ${otherUserName}? This will end the sponsor relationship.`;
 
-    const confirmed =
-      Platform.OS === 'web'
-        ? window.confirm(confirmMessage)
-        : await new Promise<boolean>((resolve) => {
-            Alert.alert('Confirm Disconnection', confirmMessage, [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => resolve(false),
-              },
-              {
-                text: 'Disconnect',
-                style: 'destructive',
-                onPress: () => resolve(true),
-              },
-            ]);
-          });
+    const confirmed = await showConfirm(
+      'Confirm Disconnection',
+      confirmMessage,
+      'Disconnect',
+      'Cancel',
+      true
+    );
 
     if (!confirmed) return;
 
@@ -151,21 +163,13 @@ export default function HomeScreen() {
 
       await fetchData();
 
-      if (Platform.OS === 'web') {
-        window.alert('Successfully disconnected');
-      } else {
-        Alert.alert('Success', 'Successfully disconnected');
-      }
+      showAlert('Success', 'Successfully disconnected');
     } catch (error: unknown) {
       logger.error('Relationship disconnect failed', error as Error, {
         category: LogCategory.DATABASE,
       });
       const message = error instanceof Error ? error.message : 'Failed to disconnect.';
-      if (Platform.OS === 'web') {
-        window.alert(message);
-      } else {
-        Alert.alert('Error', message);
-      }
+      showAlert('Error', message);
     }
   };
 

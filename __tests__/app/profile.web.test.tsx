@@ -187,7 +187,7 @@ describe('ProfileScreen Web', () => {
     expect(window.confirm).toHaveBeenCalled();
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith('Sobriety date updated successfully');
+      expect(window.alert).toHaveBeenCalledWith('Success: Sobriety date updated successfully');
     });
   });
 
@@ -222,7 +222,7 @@ describe('ProfileScreen Web', () => {
     expect(window.confirm).toHaveBeenCalled();
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith('Update Failed');
+      expect(window.alert).toHaveBeenCalledWith('Error: Update Failed');
     });
   });
 });

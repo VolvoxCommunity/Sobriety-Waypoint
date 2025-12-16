@@ -19,6 +19,15 @@ import { Task, SponsorSponseeRelationship, Profile } from '@/types/database';
 // Mocks
 // =============================================================================
 
+// Mock showAlert and showConfirm
+jest.mock('@/lib/alert', () => ({
+  showAlert: jest.fn(),
+  showConfirm: jest.fn(),
+}));
+
+// Import the mocked functions so we can control them in tests
+const { showAlert: mockShowAlert, showConfirm: mockShowConfirm } = jest.requireMock('@/lib/alert');
+
 // Mock data - using closures to allow per-test control
 let mockRelationshipsAsSponsor: SponsorSponseeRelationship[] = [];
 let mockRelationshipsAsSponsee: SponsorSponseeRelationship[] = [];
@@ -259,6 +268,8 @@ const createMockTask = (): Task => ({
 describe('HomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockShowAlert.mockClear();
+    mockShowConfirm.mockClear();
     mockRelationshipsAsSponsor = [];
     mockRelationshipsAsSponsee = [];
     mockTasks = [];
@@ -589,17 +600,25 @@ describe('HomeScreen', () => {
     });
 
     it('shows confirmation dialog when disconnect is pressed', async () => {
-      const { Alert } = jest.requireMock('react-native');
       render(<HomeScreen />);
 
       await waitFor(() => {
         expect(screen.getByText('Jane D.')).toBeTruthy();
       });
 
-      // Find the relationship container and check it's there
-      // The actual disconnect would need the button to be pressed
-      // but the icon is mocked, so we verify the structure exists
-      expect(screen.getByText(/Connected/)).toBeTruthy();
+      // Find and press disconnect button (via accessibility label)
+      const disconnectButtons = screen.getAllByLabelText(/Disconnect from/);
+      fireEvent.press(disconnectButtons[0]);
+
+      await waitFor(() => {
+        expect(mockShowConfirm).toHaveBeenCalledWith(
+          'Confirm Disconnection',
+          expect.stringContaining('Disconnect from'),
+          'Disconnect',
+          'Cancel',
+          true
+        );
+      });
     });
   });
 
@@ -885,8 +904,6 @@ describe('HomeScreen', () => {
     });
 
     it('shows confirmation dialog when disconnect is pressed', async () => {
-      const { Alert } = jest.requireMock('react-native');
-
       render(<HomeScreen />);
 
       await waitFor(() => {
@@ -898,27 +915,19 @@ describe('HomeScreen', () => {
       fireEvent.press(disconnectButtons[0]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith(
+        expect(mockShowConfirm).toHaveBeenCalledWith(
           'Confirm Disconnection',
           expect.stringContaining('Disconnect from'),
-          expect.any(Array)
+          'Disconnect',
+          'Cancel',
+          true
         );
       });
     });
 
     it('successfully disconnects when confirmed', async () => {
-      const { Alert } = jest.requireMock('react-native');
-
-      // Mock Alert.alert to auto-confirm
-      Alert.alert.mockImplementation(
-        (_title: string, _message: string, buttons?: { text: string; onPress?: () => void }[]) => {
-          if (!buttons) return;
-          const disconnectButton = buttons.find((b) => b.text === 'Disconnect');
-          if (disconnectButton?.onPress) {
-            disconnectButton.onPress();
-          }
-        }
-      );
+      // Mock showConfirm to auto-confirm (return true)
+      mockShowConfirm.mockResolvedValue(true);
 
       render(<HomeScreen />);
 
@@ -930,23 +939,13 @@ describe('HomeScreen', () => {
       fireEvent.press(disconnectButtons[0]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Success', 'Successfully disconnected');
+        expect(mockShowAlert).toHaveBeenCalledWith('Success', 'Successfully disconnected');
       });
     });
 
     it('does not disconnect when cancelled', async () => {
-      const { Alert } = jest.requireMock('react-native');
-
-      // Mock Alert.alert to auto-cancel
-      Alert.alert.mockImplementation(
-        (_title: string, _message: string, buttons?: { text: string; onPress?: () => void }[]) => {
-          if (!buttons) return;
-          const cancelButton = buttons.find((b) => b.text === 'Cancel');
-          if (cancelButton?.onPress) {
-            cancelButton.onPress();
-          }
-        }
-      );
+      // Mock showConfirm to auto-cancel (return false)
+      mockShowConfirm.mockResolvedValue(false);
 
       render(<HomeScreen />);
 
@@ -960,14 +959,13 @@ describe('HomeScreen', () => {
       // Should not show success message
       await waitFor(
         () => {
-          expect(Alert.alert).not.toHaveBeenCalledWith('Success', expect.any(String));
+          expect(mockShowAlert).not.toHaveBeenCalledWith('Success', expect.any(String));
         },
         { timeout: 100 }
       );
     });
 
     it('shows error when disconnect fails', async () => {
-      const { Alert } = jest.requireMock('react-native');
       const { supabase } = jest.requireMock('@/lib/supabase');
 
       // Mock the update to fail
@@ -1019,17 +1017,8 @@ describe('HomeScreen', () => {
         };
       });
 
-      // Mock Alert.alert to auto-confirm
-      Alert.alert.mockImplementation(
-        (_title: string, _message: string, buttons?: { text: string; onPress?: () => void }[]) => {
-          if (buttons) {
-            const disconnectButton = buttons.find((b) => b.text === 'Disconnect');
-            if (disconnectButton?.onPress) {
-              disconnectButton.onPress();
-            }
-          }
-        }
-      );
+      // Mock showConfirm to auto-confirm (return true)
+      mockShowConfirm.mockResolvedValue(true);
 
       render(<HomeScreen />);
 
@@ -1041,7 +1030,7 @@ describe('HomeScreen', () => {
       fireEvent.press(disconnectButtons[0]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Database error');
+        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Database error');
       });
     });
   });

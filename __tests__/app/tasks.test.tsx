@@ -18,6 +18,12 @@ import { Platform } from 'react-native';
 // Mocks
 // =============================================================================
 
+// Mock alert utilities
+jest.mock('@/lib/alert', () => ({
+  showAlert: jest.fn(),
+  showConfirm: jest.fn(),
+}));
+
 // Mock data
 let mockMyTasks: Task[] = [];
 let mockManageTasks: Task[] = [];
@@ -684,7 +690,6 @@ describe('TasksScreen', () => {
 
     it('submits task completion when Mark Complete is pressed', async () => {
       const { supabase } = jest.requireMock('@/lib/supabase');
-      const { Alert } = jest.requireMock('react-native');
 
       render(<TasksScreen />);
 
@@ -1003,7 +1008,7 @@ describe('TasksScreen', () => {
   describe('Task Completion Error Handling', () => {
     it('shows error alert when task completion fails', async () => {
       const { supabase } = jest.requireMock('@/lib/supabase');
-      const { Alert } = jest.requireMock('react-native');
+      const { showAlert } = jest.requireMock('@/lib/alert');
 
       // Make update fail
       supabase.from.mockImplementation((table: string) => {
@@ -1066,7 +1071,7 @@ describe('TasksScreen', () => {
       fireEvent.press(screen.getByText('Mark Complete'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to complete task');
+        expect(showAlert).toHaveBeenCalledWith('Error', 'Failed to complete task');
       });
     });
   });
@@ -1360,25 +1365,23 @@ describe('TasksScreen', () => {
   describe('Web Platform', () => {
     let originalPlatform: typeof Platform.OS;
 
-    beforeAll(() => {
-      originalPlatform = Platform.OS;
-    });
-
     beforeEach(() => {
+      originalPlatform = Platform.OS;
       Platform.OS = 'web';
-      global.window = {
-        alert: jest.fn(),
-        confirm: jest.fn(() => true),
-      } as any;
+      const { showAlert, showConfirm } = jest.requireMock('@/lib/alert');
+      showConfirm.mockResolvedValue(true);
+      showAlert.mockClear();
+      showConfirm.mockClear();
     });
 
     afterEach(() => {
       Platform.OS = originalPlatform;
-      delete (global as any).window;
     });
 
-    it('uses window.alert for task completion success', async () => {
+    it('uses showAlert for task completion success', async () => {
       const { supabase } = jest.requireMock('@/lib/supabase');
+      const { showAlert } = jest.requireMock('@/lib/alert');
+
       // Ensure mock success
       supabase.from.mockImplementation((table: string) => {
         if (table === 'tasks') {
@@ -1416,12 +1419,13 @@ describe('TasksScreen', () => {
       fireEvent.press(screen.getByText('Mark Complete'));
 
       await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Task marked as completed!');
+        expect(showAlert).toHaveBeenCalledWith('Success', 'Task marked as completed!');
       });
     });
 
-    it('uses window.alert for task completion failure', async () => {
+    it('uses showAlert for task completion failure', async () => {
       const { supabase } = jest.requireMock('@/lib/supabase');
+      const { showAlert } = jest.requireMock('@/lib/alert');
 
       supabase.from.mockImplementation((table: string) => {
         if (table === 'tasks') {
@@ -1461,12 +1465,13 @@ describe('TasksScreen', () => {
       fireEvent.press(screen.getByText('Mark Complete'));
 
       await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Failed to complete task');
+        expect(showAlert).toHaveBeenCalledWith('Error', 'Failed to complete task');
       });
     });
 
-    it('uses window.confirm and alert for task deletion', async () => {
+    it('uses showConfirm and showAlert for task deletion', async () => {
       const { supabase } = jest.requireMock('@/lib/supabase');
+      const { showAlert, showConfirm } = jest.requireMock('@/lib/alert');
 
       const localSponsees = [
         {
@@ -1551,10 +1556,16 @@ describe('TasksScreen', () => {
       const deleteButton = screen.getByTestId('delete-task-manage-task-1');
       fireEvent.press(deleteButton);
 
-      expect(window.confirm).toHaveBeenCalled();
+      expect(showConfirm).toHaveBeenCalledWith(
+        'Confirm Delete',
+        'Delete task "Delete Me Web"? This cannot be undone.',
+        'Delete',
+        'Cancel',
+        true
+      );
 
       await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith('Task deleted successfully');
+        expect(showAlert).toHaveBeenCalledWith('Success', 'Task deleted successfully');
       });
     });
   });
