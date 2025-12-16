@@ -1126,7 +1126,8 @@ describe('ProfileScreen', () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Confirm Disconnection',
           expect.stringContaining('Bob S.'),
-          expect.any(Array)
+          expect.any(Array),
+          expect.anything()
         );
       });
     });
@@ -1203,7 +1204,8 @@ describe('ProfileScreen', () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Confirm Disconnection',
           expect.stringContaining('Jane D.'),
-          expect.any(Array)
+          expect.any(Array),
+          expect.anything()
         );
       });
     });
@@ -1676,7 +1678,8 @@ describe('ProfileScreen', () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Confirm Disconnection',
           expect.stringContaining('Jane D.'),
-          expect.any(Array)
+          expect.any(Array),
+          expect.anything()
         );
       });
     });
@@ -1797,7 +1800,8 @@ describe('ProfileScreen', () => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Confirm Disconnection',
           expect.stringContaining('Bob S.'),
-          expect.any(Array)
+          expect.any(Array),
+          expect.anything()
         );
       });
     });
