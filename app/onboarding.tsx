@@ -264,7 +264,12 @@ export default function OnboardingScreen() {
       // Note: Navigation only occurs if profile has all required fields (checked in useEffect)
       setAwaitingProfileUpdate(true);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update profile';
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : 'Failed to update profile';
       if (Platform.OS === 'web') {
         window.alert('Error: ' + message);
       } else {

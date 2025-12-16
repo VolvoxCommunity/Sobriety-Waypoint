@@ -538,8 +538,12 @@ describe('OnboardingScreen', () => {
       const displayNameInput = screen.getByPlaceholderText('e.g. John D.');
       fireEvent.changeText(displayNameInput, 'John D.');
 
-      // Wait for validation
-      await waitFor(() => {}, { timeout: 500 });
+      // Wait for value update and validation debounce
+      await waitFor(() => {
+        expect(displayNameInput.props.value).toBe('John D.');
+      });
+      // Allow debounce to fire
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Accept terms and submit
       fireEvent.press(screen.getByText(/I agree to the/));
@@ -553,6 +557,8 @@ describe('OnboardingScreen', () => {
       await waitFor(() => {
         expect(mockRefreshProfile).toHaveBeenCalled();
       });
+      // Verify upsert is called in happy path
+      expect(getMockUpsert()).toHaveBeenCalled();
     });
 
     it('shows loading state during submission', async () => {
@@ -638,18 +644,24 @@ describe('OnboardingScreen', () => {
 
     // TODO: Fix this test - the mock upsert isn't being called for unknown reasons
     // after migrating from update() to upsert()
-    it.skip('shows error alert when profile update fails', async () => {
-      // Mock upsert to return an error object (Supabase errors have .message)
-      getMockUpsert().mockResolvedValue({
+    it('shows error alert when profile update fails', async () => {
+      const mockUpsert = jest.fn().mockResolvedValue({
         error: { message: 'Update failed', code: 'PGRST301' },
       });
+
+      // Override the supabase.from mock for this test only
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      // Use mockImplementationOnce so it doesn't affect other tests
+      supabase.from.mockImplementationOnce(() => ({
+        upsert: mockUpsert,
+      }));
 
       render(<OnboardingScreen />);
       await fillAndSubmitForm();
 
       // Verify upsert was actually called
       await waitFor(() => {
-        expect(getMockUpsert()).toHaveBeenCalled();
+        expect(mockUpsert).toHaveBeenCalled();
       });
 
       await waitFor(() => {
