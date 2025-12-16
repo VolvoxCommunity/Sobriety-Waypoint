@@ -205,7 +205,7 @@ describe('RelationshipCard', () => {
       expect(screen.getByText('1 day sober')).toBeTruthy();
     });
 
-    it('does not display days sober during loading', () => {
+    it('displays loading indicator during loading instead of null', () => {
       mockUseDaysSober.mockReturnValue({ daysSober: null, loading: true });
 
       render(
@@ -219,9 +219,29 @@ describe('RelationshipCard', () => {
         />
       );
 
-      // When loading, daysSober is null so the text should still render but with null value
-      // The component shows "null days sober" when loading - this tests that loading state is handled
+      // Should show "..." during loading, NOT "null days sober"
+      expect(screen.getByText('...')).toBeTruthy();
+      expect(screen.queryByText(/null days sober/)).toBeNull();
       expect(screen.queryByText('180 days sober')).toBeNull();
+    });
+
+    it('has correct accessibility label during loading', () => {
+      mockUseDaysSober.mockReturnValue({ daysSober: null, loading: true });
+
+      render(
+        <RelationshipCard
+          userId="user-123"
+          profile={mockProfile}
+          connectedAt="2024-01-01T00:00:00Z"
+          relationshipType="sponsee"
+          theme={mockTheme}
+          onDisconnect={mockOnDisconnect}
+        />
+      );
+
+      // Should have "Loading days sober" accessibility label during loading
+      const sobrietyInfo = screen.getByLabelText('Loading days sober');
+      expect(sobrietyInfo).toBeTruthy();
     });
   });
 
