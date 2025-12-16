@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { JSX } from 'react';
+import React, { JSX, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Profile } from '@/types/database';
 import { ThemeColors } from '@/contexts/ThemeContext';
@@ -61,7 +61,7 @@ export default function TaskFilters({
   selectedSponseeId,
   onSponseeFilterChange,
 }: TaskFiltersProps): JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <>

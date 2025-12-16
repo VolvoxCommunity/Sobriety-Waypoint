@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { JSX } from 'react';
+import React, { JSX, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -77,7 +77,7 @@ export default function TaskCompletionModal({
   onClose,
   onSubmit,
 }: TaskCompletionModalProps): JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

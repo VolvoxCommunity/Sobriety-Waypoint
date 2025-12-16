@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { JSX } from 'react';
+import React, { JSX, useMemo } from 'react';
 import {
   View,
   Text,
@@ -127,9 +127,9 @@ export default function ManageTasksView({
   onDeleteTask,
   isOverdue,
 }: ManageTasksViewProps): JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const stats: ManageStats = React.useMemo(() => {
+  const stats: ManageStats = useMemo(() => {
     const now = new Date();
     return {
       total: tasks.length,

@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { JSX } from 'react';
+import React, { JSX, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Circle } from 'lucide-react-native';
 import { Task } from '@/types/database';
@@ -88,7 +88,7 @@ export default function MyTasksView({
   onToggleCompleted,
   onCompleteTask,
 }: MyTasksViewProps): JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const stats: TaskStats = {
     pending: tasks.filter((t) => t.status !== 'completed').length,
