@@ -122,7 +122,7 @@ export function AppleSignInButton({ onSuccess, onError }: AppleSignInButtonProps
       // Track successful Apple sign in
       try {
         trackEvent(AnalyticsEvents.AUTH_LOGIN, { method: 'apple' });
-      } catch (e) {
+      } catch (e: unknown) {
         // Analytics failures should not block authentication
         logger.warn('Failed to track Apple Sign In event', {
           category: LogCategory.ANALYTICS,
