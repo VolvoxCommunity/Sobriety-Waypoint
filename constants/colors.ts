@@ -39,8 +39,9 @@ export const Palette = {
   amber500: '#f59e0b',
 
   // Blues
+  blue50: '#e5f1ff', // Light blue for light theme primaryLight
   blue500: '#3b82f6',
-  blue700: '#1d4ed8', // Darker blue for light theme primaryLight variation maybe?
+  blue700: '#1d4ed8',
   blue900: '#003d7a', // Used in dark theme primaryLight
 
   // Violets
