@@ -16,15 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { useDaysSober } from '@/hooks/useDaysSober';
-import {
-  Heart,
-  Share2,
-  QrCode,
-  UserMinus,
-  Edit2,
-  CheckCircle,
-  Settings,
-} from 'lucide-react-native';
+import { Settings } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
@@ -36,151 +28,10 @@ import EnterInviteCodeSheet, {
 } from '@/components/sheets/EnterInviteCodeSheet';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { showAlert, showConfirm } from '@/lib/alert';
-
-// =============================================================================
-// Helper Components
-// =============================================================================
-
-/**
- * Renders a card for a sponsee showing avatar, display name, connection date, optional sobriety days and task completion, and a disconnect control.
- *
- * @param relationship - Sponsor/sponsee relationship object; component reads `relationship.sponsee`, `relationship.connected_at`, and `relationship.sponsee.sobriety_date` when present.
- * @param theme - Current theme object used for styling.
- * @param onDisconnect - Callback invoked when the user presses the Disconnect button.
- * @param taskStats - Optional task statistics for the sponsee with `total` and `completed` counts.
- *
- * @returns The JSX element rendering the sponsee relationship card.
- */
-function SponseeDaysDisplay({
-  relationship,
-  theme,
-  onDisconnect,
-  taskStats,
-}: {
-  relationship: SponsorSponseeRelationship;
-  theme: ReturnType<typeof useTheme>['theme'];
-  onDisconnect: () => void;
-  taskStats?: { total: number; completed: number };
-}) {
-  const { daysSober } = useDaysSober(relationship.sponsee_id);
-
-  return (
-    <View
-      style={createStyles(theme).relationshipCard}
-      accessible={true}
-      accessibilityLabel={`Sponsee ${relationship.sponsee?.display_name ?? 'unknown'}`}
-    >
-      <View style={createStyles(theme).relationshipHeader}>
-        <View style={createStyles(theme).avatar} accessibilityRole="image">
-          <Text style={createStyles(theme).avatarText}>
-            {(relationship.sponsee?.display_name || '?')[0].toUpperCase()}
-          </Text>
-        </View>
-        <View style={createStyles(theme).relationshipInfo}>
-          <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsee?.display_name ?? '?'}
-          </Text>
-          <Text style={createStyles(theme).relationshipMeta}>
-            Connected {new Date(relationship.connected_at).toLocaleDateString()}
-          </Text>
-          {relationship.sponsee?.sobriety_date && (
-            <View
-              style={createStyles(theme).sobrietyInfo}
-              accessibilityLabel={`${daysSober} days sober`}
-            >
-              <Heart size={14} color={theme.primary} fill={theme.primary} />
-              <Text style={createStyles(theme).sobrietyText}>{daysSober} days sober</Text>
-            </View>
-          )}
-          {taskStats && (
-            <View
-              style={createStyles(theme).taskStatsInfo}
-              accessibilityLabel={`${taskStats.completed} out of ${taskStats.total} tasks completed`}
-            >
-              <CheckCircle size={14} color={theme.success} />
-              <Text style={createStyles(theme).taskStatsText}>
-                {taskStats.completed}/{taskStats.total} tasks completed
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-      <TouchableOpacity
-        style={createStyles(theme).disconnectButton}
-        onPress={onDisconnect}
-        accessibilityRole="button"
-        accessibilityLabel={`Disconnect from ${relationship.sponsee?.display_name ?? 'sponsee'}`}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <UserMinus size={18} color={theme.danger} />
-        <Text style={createStyles(theme).disconnectText}>Disconnect</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-/**
- * Render a card showing a sponsor's avatar, connection date, optional sobriety info, and a disconnect action.
- *
- * @param relationship - Sponsor-sponsee relationship object providing sponsor display_name, sobriety_date, and connected_at
- * @param theme - Theme object used to style the card
- * @param onDisconnect - Callback invoked when the Disconnect button is pressed
- * @returns A React element representing the sponsor relationship card
- */
-function SponsorDaysDisplay({
-  relationship,
-  theme,
-  onDisconnect,
-}: {
-  relationship: SponsorSponseeRelationship;
-  theme: ReturnType<typeof useTheme>['theme'];
-  onDisconnect: () => void;
-}) {
-  const { daysSober } = useDaysSober(relationship.sponsor_id);
-
-  return (
-    <View
-      style={createStyles(theme).relationshipCard}
-      accessible={true}
-      accessibilityLabel={`Sponsor ${relationship.sponsor?.display_name ?? 'unknown'}`}
-    >
-      <View style={createStyles(theme).relationshipHeader}>
-        <View style={createStyles(theme).avatar} accessibilityRole="image">
-          <Text style={createStyles(theme).avatarText}>
-            {(relationship.sponsor?.display_name || '?')[0].toUpperCase()}
-          </Text>
-        </View>
-        <View style={createStyles(theme).relationshipInfo}>
-          <Text style={createStyles(theme).relationshipName}>
-            {relationship.sponsor?.display_name ?? '?'}
-          </Text>
-          <Text style={createStyles(theme).relationshipMeta}>
-            Connected {new Date(relationship.connected_at).toLocaleDateString()}
-          </Text>
-          {relationship.sponsor?.sobriety_date && (
-            <View
-              style={createStyles(theme).sobrietyInfo}
-              accessibilityLabel={`${daysSober} days sober`}
-            >
-              <Heart size={14} color={theme.primary} fill={theme.primary} />
-              <Text style={createStyles(theme).sobrietyText}>{daysSober} days sober</Text>
-            </View>
-          )}
-        </View>
-      </View>
-      <TouchableOpacity
-        style={createStyles(theme).disconnectButton}
-        onPress={onDisconnect}
-        accessibilityRole="button"
-        accessibilityLabel={`Disconnect from ${relationship.sponsor?.display_name ?? 'sponsor'}`}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <UserMinus size={18} color={theme.danger} />
-        <Text style={createStyles(theme).disconnectText}>Disconnect</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import SobrietyStats from '@/components/profile/SobrietyStats';
+import RelationshipCard from '@/components/profile/RelationshipCard';
+import InviteCodeSection from '@/components/profile/InviteCodeSection';
 
 /**
  * Render the authenticated user's profile, sobriety journey, and sponsor/sponsee management UI.
@@ -697,176 +548,88 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.container}>
-        <View style={styles.profileHeader} accessible={true}>
-          <View style={styles.avatar} accessibilityRole="image">
-            <Text style={styles.avatarText}>
-              {profile?.display_name?.[0]?.toUpperCase() || '?'}
-            </Text>
-          </View>
-          <Text style={styles.name} accessibilityRole="header">
-            {profile?.display_name ?? '?'}
-          </Text>
-          <Text style={styles.email} accessibilityRole="text">
-            {profile?.email}
-          </Text>
-        </View>
+        <ProfileHeader displayName={profile?.display_name} email={profile?.email} theme={theme} />
 
-        <View style={styles.sobrietyCard} accessible={false}>
-          <View
-            style={styles.sobrietyHeader}
-            accessibilityRole="header"
-            accessibilityLabel="Sobriety Journey"
-          >
-            <Heart size={24} color={theme.primary} fill={theme.primary} />
-            <Text style={styles.sobrietyTitle}>Sobriety Journey</Text>
-          </View>
-          <Text
-            style={styles.daysSober}
-            accessibilityRole="text"
-            accessibilityLabel={loadingDaysSober ? 'Loading days sober' : `${daysSober} Days Sober`}
-            accessibilityLiveRegion="polite"
-          >
-            {loadingDaysSober ? '...' : `${daysSober} Days`}
-          </Text>
-          <View style={styles.sobrietyDateContainer}>
-            {journeyStartDate && (
-              <Text style={styles.journeyStartDate}>
-                Journey started:{' '}
-                {parseDateAsLocal(journeyStartDate).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={handleEditSobrietyDate}
-              accessibilityRole="button"
-              accessibilityLabel="Edit sobriety date"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Edit2 size={16} color={theme.primary} />
-            </TouchableOpacity>
-          </View>
-          {hasSlipUps && currentStreakStartDate && (
-            <Text
-              style={styles.currentStreakDate}
-              accessibilityRole="text"
-              accessibilityLabel={`Current streak since ${parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
-            >
-              Current streak since{' '}
-              {parseDateAsLocal(currentStreakStartDate).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </Text>
-          )}
-          <TouchableOpacity
-            style={styles.slipUpButton}
-            onPress={handleLogSlipUp}
-            accessibilityRole="button"
-            accessibilityLabel="Record a Setback"
-            accessibilityHint="Logs a slip up and resets your streak"
-          >
-            <Heart size={18} color={theme.white} />
-            <Text style={styles.slipUpButtonText}>Record a Setback</Text>
-          </TouchableOpacity>
-        </View>
+        <SobrietyStats
+          daysSober={daysSober}
+          journeyStartDate={journeyStartDate}
+          currentStreakStartDate={currentStreakStartDate}
+          hasSlipUps={hasSlipUps}
+          loading={loadingDaysSober}
+          theme={theme}
+          onEditSobrietyDate={handleEditSobrietyDate}
+          onLogSlipUp={handleLogSlipUp}
+        />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Sponsees</Text>
-          {loadingRelationships ? (
+        {loadingRelationships ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Sponsees</Text>
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={theme.primary} />
             </View>
-          ) : sponseeRelationships.length > 0 ? (
-            <>
-              {sponseeRelationships.map((rel) => (
-                <SponseeDaysDisplay
-                  key={rel.id}
-                  relationship={rel}
-                  theme={theme}
-                  taskStats={sponseeTaskStats[rel.sponsee_id]}
-                  onDisconnect={() =>
-                    disconnectRelationship(rel.id, true, rel.sponsee?.display_name || 'Unknown')
-                  }
-                />
-              ))}
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={generateInviteCode}
-                accessibilityRole="button"
-                accessibilityLabel="Generate New Invite Code"
-              >
-                <Share2 size={20} color={theme.primary} />
-                <Text style={styles.actionButtonText}>Generate New Invite Code</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <View>
-              <Text style={styles.emptyStateText}>
-                No sponsees yet. Generate an invite code to get started.
-              </Text>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={generateInviteCode}
-                accessibilityRole="button"
-                accessibilityLabel="Generate Invite Code"
-              >
-                <Share2 size={20} color={theme.primary} />
-                <Text style={styles.actionButtonText}>Generate Invite Code</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Sponsor</Text>
-          {loadingRelationships ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.primary} />
-            </View>
-          ) : sponsorRelationships.length > 0 ? (
-            sponsorRelationships.map((rel) => (
-              <SponsorDaysDisplay
+          </View>
+        ) : (
+          <InviteCodeSection
+            title="Your Sponsees"
+            isEmpty={sponseeRelationships.length === 0}
+            emptyMessage="No sponsees yet. Generate an invite code to get started."
+            primaryButtonLabel={
+              sponseeRelationships.length > 0 ? 'Generate New Invite Code' : 'Generate Invite Code'
+            }
+            showGenerateNew={sponseeRelationships.length > 0}
+            theme={theme}
+            onPrimaryAction={generateInviteCode}
+          >
+            {sponseeRelationships.map((rel) => (
+              <RelationshipCard
                 key={rel.id}
-                relationship={rel}
+                userId={rel.sponsee_id}
+                profile={rel.sponsee ?? null}
+                connectedAt={rel.connected_at}
+                relationshipType="sponsee"
+                theme={theme}
+                taskStats={sponseeTaskStats[rel.sponsee_id]}
+                onDisconnect={() =>
+                  disconnectRelationship(rel.id, true, rel.sponsee?.display_name || 'Unknown')
+                }
+              />
+            ))}
+          </InviteCodeSection>
+        )}
+
+        {loadingRelationships ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Sponsor</Text>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          </View>
+        ) : (
+          <InviteCodeSection
+            title="Your Sponsor"
+            isEmpty={sponsorRelationships.length === 0}
+            emptyMessage="No sponsor connected yet"
+            primaryButtonLabel="Enter Invite Code"
+            theme={theme}
+            onPrimaryAction={handleShowInviteCodeSheet}
+            onSecondaryAction={
+              sponsorRelationships.length > 0 ? handleShowInviteCodeSheet : undefined
+            }
+          >
+            {sponsorRelationships.map((rel) => (
+              <RelationshipCard
+                key={rel.id}
+                userId={rel.sponsor_id}
+                profile={rel.sponsor ?? null}
+                connectedAt={rel.connected_at}
+                relationshipType="sponsor"
                 theme={theme}
                 onDisconnect={() =>
                   disconnectRelationship(rel.id, false, rel.sponsor?.display_name || 'Unknown')
                 }
               />
-            ))
-          ) : (
-            <View>
-              <Text style={styles.emptyStateText}>No sponsor connected yet</Text>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={handleShowInviteCodeSheet}
-                accessibilityRole="button"
-                accessibilityLabel="Enter Invite Code"
-              >
-                <QrCode size={20} color={theme.primary} />
-                <Text style={styles.actionButtonText}>Enter Invite Code</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {sponsorRelationships.length > 0 && (
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleShowInviteCodeSheet}
-              accessibilityRole="button"
-              accessibilityLabel="Connect to Another Sponsor"
-            >
-              <QrCode size={20} color={theme.primary} />
-              <Text style={styles.actionButtonText}>Connect to Another Sponsor</Text>
-            </TouchableOpacity>
-          </View>
+            ))}
+          </InviteCodeSection>
         )}
 
         {Platform.OS === 'web' && showSobrietyDatePicker && (
@@ -1031,116 +794,6 @@ const createStyles = (
     settingsButton: {
       padding: 8,
     },
-    profileHeader: {
-      alignItems: 'center',
-      padding: 24,
-      paddingTop: 20,
-      backgroundColor: theme.surface,
-    },
-    avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: theme.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    avatarText: {
-      fontSize: 32,
-      fontFamily: theme.fontRegular,
-      fontWeight: '700',
-      color: theme.white,
-    },
-    name: {
-      fontSize: 24,
-      fontFamily: theme.fontRegular,
-      fontWeight: '700',
-      color: theme.text,
-      marginBottom: 4,
-    },
-    email: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      marginBottom: 12,
-    },
-    sobrietyCard: {
-      backgroundColor: theme.card,
-      margin: 16,
-      padding: 20,
-      borderRadius: 16,
-      alignItems: 'center',
-      shadowColor: theme.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    sobrietyHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    sobrietyTitle: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.text,
-      marginLeft: 12,
-    },
-    daysSober: {
-      fontSize: 48,
-      fontFamily: theme.fontRegular,
-      fontWeight: '700',
-      color: theme.primary,
-    },
-    sobrietyDateContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 8,
-      gap: 8,
-    },
-    sobrietyDate: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-    },
-    journeyStartDate: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-    },
-    currentStreakDate: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.text,
-      fontWeight: '500',
-      marginTop: 8,
-    },
-    editButton: {
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: theme.primaryLight,
-    },
-    slipUpButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.primary,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginTop: 20,
-      gap: 8,
-    },
-    slipUpButtonText: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.white,
-    },
     section: {
       padding: 16,
     },
@@ -1151,112 +804,9 @@ const createStyles = (
       color: theme.text,
       marginBottom: 12,
     },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.card,
-      padding: 16,
-      borderRadius: 12,
-      shadowColor: theme.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    actionButtonText: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.text,
-      marginLeft: 12,
-    },
     loadingContainer: {
       padding: 20,
       alignItems: 'center',
-    },
-    relationshipCard: {
-      backgroundColor: theme.card,
-      padding: 16,
-      borderRadius: 12,
-      marginBottom: 12,
-      shadowColor: theme.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    relationshipHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    relationshipInfo: {
-      marginLeft: 12,
-      flex: 1,
-    },
-    relationshipName: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.text,
-    },
-    relationshipMeta: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      marginTop: 2,
-    },
-    sobrietyInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 8,
-    },
-    sobrietyText: {
-      fontSize: 12,
-      fontFamily: theme.fontRegular,
-      color: theme.primary,
-      fontWeight: '600',
-    },
-    taskStatsInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 6,
-    },
-    taskStatsText: {
-      fontSize: 12,
-      fontFamily: theme.fontRegular,
-      color: theme.success,
-      fontWeight: '600',
-    },
-    disconnectButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.dangerBorder,
-      backgroundColor: theme.dangerLight,
-    },
-    disconnectText: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.danger,
-      marginLeft: 12,
-    },
-    emptyStateText: {
-      fontSize: 14,
-      fontFamily: theme.fontRegular,
-      color: theme.textSecondary,
-      textAlign: 'center',
-      marginBottom: 16,
-    },
-    buttonDisabled: {
-      opacity: 0.6,
     },
     modalOverlay: {
       flex: 1,
