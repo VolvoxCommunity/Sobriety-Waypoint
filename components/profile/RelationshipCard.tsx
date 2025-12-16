@@ -74,7 +74,7 @@ export default function RelationshipCard({
   taskStats,
 }: RelationshipCardProps): React.JSX.Element {
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { daysSober } = useDaysSober(userId);
+  const { daysSober, loading: loadingDaysSober } = useDaysSober(userId);
 
   const displayName = profile?.display_name ?? 'Unknown';
   const initial = (displayName[0] || '?').toUpperCase();
@@ -96,11 +96,17 @@ export default function RelationshipCard({
           {profile?.sobriety_date && (
             <View
               style={styles.sobrietyInfo}
-              accessibilityLabel={`${daysSober} ${daysSober === 1 ? 'day' : 'days'} sober`}
+              accessibilityLabel={
+                loadingDaysSober
+                  ? 'Loading days sober'
+                  : `${daysSober} ${daysSober === 1 ? 'day' : 'days'} sober`
+              }
             >
               <Heart size={14} color={theme.primary} fill={theme.primary} />
               <Text style={styles.sobrietyText}>
-                {daysSober} {daysSober === 1 ? 'day' : 'days'} sober
+                {loadingDaysSober
+                  ? '...'
+                  : `${daysSober} ${daysSober === 1 ? 'day' : 'days'} sober`}
               </Text>
             </View>
           )}
