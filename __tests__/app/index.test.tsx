@@ -820,6 +820,23 @@ describe('HomeScreen', () => {
         expect(screen.getByText('Your Sponsees')).toBeTruthy();
       });
     });
+
+    it('opens task creation sheet when assign task button is pressed', async () => {
+      render(<HomeScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Jane D.')).toBeTruthy();
+      });
+
+      // Find and press the assign task button for sponsee
+      const assignTaskButton = screen.getByLabelText('Assign task to Jane D.');
+      fireEvent.press(assignTaskButton);
+
+      // The task creation sheet should be rendered (it's mocked but the state updates happen)
+      await waitFor(() => {
+        expect(screen.getByTestId('task-creation-sheet')).toBeTruthy();
+      });
+    });
   });
 
   describe('Pull to Refresh', () => {
@@ -1031,6 +1048,168 @@ describe('HomeScreen', () => {
 
       await waitFor(() => {
         expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Database error');
+      });
+    });
+  });
+
+  describe('Error Handling - Data Fetching', () => {
+    it('handles sponsor relationships fetch error gracefully', async () => {
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsor_id') {
+                  return {
+                    eq: jest.fn().mockResolvedValue({
+                      data: null,
+                      error: { message: 'Failed to fetch sponsor relationships' },
+                    }),
+                  };
+                }
+                return {
+                  eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                };
+              }),
+            }),
+          };
+        }
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  order: jest.fn().mockReturnValue({
+                    limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<HomeScreen />);
+
+      // Should render without crashing despite error
+      await waitFor(() => {
+        expect(screen.getByText('Your Sobriety Journey')).toBeTruthy();
+      });
+    });
+
+    it('handles sponsee relationships fetch error gracefully', async () => {
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsor_id') {
+                  return {
+                    eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  };
+                }
+                if (field === 'sponsee_id') {
+                  return {
+                    eq: jest.fn().mockResolvedValue({
+                      data: null,
+                      error: { message: 'Failed to fetch sponsee relationships' },
+                    }),
+                  };
+                }
+                return {
+                  eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                };
+              }),
+            }),
+          };
+        }
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  order: jest.fn().mockReturnValue({
+                    limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<HomeScreen />);
+
+      // Should render without crashing despite error
+      await waitFor(() => {
+        expect(screen.getByText('Your Sobriety Journey')).toBeTruthy();
+      });
+    });
+
+    it('handles tasks fetch error gracefully', async () => {
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsor_id') {
+                  return {
+                    eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  };
+                }
+                if (field === 'sponsee_id') {
+                  return {
+                    eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  };
+                }
+                return {
+                  eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                };
+              }),
+            }),
+          };
+        }
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  order: jest.fn().mockReturnValue({
+                    limit: jest.fn().mockResolvedValue({
+                      data: null,
+                      error: { message: 'Failed to fetch tasks' },
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<HomeScreen />);
+
+      // Should render without crashing despite error
+      await waitFor(() => {
+        expect(screen.getByText('Your Sobriety Journey')).toBeTruthy();
       });
     });
   });
