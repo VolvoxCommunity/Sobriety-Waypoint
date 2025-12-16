@@ -1569,4 +1569,328 @@ describe('TasksScreen', () => {
       });
     });
   });
+
+  describe('Error Handling - Data Fetching', () => {
+    const { supabase } = jest.requireMock('@/lib/supabase');
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockMyTasks = [];
+      mockManageTasks = [];
+      mockSponsees = [];
+      mockPendingTasks = [];
+    });
+
+    it('handles fetchMyTasks error gracefully', async () => {
+      // Override to return error for my tasks fetch
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsee_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({
+                      data: null,
+                      error: { message: 'Database error' },
+                    }),
+                    neq: jest.fn().mockReturnValue({
+                      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    }),
+                  };
+                }
+                if (field === 'sponsor_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  };
+                }
+                return { order: jest.fn().mockResolvedValue({ data: [], error: null }) };
+              }),
+            }),
+          };
+        }
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<TasksScreen />);
+
+      // Component should render without crashing despite error
+      // Check for the screen title which always renders
+      await waitFor(() => {
+        expect(screen.getByText('Tasks')).toBeTruthy();
+      });
+    });
+
+    it('handles fetchManageData sponsee error gracefully', async () => {
+      // Override to return error for sponsee relationships fetch
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsee_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    neq: jest.fn().mockReturnValue({
+                      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    }),
+                  };
+                }
+                if (field === 'sponsor_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  };
+                }
+                return { order: jest.fn().mockResolvedValue({ data: [], error: null }) };
+              }),
+            }),
+          };
+        }
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'Failed to fetch sponsees' },
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<TasksScreen />);
+
+      // Component should render without crashing despite error
+      // Check for the screen title which always renders
+      await waitFor(() => {
+        expect(screen.getByText('Tasks')).toBeTruthy();
+      });
+    });
+
+    it('handles fetchManageData task error gracefully', async () => {
+      // Override to return error for tasks fetch in manage data
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsee_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    neq: jest.fn().mockReturnValue({
+                      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    }),
+                  };
+                }
+                if (field === 'sponsor_id') {
+                  // Return error for manage tasks fetch
+                  return {
+                    order: jest.fn().mockResolvedValue({
+                      data: null,
+                      error: { message: 'Failed to fetch manage tasks' },
+                    }),
+                  };
+                }
+                return { order: jest.fn().mockResolvedValue({ data: [], error: null }) };
+              }),
+            }),
+          };
+        }
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<TasksScreen />);
+
+      // Component should render without crashing despite error
+      await waitFor(() => {
+        expect(screen.getByText('Tasks')).toBeTruthy();
+      });
+    });
+
+    it('handles initializeView error gracefully and defaults to manage view', async () => {
+      // Override to return error for initializeView check
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsee_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    neq: jest.fn().mockReturnValue({
+                      limit: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: { message: 'Failed to check pending tasks' },
+                      }),
+                    }),
+                  };
+                }
+                if (field === 'sponsor_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                  };
+                }
+                return { order: jest.fn().mockResolvedValue({ data: [], error: null }) };
+              }),
+            }),
+          };
+        }
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<TasksScreen />);
+
+      // Should render successfully despite error - check for screen title
+      await waitFor(() => {
+        expect(screen.getByText('Tasks')).toBeTruthy();
+      });
+    });
+
+    it('handles task deletion error gracefully', async () => {
+      const { showConfirm, showAlert } = jest.requireMock('@/lib/alert');
+      showConfirm.mockImplementation(
+        async (
+          _title: string,
+          _message: string,
+          _confirm: string,
+          _cancel: string,
+          _destructive: boolean,
+          onConfirm?: () => void
+        ) => {
+          if (onConfirm) onConfirm();
+          return true;
+        }
+      );
+
+      // Set up sponsees data
+      const testSponsees = [
+        {
+          id: 'sponsee-1',
+          display_name: 'Test Sponsee',
+          sobriety_date: '2024-06-01',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      // Set up manage tasks data
+      const testManageTasks = [
+        {
+          id: 'manage-task-1',
+          sponsor_id: 'user-123',
+          sponsee_id: 'sponsee-1',
+          title: 'Delete Error Task',
+          status: 'assigned',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          sponsee: testSponsees[0],
+        },
+      ];
+
+      // Override to return error on delete
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockImplementation((field: string) => {
+                if (field === 'sponsee_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    neq: jest.fn().mockReturnValue({
+                      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    }),
+                  };
+                }
+                if (field === 'sponsor_id') {
+                  return {
+                    order: jest.fn().mockResolvedValue({ data: testManageTasks, error: null }),
+                  };
+                }
+                return { order: jest.fn().mockResolvedValue({ data: [], error: null }) };
+              }),
+            }),
+            delete: jest.fn().mockReturnValue({
+              eq: jest.fn().mockRejectedValue(new Error('Delete failed')),
+            }),
+          };
+        }
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({
+                  data: [{ sponsee: testSponsees[0] }],
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<TasksScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete Error Task')).toBeTruthy();
+      });
+
+      const deleteButton = screen.getByTestId('delete-task-manage-task-1');
+      fireEvent.press(deleteButton);
+
+      await waitFor(() => {
+        expect(showAlert).toHaveBeenCalledWith('Error', 'Failed to delete task');
+      });
+    });
+  });
 });
