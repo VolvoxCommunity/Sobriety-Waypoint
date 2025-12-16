@@ -139,8 +139,8 @@ describe('ProfileHeader', () => {
         <ProfileHeader displayName="Avatar Test" email="avatar@example.com" theme={mockTheme} />
       );
 
-      // Avatar should have image role - verified via component code
-      expect(screen.getByText('A')).toBeTruthy();
+      // Query by accessibility role to verify image role on avatar
+      expect(screen.getByRole('image')).toBeTruthy();
     });
 
     it('sets header role on name', () => {
@@ -148,8 +148,8 @@ describe('ProfileHeader', () => {
         <ProfileHeader displayName="Header Test" email="header@example.com" theme={mockTheme} />
       );
 
-      // Name should have header role - verified via component code
-      expect(screen.getByText('Header Test')).toBeTruthy();
+      // Query by accessibility role to verify header role on name
+      expect(screen.getByRole('header')).toBeTruthy();
     });
 
     it('sets text role on email', () => {
@@ -157,7 +157,8 @@ describe('ProfileHeader', () => {
         <ProfileHeader displayName="Email Test" email="emailtest@example.com" theme={mockTheme} />
       );
 
-      // Email should have text role - verified via component code
+      // Query by text role - note: 'text' role may not be directly queryable
+      // so we verify the element with the email text exists
       expect(screen.getByText('emailtest@example.com')).toBeTruthy();
     });
   });
