@@ -1175,6 +1175,284 @@ describe('AuthContext', () => {
     });
   });
 
+  describe('OAuth URL parsing edge cases', () => {
+    it('handles malformed URL gracefully', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Malformed URL - not a valid URL structure
+      mockGetInitialURL.mockResolvedValueOnce('not-a-valid-url-at-all');
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not crash or attempt to create session
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles URL with missing access_token', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Only refresh_token, no access_token
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback#refresh_token=only-refresh'
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not attempt to create session without both tokens
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles URL with missing refresh_token', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Only access_token, no refresh_token
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback#access_token=only-access'
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not attempt to create session without both tokens
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles URL with empty access_token value', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Empty access_token
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback#access_token=&refresh_token=valid-refresh'
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not attempt to create session with empty token
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles URL with empty refresh_token value', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Empty refresh_token
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback#access_token=valid-access&refresh_token='
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not attempt to create session with empty token
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('prioritizes hash fragment tokens over query params when both exist', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Both hash and query params - hash should take precedence
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback?access_token=query-access&refresh_token=query-refresh#access_token=hash-access&refresh_token=hash-refresh'
+      );
+
+      mockSetSession.mockResolvedValue({
+        data: { session: { user: { id: 'precedence-user', email: 'precedence@test.com' } } },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should use hash tokens (Supabase's default for implicit grant)
+      expect(mockSetSession).toHaveBeenCalledWith({
+        access_token: 'hash-access',
+        refresh_token: 'hash-refresh',
+      });
+    });
+
+    it('falls back to query params when hash has only partial tokens', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Hash has only access_token, query has both - should fall back to query
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback?access_token=query-access&refresh_token=query-refresh#access_token=hash-access'
+      );
+
+      mockSetSession.mockResolvedValue({
+        data: { session: { user: { id: 'fallback-user', email: 'fallback@test.com' } } },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should fall back to query params when hash doesn't have both tokens
+      expect(mockSetSession).toHaveBeenCalledWith({
+        access_token: 'query-access',
+        refresh_token: 'query-refresh',
+      });
+    });
+
+    it('handles URL with OAuth error parameter', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // OAuth error response
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback#error=access_denied&error_description=User+denied+access'
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not attempt to create session when error is present
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles URL with special characters in tokens', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Tokens with URL-encoded special characters
+      mockGetInitialURL.mockResolvedValueOnce(
+        'sobrietywaypoint://auth/callback#access_token=token%2Bwith%2Fspecial%3Dchars&refresh_token=refresh%2Btoken%3D%3D'
+      );
+
+      mockSetSession.mockResolvedValue({
+        data: { session: { user: { id: 'special-user', email: 'special@test.com' } } },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should decode and use the special characters correctly
+      expect(mockSetSession).toHaveBeenCalledWith({
+        access_token: 'token+with/special=chars',
+        refresh_token: 'refresh+token==',
+      });
+    });
+
+    it('handles URL without any OAuth-related parameters', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      // Regular deep link without OAuth params
+      mockGetInitialURL.mockResolvedValueOnce('sobrietywaypoint://profile/view');
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should not attempt to process as OAuth callback
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles duplicate URL processing by ignoring second attempt', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      const duplicateUrl =
+        'sobrietywaypoint://auth/callback#access_token=duplicate&refresh_token=duplicate';
+
+      mockGetInitialURL.mockResolvedValueOnce(duplicateUrl);
+
+      mockSetSession.mockResolvedValue({
+        data: { session: { user: { id: 'dup-user', email: 'dup@test.com' } } },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // First call should succeed
+      expect(mockSetSession).toHaveBeenCalledTimes(1);
+
+      mockSetSession.mockClear();
+
+      // Simulate the same URL being processed again via addEventListener.
+      // We access the internal URL event handler to test the duplicate-processing guard.
+      // This is necessary because we can't trigger another getInitialURL call after mount,
+      // and we need to verify that the same URL isn't processed twice even when received
+      // through different channels (initial URL vs event listener).
+      const Linking = require('expo-linking');
+      const addEventListenerCalls = Linking.addEventListener.mock.calls;
+      const lastCall = addEventListenerCalls[addEventListenerCalls.length - 1];
+      const urlEventHandler = lastCall[1];
+
+      // Trigger the same URL again
+      await urlEventHandler({ url: duplicateUrl });
+
+      // Should not call setSession again (URL already processed)
+      expect(mockSetSession).not.toHaveBeenCalled();
+    });
+
+    it('handles concurrent OAuth processing by preventing race conditions', async () => {
+      const mockGetInitialURL = require('expo-linking').getInitialURL;
+      const oauthUrl =
+        'sobrietywaypoint://auth/callback#access_token=concurrent&refresh_token=concurrent';
+
+      mockGetInitialURL.mockResolvedValueOnce(oauthUrl);
+
+      // Make setSession slow to simulate race condition
+      mockSetSession.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  data: {
+                    session: { user: { id: 'concurrent-user', email: 'concurrent@test.com' } },
+                  },
+                  error: null,
+                }),
+              100
+            )
+          )
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      // Wait for initial processing to start
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Try to process the same URL while first is still in progress
+      const Linking = require('expo-linking');
+      const addEventListenerCalls = Linking.addEventListener.mock.calls;
+      const lastCall = addEventListenerCalls[addEventListenerCalls.length - 1];
+      const urlEventHandler = lastCall[1];
+
+      // Trigger URL while first is processing (won't await it to simulate concurrency)
+      urlEventHandler({ url: oauthUrl });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should only call setSession once despite concurrent attempts
+      expect(mockSetSession).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('storeAppleNameInMetadata', () => {
     it('handles updateUser error gracefully', async () => {
       mockPendingAppleName = {

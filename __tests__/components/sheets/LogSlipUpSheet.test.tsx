@@ -813,7 +813,7 @@ describe('LogSlipUpSheet', () => {
 
       await waitFor(() => {
         expect(window.confirm).toHaveBeenCalledWith(
-          'Recording this will restart your journey counter. Your sponsor will be notified so they can support you. Ready to continue?'
+          'Ready to Record?\n\nRecording this will restart your journey counter. Your sponsor will be notified so they can support you. Ready to continue?'
         );
         expect(insertMock).toHaveBeenCalled();
       });
@@ -856,7 +856,7 @@ describe('LogSlipUpSheet', () => {
 
       await waitFor(() => {
         expect(window.alert).toHaveBeenCalledWith(
-          "Your setback has been recorded. This took real courage. Remember: every day is a fresh start, and you're not alone on this journey."
+          "Setback Recorded: Your setback has been recorded. This took real courage. Remember: every day is a fresh start, and you're not alone on this journey."
         );
       });
     });

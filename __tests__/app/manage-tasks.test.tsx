@@ -948,4 +948,84 @@ describe('ManageTasksScreen', () => {
       });
     });
   });
+
+  describe('Error Handling - Data Fetching', () => {
+    it('handles sponsee relationships fetch error gracefully', async () => {
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'Failed to fetch sponsee relationships' },
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<ManageTasksScreen />);
+
+      // Should render without crashing
+      await waitFor(() => {
+        expect(screen.getByText('Manage Tasks')).toBeTruthy();
+      });
+    });
+
+    it('handles tasks fetch error gracefully', async () => {
+      const { supabase } = jest.requireMock('@/lib/supabase');
+      supabase.from.mockImplementation((table: string) => {
+        if (table === 'sponsor_sponsee_relationships') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        if (table === 'tasks') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                order: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'Failed to fetch tasks' },
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        };
+      });
+
+      render(<ManageTasksScreen />);
+
+      // Should render without crashing
+      await waitFor(() => {
+        expect(screen.getByText('Manage Tasks')).toBeTruthy();
+      });
+    });
+  });
 });

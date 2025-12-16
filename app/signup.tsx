@@ -1,12 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
@@ -17,6 +15,7 @@ import { Heart, ArrowLeft } from 'lucide-react-native';
 import { GoogleLogo } from '@/components/auth/SocialLogos';
 import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { logger, LogCategory } from '@/lib/logger';
+import { showAlert } from '@/lib/alert';
 
 /**
  * Renders the sign-up screen with fields and actions to create a new account.
@@ -43,29 +42,17 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      if (Platform.OS === 'web') {
-        window.alert('Please fill in all fields');
-      } else {
-        Alert.alert('Error', 'Please fill in all fields');
-      }
+      showAlert('Error', 'Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      if (Platform.OS === 'web') {
-        window.alert('Passwords do not match');
-      } else {
-        Alert.alert('Error', 'Passwords do not match');
-      }
+      showAlert('Error', 'Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      if (Platform.OS === 'web') {
-        window.alert('Password must be at least 6 characters');
-      } else {
-        Alert.alert('Error', 'Password must be at least 6 characters');
-      }
+      showAlert('Error', 'Password must be at least 6 characters');
       return;
     }
 
@@ -76,11 +63,7 @@ export default function SignupScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to create account');
       logger.error('Sign up failed', err, { category: LogCategory.AUTH });
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + err.message);
-      } else {
-        Alert.alert('Error', err.message);
-      }
+      showAlert('Error', err.message);
     } finally {
       setLoading(false);
     }
@@ -93,17 +76,13 @@ export default function SignupScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to sign in with Google');
       logger.error('Google sign in failed', err, { category: LogCategory.AUTH });
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + err.message);
-      } else {
-        Alert.alert('Error', err.message);
-      }
+      showAlert('Error', err.message);
     } finally {
       setGoogleLoading(false);
     }
   };
 
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
@@ -114,6 +93,7 @@ export default function SignupScreen() {
           testID="back-button"
           accessibilityLabel="Go back"
           accessibilityRole="button"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <ArrowLeft size={24} color={theme.text} />
         </TouchableOpacity>
@@ -227,8 +207,7 @@ export default function SignupScreen() {
           <AppleSignInButton
             onError={(error) => {
               logger.error('Apple sign in failed', error, { category: LogCategory.AUTH });
-              // AppleSignInButton only renders on iOS, so Alert.alert is safe here
-              Alert.alert('Error', error.message);
+              showAlert('Error', error.message);
             }}
           />
 

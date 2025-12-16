@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +29,16 @@ type TimelineEventType =
   | 'task_completion'
   | 'task_milestone';
 
+/**
+ * Metadata types for different timeline event types.
+ * Each event type has a specific metadata shape.
+ */
+type TimelineEventMetadata =
+  | SlipUp // slip_up events
+  | UserStepProgress // step_completion events
+  | { taskId: string; stepNumber: number | undefined; sponsorId: string } // task_completion events
+  | { milestoneCount: number }; // task_milestone events
+
 interface TimelineEvent {
   id: string;
   type: TimelineEventType;
@@ -46,7 +56,7 @@ interface TimelineEvent {
     | 'list-checks'
     | 'target';
   color: string;
-  metadata?: any;
+  metadata?: TimelineEventMetadata;
 }
 
 /**
@@ -317,7 +327,7 @@ export default function JourneyScreen() {
     });
   };
 
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   if (loading) {
     return (
@@ -382,21 +392,33 @@ export default function JourneyScreen() {
               </View>
             )}
             <View style={styles.statRow}>
-              <View style={styles.statItem}>
+              <View
+                style={styles.statItem}
+                accessible={true}
+                accessibilityLabel={`${events.filter((e) => e.type === 'step_completion').length} Steps Completed`}
+              >
                 <CheckCircle size={18} color="#10b981" />
                 <Text style={styles.statValue}>
                   {events.filter((e) => e.type === 'step_completion').length}
                 </Text>
                 <Text style={styles.statLabel}>Steps Completed</Text>
               </View>
-              <View style={styles.statItem}>
+              <View
+                style={styles.statItem}
+                accessible={true}
+                accessibilityLabel={`${events.filter((e) => e.type === 'task_completion').length} Tasks Completed`}
+              >
                 <ListChecks size={18} color="#3b82f6" />
                 <Text style={styles.statValue}>
                   {events.filter((e) => e.type === 'task_completion').length}
                 </Text>
                 <Text style={styles.statLabel}>Tasks Completed</Text>
               </View>
-              <View style={styles.statItem}>
+              <View
+                style={styles.statItem}
+                accessible={true}
+                accessibilityLabel={`${events.filter((e) => e.type === 'milestone' || e.type === 'task_milestone').length} Milestones`}
+              >
                 <Award size={18} color="#8b5cf6" />
                 <Text style={styles.statValue}>
                   {
@@ -430,7 +452,11 @@ export default function JourneyScreen() {
                   <View style={styles.timelineDate}>
                     <Text style={styles.timelineDateText}>{formatDate(event.date)}</Text>
                   </View>
-                  <View style={[styles.eventCard, { borderLeftColor: event.color }]}>
+                  <View
+                    style={[styles.eventCard, { borderLeftColor: event.color }]}
+                    accessible={true}
+                    accessibilityLabel={`${event.title}, ${formatDate(event.date)}${event.description ? `, ${event.description}` : ''}`}
+                  >
                     <View style={styles.eventHeader}>
                       <View style={[styles.eventIcon, { backgroundColor: event.color + '20' }]}>
                         {getIcon(event.icon, event.color)}

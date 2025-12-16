@@ -291,7 +291,7 @@ describe('SignupScreen', () => {
       fireEvent.press(screen.getByText('Continue with Google'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Google auth failed');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Google auth failed', undefined);
       });
     });
 
@@ -304,7 +304,11 @@ describe('SignupScreen', () => {
       fireEvent.press(screen.getByText('Continue with Google'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to sign in with Google');
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error',
+          'Failed to sign in with Google',
+          undefined
+        );
       });
     });
   });
@@ -322,7 +326,7 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields', undefined);
       });
     });
 
@@ -340,7 +344,7 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields', undefined);
       });
     });
 
@@ -358,7 +362,7 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields', undefined);
       });
     });
 
@@ -377,7 +381,7 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Passwords do not match');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Passwords do not match', undefined);
       });
     });
 
@@ -396,7 +400,11 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Password must be at least 6 characters');
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error',
+          'Password must be at least 6 characters',
+          undefined
+        );
       });
     });
   });
@@ -419,7 +427,7 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Email already registered');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Email already registered', undefined);
       });
     });
 
@@ -440,7 +448,7 @@ describe('SignupScreen', () => {
       fireEvent.press(buttons[buttons.length - 1]);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to create account');
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to create account', undefined);
       });
     });
   });
@@ -478,7 +486,7 @@ describe('SignupScreen', () => {
       Platform.OS = 'web';
       global.window = {
         alert: jest.fn(),
-        confirm: jest.fn()
+        confirm: jest.fn(),
       } as any;
     });
 
@@ -493,7 +501,7 @@ describe('SignupScreen', () => {
       const buttons = screen.getAllByText('Create Account');
       fireEvent.press(buttons[buttons.length - 1]);
 
-      expect(window.alert).toHaveBeenCalledWith('Please fill in all fields');
+      expect(window.alert).toHaveBeenCalledWith('Error: Please fill in all fields');
     });
 
     it('uses window.alert for password mismatch', () => {
@@ -509,10 +517,10 @@ describe('SignupScreen', () => {
       const buttons = screen.getAllByText('Create Account');
       fireEvent.press(buttons[buttons.length - 1]);
 
-      expect(window.alert).toHaveBeenCalledWith('Passwords do not match');
+      expect(window.alert).toHaveBeenCalledWith('Error: Passwords do not match');
     });
 
-     it('uses window.alert for short password', () => {
+    it('uses window.alert for short password', () => {
       render(<SignupScreen />);
 
       const emailInput = screen.getByPlaceholderText('your@email.com');
@@ -525,7 +533,7 @@ describe('SignupScreen', () => {
       const buttons = screen.getAllByText('Create Account');
       fireEvent.press(buttons[buttons.length - 1]);
 
-      expect(window.alert).toHaveBeenCalledWith('Password must be at least 6 characters');
+      expect(window.alert).toHaveBeenCalledWith('Error: Password must be at least 6 characters');
     });
 
     it('uses window.alert for sign up error', async () => {
@@ -556,7 +564,7 @@ describe('SignupScreen', () => {
       fireEvent.press(screen.getByText('Continue with Google'));
 
       await waitFor(() => {
-         expect(window.alert).toHaveBeenCalledWith('Error: Web Google error');
+        expect(window.alert).toHaveBeenCalledWith('Error: Web Google error');
       });
     });
   });
