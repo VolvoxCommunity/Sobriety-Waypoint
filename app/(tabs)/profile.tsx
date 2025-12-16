@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Share,
   Platform,
   ActivityIndicator,
@@ -36,6 +35,7 @@ import EnterInviteCodeSheet, {
   EnterInviteCodeSheetRef,
 } from '@/components/sheets/EnterInviteCodeSheet';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
+import { showAlert, showConfirm } from '@/lib/alert';
 
 // =============================================================================
 // Helper Components
@@ -226,17 +226,39 @@ export default function ProfileScreen() {
 
     setLoadingRelationships(true);
     try {
-      const { data: asSponsee } = await supabase
+      const { data: asSponsee, error: asSponseeError } = await supabase
         .from('sponsor_sponsee_relationships')
         .select('*, sponsor:sponsor_id(*)')
         .eq('sponsee_id', profile.id)
         .eq('status', 'active');
 
-      const { data: asSponsor } = await supabase
+      if (asSponseeError) {
+        logger.error(
+          'Failed to fetch sponsee relationships',
+          new Error(asSponseeError.message || 'Unknown database error'),
+          {
+            category: LogCategory.DATABASE,
+          }
+        );
+        return;
+      }
+
+      const { data: asSponsor, error: asSponsorError } = await supabase
         .from('sponsor_sponsee_relationships')
         .select('*, sponsee:sponsee_id(*)')
         .eq('sponsor_id', profile.id)
         .eq('status', 'active');
+
+      if (asSponsorError) {
+        logger.error(
+          'Failed to fetch sponsor relationships',
+          new Error(asSponsorError.message || 'Unknown database error'),
+          {
+            category: LogCategory.DATABASE,
+          }
+        );
+        return;
+      }
 
       setSponsorRelationships(asSponsee || []);
       setSponseeRelationships(asSponsor || []);
@@ -245,11 +267,22 @@ export default function ProfileScreen() {
       if (asSponsor && asSponsor.length > 0) {
         const sponseeIds = asSponsor.map((rel) => rel.sponsee_id);
 
-        const { data: allTasks } = await supabase
+        const { data: allTasks, error: allTasksError } = await supabase
           .from('tasks')
           .select('sponsee_id, status')
           .eq('sponsor_id', profile.id)
           .in('sponsee_id', sponseeIds);
+
+        if (allTasksError) {
+          logger.error(
+            'Failed to fetch task statistics',
+            new Error(allTasksError.message || 'Unknown database error'),
+            {
+              category: LogCategory.DATABASE,
+            }
+          );
+          return;
+        }
 
         // Aggregate stats client-side
         const stats: { [key: string]: { total: number; completed: number } } = {};
@@ -307,22 +340,18 @@ export default function ProfileScreen() {
     });
 
     if (error) {
-      if (Platform.OS === 'web') {
-        window.alert('Error: Failed to generate invite code');
-      } else {
-        Alert.alert('Error', 'Failed to generate invite code');
-      }
+      showAlert('Error', 'Failed to generate invite code');
     } else {
       if (Platform.OS === 'web') {
-        const shouldShare = window.confirm(
+        const shouldCopy = window.confirm(
           `Your invite code is: ${code}\n\nShare this with your sponsee to connect.\n\nClick OK to copy to clipboard.`
         );
-        if (shouldShare) {
+        if (shouldCopy) {
           navigator.clipboard.writeText(code);
-          window.alert('Invite code copied to clipboard!');
+          showAlert('Success', 'Invite code copied to clipboard!');
         }
       } else {
-        Alert.alert(
+        showAlert(
           'Invite Code Generated',
           `Your invite code is: ${code}\n\nShare this with your sponsee to connect.`,
           [
@@ -395,13 +424,24 @@ export default function ProfileScreen() {
         throw new Error('You cannot connect to yourself as a sponsor');
       }
 
-      const { data: existingRelationship } = await supabase
+      const { data: existingRelationship, error: existingRelationshipError } = await supabase
         .from('sponsor_sponsee_relationships')
         .select('id')
         .eq('sponsor_id', invite.sponsor_id)
         .eq('sponsee_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
+
+      if (existingRelationshipError) {
+        logger.error(
+          'Failed to check existing relationship',
+          new Error(existingRelationshipError.message || 'Unknown database error'),
+          {
+            category: LogCategory.DATABASE,
+          }
+        );
+        throw new Error('Failed to verify existing connections');
+      }
 
       if (existingRelationship) {
         throw new Error('You are already connected to this sponsor');
@@ -458,11 +498,7 @@ export default function ProfileScreen() {
       await fetchRelationships();
 
       // Show success message
-      if (Platform.OS === 'web') {
-        window.alert(`Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
-      } else {
-        Alert.alert('Success', `Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
-      }
+      showAlert('Success', `Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
     } catch (error: unknown) {
       logger.error('Join with invite code failed', error as Error, {
         category: LogCategory.DATABASE,
@@ -483,23 +519,13 @@ export default function ProfileScreen() {
       ? `Are you sure you want to disconnect from ${otherUserName}? This will end your sponsee relationship.`
       : `Are you sure you want to disconnect from ${otherUserName}? This will end your sponsor relationship.`;
 
-    const confirmed =
-      Platform.OS === 'web'
-        ? window.confirm(confirmMessage)
-        : await new Promise<boolean>((resolve) => {
-            Alert.alert('Confirm Disconnection', confirmMessage, [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => resolve(false),
-              },
-              {
-                text: 'Disconnect',
-                style: 'destructive',
-                onPress: () => resolve(true),
-              },
-            ]);
-          });
+    const confirmed = await showConfirm(
+      'Confirm Disconnection',
+      confirmMessage,
+      'Disconnect',
+      'Cancel',
+      true
+    );
 
     if (!confirmed) return;
 
@@ -537,21 +563,13 @@ export default function ProfileScreen() {
 
       await fetchRelationships();
 
-      if (Platform.OS === 'web') {
-        window.alert('Successfully disconnected');
-      } else {
-        Alert.alert('Success', 'Successfully disconnected');
-      }
+      showAlert('Success', 'Successfully disconnected');
     } catch (error: unknown) {
       logger.error('Disconnect relationship failed', error as Error, {
         category: LogCategory.DATABASE,
       });
       const message = error instanceof Error ? error.message : 'Failed to disconnect.';
-      if (Platform.OS === 'web') {
-        window.alert(message);
-      } else {
-        Alert.alert('Error', message);
-      }
+      showAlert('Error', message);
     }
   };
 
@@ -576,29 +594,18 @@ export default function ProfileScreen() {
       selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate > today) {
-        if (Platform.OS === 'web') {
-          window.alert('Sobriety date cannot be in the future');
-        } else {
-          Alert.alert('Invalid Date', 'Sobriety date cannot be in the future');
-        }
+        showAlert('Invalid Date', 'Sobriety date cannot be in the future');
         return;
       }
 
       const confirmMessage = `Update your sobriety date to ${newDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}?`;
 
-      const confirmed =
-        Platform.OS === 'web'
-          ? window.confirm(confirmMessage)
-          : await new Promise<boolean>((resolve) => {
-              Alert.alert('Confirm Date Change', confirmMessage, [
-                {
-                  text: 'Cancel',
-                  style: 'cancel',
-                  onPress: () => resolve(false),
-                },
-                { text: 'Update', onPress: () => resolve(true) },
-              ]);
-            });
+      const confirmed = await showConfirm(
+        'Confirm Date Change',
+        confirmMessage,
+        'Update',
+        'Cancel'
+      );
 
       if (!confirmed) return;
 
@@ -614,21 +621,13 @@ export default function ProfileScreen() {
 
         await refreshProfile();
 
-        if (Platform.OS === 'web') {
-          window.alert('Sobriety date updated successfully');
-        } else {
-          Alert.alert('Success', 'Sobriety date updated successfully');
-        }
+        showAlert('Success', 'Sobriety date updated successfully');
       } catch (error: unknown) {
         logger.error('Sobriety date update failed', error as Error, {
           category: LogCategory.DATABASE,
         });
         const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
-        if (Platform.OS === 'web') {
-          window.alert(message);
-        } else {
-          Alert.alert('Error', message);
-        }
+        showAlert('Error', message);
       }
     },
     [profile, userTimezone, refreshProfile]

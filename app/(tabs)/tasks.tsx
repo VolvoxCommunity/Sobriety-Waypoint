@@ -9,7 +9,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Modal,
   TextInput,
   ActivityIndicator,
@@ -29,6 +28,7 @@ import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
 import { IOS_TAB_BAR_HEIGHT } from '@/constants/layout';
+import { showAlert, showConfirm } from '@/lib/alert';
 
 // =============================================================================
 // Types & Interfaces
@@ -85,11 +85,19 @@ export default function TasksScreen() {
    */
   const fetchMyTasks = useCallback(async () => {
     if (!profile) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .select('*, sponsor:sponsor_id(*)')
       .eq('sponsee_id', profile.id)
       .order('created_at', { ascending: false });
+
+    if (error) {
+      logger.error('Failed to fetch my tasks', new Error(JSON.stringify(error)), {
+        category: LogCategory.DATABASE,
+      });
+      return;
+    }
+
     setMyTasks(data || []);
   }, [profile]);
 
@@ -99,22 +107,36 @@ export default function TasksScreen() {
   const fetchManageData = useCallback(async () => {
     if (!profile) return;
 
-    const { data: sponseeData } = await supabase
+    const { data: sponseeData, error: sponseeError } = await supabase
       .from('sponsor_sponsee_relationships')
       .select('*, sponsee:sponsee_id(*)')
       .eq('sponsor_id', profile.id)
       .eq('status', 'active');
+
+    if (sponseeError) {
+      logger.error('Failed to fetch sponsees', new Error(JSON.stringify(sponseeError)), {
+        category: LogCategory.DATABASE,
+      });
+      return;
+    }
 
     const sponseeProfiles = (sponseeData || [])
       .map((rel) => rel.sponsee)
       .filter(Boolean) as Profile[];
     setSponsees(sponseeProfiles);
 
-    const { data: taskData } = await supabase
+    const { data: taskData, error: taskError } = await supabase
       .from('tasks')
       .select('*, sponsee:sponsee_id(*)')
       .eq('sponsor_id', profile.id)
       .order('created_at', { ascending: false });
+
+    if (taskError) {
+      logger.error('Failed to fetch manage tasks', new Error(JSON.stringify(taskError)), {
+        category: LogCategory.DATABASE,
+      });
+      return;
+    }
 
     setManageTasks(taskData || []);
   }, [profile]);
@@ -126,12 +148,21 @@ export default function TasksScreen() {
   const initializeView = useCallback(async () => {
     if (!profile) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .select('id')
       .eq('sponsee_id', profile.id)
       .neq('status', 'completed')
       .limit(1);
+
+    if (error) {
+      logger.error('Failed to initialize view', new Error(JSON.stringify(error)), {
+        category: LogCategory.DATABASE,
+      });
+      // Fallback to 'manage' view on error
+      setViewMode('manage');
+      return;
+    }
 
     setViewMode(data && data.length > 0 ? 'my-tasks' : 'manage');
   }, [profile]);
@@ -205,20 +236,12 @@ export default function TasksScreen() {
       setCompletionNotes('');
       await fetchMyTasks();
 
-      if (Platform.OS === 'web') {
-        window.alert('Task marked as completed!');
-      } else {
-        Alert.alert('Success', 'Task marked as completed!');
-      }
+      showAlert('Success', 'Task marked as completed!');
     } catch (error) {
       logger.error('Task completion failed', error as Error, {
         category: LogCategory.DATABASE,
       });
-      if (Platform.OS === 'web') {
-        window.alert('Failed to complete task');
-      } else {
-        Alert.alert('Error', 'Failed to complete task');
-      }
+      showAlert('Error', 'Failed to complete task');
     } finally {
       setIsSubmitting(false);
     }
@@ -231,23 +254,7 @@ export default function TasksScreen() {
   const handleDeleteTask = async (taskId: string, taskTitle: string) => {
     const confirmMessage = `Delete task "${taskTitle}"? This cannot be undone.`;
 
-    const confirmed =
-      Platform.OS === 'web'
-        ? window.confirm(confirmMessage)
-        : await new Promise<boolean>((resolve) => {
-            Alert.alert('Confirm Delete', confirmMessage, [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => resolve(false),
-              },
-              {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: () => resolve(true),
-              },
-            ]);
-          });
+    const confirmed = await showConfirm('Confirm Delete', confirmMessage, 'Delete', 'Cancel', true);
 
     if (!confirmed) return;
 
@@ -258,20 +265,12 @@ export default function TasksScreen() {
 
       await fetchManageData();
 
-      if (Platform.OS === 'web') {
-        window.alert('Task deleted successfully');
-      } else {
-        Alert.alert('Success', 'Task deleted successfully');
-      }
+      showAlert('Success', 'Task deleted successfully');
     } catch (error) {
       logger.error('Task deletion failed', error as Error, {
         category: LogCategory.DATABASE,
       });
-      if (Platform.OS === 'web') {
-        window.alert('Failed to delete task');
-      } else {
-        Alert.alert('Error', 'Failed to delete task');
-      }
+      showAlert('Error', 'Failed to delete task');
     }
   };
 

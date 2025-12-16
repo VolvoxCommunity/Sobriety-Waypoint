@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -18,6 +17,7 @@ import { Heart } from 'lucide-react-native';
 import { GoogleLogo } from '@/components/auth/SocialLogos';
 import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { logger, LogCategory } from '@/lib/logger';
+import { showAlert } from '@/lib/alert';
 
 /**
  * Render the app's login screen and manage email/password, Google, and Apple sign-in flows.
@@ -42,11 +42,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      if (Platform.OS === 'web') {
-        window.alert('Please fill in all fields');
-      } else {
-        Alert.alert('Error', 'Please fill in all fields');
-      }
+      showAlert('Error', 'Please fill in all fields');
       return;
     }
 
@@ -56,11 +52,7 @@ export default function LoginScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to sign in');
       logger.error('Sign in failed', err, { category: LogCategory.AUTH, email });
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + err.message);
-      } else {
-        Alert.alert('Error', err.message);
-      }
+      showAlert('Error', err.message);
     } finally {
       setLoading(false);
     }
@@ -73,11 +65,7 @@ export default function LoginScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to sign in with Google');
       logger.error('Google sign in failed', err, { category: LogCategory.AUTH });
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + err.message);
-      } else {
-        Alert.alert('Error', err.message);
-      }
+      showAlert('Error', err.message);
     } finally {
       setGoogleLoading(false);
     }
@@ -180,8 +168,7 @@ export default function LoginScreen() {
           <AppleSignInButton
             onError={(error) => {
               logger.error('Apple sign in failed', error, { category: LogCategory.AUTH });
-              // AppleSignInButton only renders on iOS, so Alert.alert is safe here
-              Alert.alert('Error', error.message);
+              showAlert('Error', error.message);
             }}
           />
 

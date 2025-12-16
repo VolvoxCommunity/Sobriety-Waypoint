@@ -15,7 +15,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert, Platform, Linking } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import SettingsSheet, { SettingsSheetRef } from '@/components/SettingsSheet';
 
@@ -154,8 +154,14 @@ jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-// Mock Alert
-const mockAlert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+// Mock alert utilities
+jest.mock('@/lib/alert', () => ({
+  showAlert: jest.fn(),
+  showConfirm: jest.fn().mockResolvedValue(true), // Default to confirmed
+}));
+
+// Get references to the mocked functions
+const { showAlert: mockShowAlert, showConfirm: mockShowConfirm } = jest.requireMock('@/lib/alert');
 
 // Mock Constants
 jest.mock('expo-constants', () => ({
@@ -185,7 +191,7 @@ jest.mock('expo-device', () => ({
 // Mock Application
 jest.mock('expo-application', () => ({
   nativeBuildVersion: '1',
-  nativeApplicationVersion: '1.0.0',
+  nativeApplicationVersion: '1.1.0',
 }));
 
 // Mock lucide-react-native icons
@@ -275,6 +281,8 @@ describe('SettingsSheet', () => {
     mockSignOut.mockResolvedValue(undefined);
     mockDeleteAccount.mockResolvedValue(undefined);
     mockRefreshProfile.mockResolvedValue(undefined);
+    // Reset alert mocks to defaults - mockClear is already called by jest.clearAllMocks()
+    (mockShowConfirm as jest.Mock).mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -481,13 +489,12 @@ describe('SettingsSheet', () => {
         fireEvent.press(signOutButton);
       });
 
-      expect(mockAlert).toHaveBeenCalledWith(
+      expect(mockShowConfirm).toHaveBeenCalledWith(
         'Sign Out',
         'Are you sure you want to sign out?',
-        expect.arrayContaining([
-          expect.objectContaining({ text: 'Cancel', style: 'cancel' }),
-          expect.objectContaining({ text: 'Sign Out', style: 'destructive' }),
-        ])
+        'Sign Out',
+        'Cancel',
+        true // destructive
       );
     });
 
@@ -497,16 +504,6 @@ describe('SettingsSheet', () => {
       const signOutButton = screen.getByLabelText('Sign out of your account');
       await act(async () => {
         fireEvent.press(signOutButton);
-      });
-
-      // Get the onPress callback from the Sign Out button in the alert
-      const alertCall = mockAlert.mock.calls[0];
-      const signOutButtonHandler = alertCall[2].find(
-        (btn: { text: string }) => btn.text === 'Sign Out'
-      );
-
-      await act(async () => {
-        await signOutButtonHandler.onPress();
       });
 
       expect(mockDismiss).toHaveBeenCalled();
@@ -523,20 +520,9 @@ describe('SettingsSheet', () => {
         fireEvent.press(signOutButton);
       });
 
-      const alertCall = mockAlert.mock.calls[0];
-      const signOutButtonHandler = alertCall[2].find(
-        (btn: { text: string }) => btn.text === 'Sign Out'
-      );
-
-      mockAlert.mockClear();
-      await act(async () => {
-        await signOutButtonHandler.onPress();
+      await waitFor(() => {
+        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to sign out: Network error');
       });
-
-      expect(mockAlert).toHaveBeenCalledWith(
-        'Error',
-        expect.stringContaining('Failed to sign out')
-      );
     });
   });
 
@@ -564,7 +550,13 @@ describe('SettingsSheet', () => {
         fireEvent.press(signOutButton);
       });
 
-      expect(global.window.confirm).toHaveBeenCalledWith('Are you sure you want to sign out?');
+      expect(mockShowConfirm).toHaveBeenCalledWith(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        'Sign Out',
+        'Cancel',
+        true
+      );
     });
 
     it('should call signOut when confirmed on web', async () => {
@@ -580,7 +572,7 @@ describe('SettingsSheet', () => {
     });
 
     it('should not call signOut when cancelled on web', async () => {
-      (global.window.confirm as jest.Mock).mockReturnValueOnce(false);
+      mockShowConfirm.mockResolvedValueOnce(false);
 
       render(<SettingsSheet />);
 
@@ -602,7 +594,9 @@ describe('SettingsSheet', () => {
         fireEvent.press(signOutButton);
       });
 
-      expect(global.window.alert).toHaveBeenCalledWith(expect.stringContaining('Network error'));
+      await waitFor(() => {
+        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to sign out: Network error');
+      });
     });
   });
 
@@ -631,10 +625,12 @@ describe('SettingsSheet', () => {
         fireEvent.press(deleteButton);
       });
 
-      expect(mockAlert).toHaveBeenCalledWith(
+      expect(mockShowConfirm).toHaveBeenCalledWith(
         'Delete Account?',
         expect.stringContaining('permanently delete'),
-        expect.any(Array)
+        'Delete Account',
+        'Cancel',
+        true
       );
     });
 
@@ -649,35 +645,25 @@ describe('SettingsSheet', () => {
         fireEvent.press(deleteButton);
       });
 
-      // First confirmation
-      const firstAlertCall = mockAlert.mock.calls[0];
-      const firstDeleteHandler = firstAlertCall[2].find(
-        (btn: { text: string }) => btn.text === 'Delete Account'
-      );
-
-      mockAlert.mockClear();
-      await act(async () => {
-        firstDeleteHandler.onPress();
+      // Should show both confirmations and call deleteAccount
+      await waitFor(() => {
+        expect(mockShowConfirm).toHaveBeenCalledWith(
+          'Delete Account?',
+          expect.stringContaining('permanently delete'),
+          'Delete Account',
+          'Cancel',
+          true
+        );
+        expect(mockShowConfirm).toHaveBeenCalledWith(
+          'Final Confirmation',
+          expect.stringContaining('last chance'),
+          'Yes, Delete My Account',
+          'Cancel',
+          true
+        );
+        expect(mockDismiss).toHaveBeenCalled();
+        expect(mockDeleteAccount).toHaveBeenCalled();
       });
-
-      // Second confirmation
-      expect(mockAlert).toHaveBeenCalledWith(
-        'Final Confirmation',
-        expect.any(String),
-        expect.any(Array)
-      );
-
-      const secondAlertCall = mockAlert.mock.calls[0];
-      const finalDeleteHandler = secondAlertCall[2].find(
-        (btn: { text: string }) => btn.text === 'Yes, Delete My Account'
-      );
-
-      await act(async () => {
-        await finalDeleteHandler.onPress();
-      });
-
-      expect(mockDismiss).toHaveBeenCalled();
-      expect(mockDeleteAccount).toHaveBeenCalled();
     });
 
     it('should show error alert when delete account fails', async () => {
@@ -693,46 +679,18 @@ describe('SettingsSheet', () => {
         fireEvent.press(deleteButton);
       });
 
-      // First confirmation
-      const firstAlertCall = mockAlert.mock.calls[0];
-      const firstDeleteHandler = firstAlertCall[2].find(
-        (btn: { text: string }) => btn.text === 'Delete Account'
-      );
-
-      mockAlert.mockClear();
-      await act(async () => {
-        firstDeleteHandler.onPress();
+      await waitFor(() => {
+        expect(mockShowAlert).toHaveBeenCalledWith(
+          'Error',
+          'Failed to delete account: Delete failed'
+        );
       });
-
-      // Second confirmation
-      const secondAlertCall = mockAlert.mock.calls[0];
-      const finalDeleteHandler = secondAlertCall[2].find(
-        (btn: { text: string }) => btn.text === 'Yes, Delete My Account'
-      );
-
-      mockAlert.mockClear();
-      await act(async () => {
-        await finalDeleteHandler.onPress();
-      });
-
-      expect(mockAlert).toHaveBeenCalledWith('Error', expect.stringContaining('Delete failed'));
     });
   });
 
   describe('Delete Account - Web', () => {
-    const originalWindow = global.window;
-
     beforeEach(() => {
       (Platform as any).OS = 'web';
-      global.window = {
-        ...originalWindow,
-        confirm: jest.fn().mockReturnValue(true),
-        alert: jest.fn(),
-      } as unknown as Window & typeof globalThis;
-    });
-
-    afterEach(() => {
-      global.window = originalWindow;
     });
 
     it('should show confirm dialogs and delete account on web', async () => {
@@ -747,16 +705,32 @@ describe('SettingsSheet', () => {
       });
 
       // Both confirms should be called
-      expect(global.window.confirm).toHaveBeenCalledTimes(2);
-      expect(mockDismiss).toHaveBeenCalled();
-      expect(mockDeleteAccount).toHaveBeenCalled();
-      expect(global.window.alert).toHaveBeenCalledWith(
-        expect.stringContaining('account has been deleted')
-      );
+      await waitFor(() => {
+        expect(mockShowConfirm).toHaveBeenCalledWith(
+          'Delete Account?',
+          expect.stringContaining('permanently delete'),
+          'Delete Account',
+          'Cancel',
+          true
+        );
+        expect(mockShowConfirm).toHaveBeenCalledWith(
+          'Final Confirmation',
+          expect.stringContaining('last chance'),
+          'Yes, Delete My Account',
+          'Cancel',
+          true
+        );
+        expect(mockDismiss).toHaveBeenCalled();
+        expect(mockDeleteAccount).toHaveBeenCalled();
+        expect(mockShowAlert).toHaveBeenCalledWith(
+          'Account Deleted',
+          expect.stringContaining('account has been deleted')
+        );
+      });
     });
 
     it('should not delete when first confirm is cancelled', async () => {
-      (global.window.confirm as jest.Mock).mockReturnValueOnce(false);
+      mockShowConfirm.mockResolvedValueOnce(false);
 
       render(<SettingsSheet />);
 
@@ -772,7 +746,7 @@ describe('SettingsSheet', () => {
     });
 
     it('should not delete when second confirm is cancelled', async () => {
-      (global.window.confirm as jest.Mock).mockReturnValueOnce(true).mockReturnValueOnce(false);
+      mockShowConfirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
       render(<SettingsSheet />);
 
@@ -800,7 +774,12 @@ describe('SettingsSheet', () => {
         fireEvent.press(deleteButton);
       });
 
-      expect(global.window.alert).toHaveBeenCalledWith(expect.stringContaining('Delete error'));
+      await waitFor(() => {
+        expect(mockShowAlert).toHaveBeenCalledWith(
+          'Error',
+          'Failed to delete account: Delete error'
+        );
+      });
     });
   });
 

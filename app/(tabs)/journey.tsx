@@ -29,6 +29,16 @@ type TimelineEventType =
   | 'task_completion'
   | 'task_milestone';
 
+/**
+ * Metadata types for different timeline event types.
+ * Each event type has a specific metadata shape.
+ */
+type TimelineEventMetadata =
+  | SlipUp // slip_up events
+  | UserStepProgress // step_completion events
+  | { taskId: string; stepNumber: number | undefined; sponsorId: string } // task_completion events
+  | { milestoneCount: number }; // task_milestone events
+
 interface TimelineEvent {
   id: string;
   type: TimelineEventType;
@@ -46,7 +56,7 @@ interface TimelineEvent {
     | 'list-checks'
     | 'target';
   color: string;
-  metadata?: any;
+  metadata?: TimelineEventMetadata;
 }
 
 /**

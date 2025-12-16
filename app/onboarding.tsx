@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Platform,
   TextInput,
   Linking,
@@ -15,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { validateDisplayName } from '@/lib/validation';
+import { showAlert } from '@/lib/alert';
 import { Calendar, LogOut, Info, Square, CheckSquare } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
@@ -143,10 +143,9 @@ export default function OnboardingScreen() {
       if (awaitingProfileUpdate) {
         setAwaitingProfileUpdate(false);
         setLoading(false);
-        Alert.alert(
+        showAlert(
           'Profile Update Timeout',
-          'Your profile update is taking longer than expected. Please try again.',
-          [{ text: 'OK' }]
+          'Your profile update is taking longer than expected. Please try again.'
         );
       }
     }, 10000); // 10 second timeout
@@ -195,9 +194,9 @@ export default function OnboardingScreen() {
       router.replace('/login');
     } catch (error) {
       if (error instanceof Error) {
-        Alert.alert('Error', error.message);
+        showAlert('Error', error.message);
       } else {
-        Alert.alert('Error', 'An unknown error occurred');
+        showAlert('Error', 'An unknown error occurred');
       }
     }
   };
@@ -265,11 +264,7 @@ export default function OnboardingScreen() {
       setAwaitingProfileUpdate(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update profile';
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + message);
-      } else {
-        Alert.alert('Error', message);
-      }
+      showAlert('Error', message);
     } finally {
       setLoading(false);
     }
