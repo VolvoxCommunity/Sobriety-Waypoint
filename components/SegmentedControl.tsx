@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 
@@ -32,7 +32,7 @@ export default function SegmentedControl({
   onChange,
 }: SegmentedControlProps) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>

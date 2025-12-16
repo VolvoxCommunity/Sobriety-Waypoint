@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { useTheme } from '@/contexts/ThemeContext';
 
@@ -45,7 +45,7 @@ export default function ProfileHeader({
   email,
   theme,
 }: ProfileHeaderProps): React.JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Extract first initial for avatar
   const initial = (displayName?.[0] || '?').toUpperCase();

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Heart, UserMinus, CheckCircle } from 'lucide-react-native';
 import type { useTheme } from '@/contexts/ThemeContext';
@@ -73,7 +73,7 @@ export default function RelationshipCard({
   onDisconnect,
   taskStats,
 }: RelationshipCardProps): React.JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { daysSober } = useDaysSober(userId);
 
   const displayName = profile?.display_name ?? 'Unknown';

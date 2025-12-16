@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Heart, Edit2 } from 'lucide-react-native';
 import type { useTheme } from '@/contexts/ThemeContext';
@@ -65,7 +65,7 @@ export default function SobrietyStats({
   onEditSobrietyDate,
   onLogSlipUp,
 }: SobrietyStatsProps): React.JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.container} accessible={false}>

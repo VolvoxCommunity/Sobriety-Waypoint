@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { JSX } from 'react';
+import React, { JSX, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CheckCircle, Calendar, Clock, Trash2 } from 'lucide-react-native';
 import { Task, Profile } from '@/types/database';
@@ -64,7 +64,7 @@ export default function TaskCard({
   onComplete,
   onDelete,
 }: TaskCardProps): JSX.Element {
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View
