@@ -45,7 +45,7 @@ export const lightTheme: ThemeColors = {
   textTertiary: Palette.gray400,
   textOnPrimary: Palette.white,
   primary: Palette.iosBlue,
-  primaryLight: '#e5f1ff',
+  primaryLight: Palette.blue50,
   border: Palette.gray200,
   borderLight: Palette.gray100,
   error: Palette.red500,
