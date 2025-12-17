@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform Sobriety Waypoint into a native-first app with iOS 26 Liquid Glass aesthetics, Android Material You adaptation, and strict Airbnb code standards — while maintaining web support via top navigation.
+Transform Sobers into a native-first app with iOS 26 Liquid Glass aesthetics, Android Material You adaptation, and strict Airbnb code standards — while maintaining web support via top navigation.
 
 ## Goals
 
