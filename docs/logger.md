@@ -1,6 +1,6 @@
 # Universal Logger
 
-The universal logger provides centralized, structured logging for the Sobriety Waypoint application. All logs are sent to Sentry as breadcrumbs and output to the console in development.
+The universal logger provides centralized, structured logging for the Sobers application. All logs are sent to Sentry as breadcrumbs and output to the console in development.
 
 ## Quick Start
 

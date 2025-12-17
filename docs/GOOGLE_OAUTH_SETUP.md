@@ -1,6 +1,6 @@
 # Google OAuth Setup Guide
 
-This guide walks through configuring Google OAuth authentication for Sobriety Waypoint across all platforms (iOS, Android, and Web).
+This guide walks through configuring Google OAuth authentication for Sobers across all platforms (iOS, Android, and Web).
 
 ## Overview
 
@@ -22,7 +22,7 @@ The app uses Supabase Auth with Google OAuth. The authentication flow varies by 
 3. Navigate to **APIs & Services** → **OAuth consent screen**
 4. Configure the consent screen:
    - User Type: **External** (or Internal for Google Workspace)
-   - App name: `Sobriety Waypoint`
+   - App name: `Sobers`
    - User support email: Your email
    - Developer contact: Your email
 5. Add scopes:
@@ -38,7 +38,7 @@ The app uses Supabase Auth with Google OAuth. The authentication flow varies by 
 1. Go to **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth client ID**
 3. Application type: **Web application**
-4. Name: `Sobriety Waypoint Web`
+4. Name: `Sobers Web`
 5. Add **Authorized JavaScript origins**:
    ```
    https://<your-supabase-project>.supabase.co
@@ -55,7 +55,7 @@ The app uses Supabase Auth with Google OAuth. The authentication flow varies by 
 
 1. Click **Create Credentials** → **OAuth client ID**
 2. Application type: **iOS**
-3. Name: `Sobriety Waypoint iOS`
+3. Name: `Sobers iOS`
 4. Bundle ID: `com.volvox.sobrietywaypoint`
 5. Save and note the **Client ID**
 
@@ -63,7 +63,7 @@ The app uses Supabase Auth with Google OAuth. The authentication flow varies by 
 
 1. Click **Create Credentials** → **OAuth client ID**
 2. Application type: **Android**
-3. Name: `Sobriety Waypoint Android`
+3. Name: `Sobers Android`
 4. Package name: `com.volvox.sobrietywaypoint`
 5. SHA-1 certificate fingerprint:
    - For development, get from EAS:
@@ -94,13 +94,13 @@ The app uses Supabase Auth with Google OAuth. The authentication flow varies by 
 The app is already configured with the correct scheme. Verify in `app.config.ts`:
 
 ```typescript
-scheme: 'sobrietywaypoint',
+scheme: 'sobers',
 ```
 
 The redirect URI for native platforms is constructed as:
 
 ```
-sobrietywaypoint://auth/callback
+sobers://auth/callback
 ```
 
 This is handled automatically by `makeRedirectUri()` in `contexts/AuthContext.tsx`.
@@ -137,7 +137,7 @@ android: {
 2. `signInWithGoogle()` creates redirect URL via `makeRedirectUri()`
 3. `WebBrowser.openAuthSessionAsync()` opens system browser
 4. User authenticates with Google
-5. Google redirects to Supabase callback → Supabase redirects to `sobrietywaypoint://auth/callback`
+5. Google redirects to Supabase callback → Supabase redirects to `sobers://auth/callback`
 6. Two possible paths:
    - **Path A**: `WebBrowser.openAuthSessionAsync()` returns with the URL, tokens extracted
    - **Path B**: Deep link arrives via `Linking.addEventListener()`, `createSessionFromUrl()` handles it
