@@ -439,7 +439,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
     } else {
       const redirectUrl = makeRedirectUri({
-        scheme: 'sobrietywaypoint',
+        scheme: 'sobers',
         path: 'auth/callback',
       });
 
