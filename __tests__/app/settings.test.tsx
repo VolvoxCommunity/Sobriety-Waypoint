@@ -648,7 +648,7 @@ describe('SettingsScreen', () => {
       fireEvent.press(screen.getByText('Terms of Service'));
 
       await waitFor(() => {
-        expect(Linking.openURL).toHaveBeenCalledWith('https://sobrietywaypoint.com/terms');
+        expect(Linking.openURL).toHaveBeenCalledWith('https://sobers.app/terms');
       });
     });
 

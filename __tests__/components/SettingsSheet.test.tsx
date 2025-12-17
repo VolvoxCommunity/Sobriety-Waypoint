@@ -803,7 +803,7 @@ describe('SettingsSheet', () => {
         fireEvent.press(termsLink);
       });
 
-      expect(mockOpenURL).toHaveBeenCalledWith('https://sobrietywaypoint.com/terms');
+      expect(mockOpenURL).toHaveBeenCalledWith('https://sobers.app/terms');
     });
 
     it('should open source code link', async () => {
@@ -1142,7 +1142,7 @@ describe('SettingsSheet', () => {
     it('should render version and tagline', () => {
       render(<SettingsSheet />);
 
-      expect(screen.getByText(/Sobriety Waypoint v/)).toBeTruthy();
+      expect(screen.getByText(/Sobers v/)).toBeTruthy();
       expect(screen.getByText('Supporting recovery, one day at a time')).toBeTruthy();
       expect(screen.getByText('By Bill Chirico')).toBeTruthy();
     });
