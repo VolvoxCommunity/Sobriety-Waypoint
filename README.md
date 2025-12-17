@@ -1,7 +1,7 @@
-# Sobriety Waypoint
+# Sobers
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Expo](https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white)](https://expo.dev/accounts/volvox-llc/projects/sobriety-waypoint)
+[![Expo](https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white)](https://expo.dev/accounts/volvox-llc/projects/sobers)
 [![CI](https://github.com/VolvoxCommunity/Sobriety-Waypoint/actions/workflows/ci.yml/badge.svg)](https://github.com/VolvoxCommunity/Sobriety-Waypoint/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/VolvoxCommunity/Sobriety-Waypoint/graph/badge.svg?token=U4ILD582YD)](https://codecov.io/gh/VolvoxCommunity/Sobriety-Waypoint)
 
@@ -19,7 +19,7 @@ A cross-platform companion app that helps sponsors and sponsees stay connected, 
 
 ## Overview
 
-Sobriety Waypoint helps people in recovery stay connected and accountable through structured task management, milestone tracking, and transparent progress visualization. Create tasks, complete them with private notes, and watch your sobriety journey unfold on a timeline that celebrates every step forward (and documents the tough moments, too).
+Sobers helps people in recovery stay connected and accountable through structured task management, milestone tracking, and transparent progress visualization. Create tasks, complete them with private notes, and watch your sobriety journey unfold on a timeline that celebrates every step forward (and documents the tough moments, too).
 
 **Everyone can be both a sponsor (helping others) and a sponsee (being helped) simultaneously.** There are no role restrictions - you can guide some people through their journey while receiving guidance from others.
 
@@ -56,7 +56,7 @@ Sobriety Waypoint helps people in recovery stay connected and accountable throug
 - `types/database.ts`: fully generated database types used throughout the app
 
 ```
-Sobriety-Waypoint/
+Sobers/
 ├── app/                    # Router, screens, layouts
 │   ├── _layout.tsx         # Root layout with auth guards
 │   ├── login.tsx           # Email/password + social sign in
@@ -92,7 +92,7 @@ Sobriety-Waypoint/
 1. Clone and install dependencies
    ```bash
    git clone <repository-url>
-   cd Sobriety-Waypoint
+   cd Sobers
    pnpm install
    ```
 2. Create `.env` in the project root
@@ -137,7 +137,7 @@ pnpm build:web   # Static web build → dist/
 - Email/password ready out of the box
 - Google OAuth configured - see `docs/GOOGLE_OAUTH_SETUP.md` for setup guide
 - Apple Sign In (iOS) - see `docs/APPLE_SIGNIN_SETUP.md` for setup guide
-- Deep link scheme: `sobrietywaypoint://`
+- Deep link scheme: `sobers://`
 - Bundle IDs: `com.volvox.sobrietywaypoint` (iOS) / `com.volvox.sobrietywaypoint` (Android)
 - Root layout enforces the flow: login → onboarding (profile + role) → authenticated tabs
 
@@ -187,7 +187,7 @@ pnpm test:ci       # Run with coverage report
   - `EXPO_PUBLIC_SUPABASE_URL`
   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
   - `EXPO_TOKEN` (create via `expo.dev` → Access Tokens)
-- Monitor native builds at [Expo builds dashboard](https://expo.dev/accounts/volvox-llc/projects/sobriety-waypoint/builds)
+- Monitor native builds at [Expo builds dashboard](https://expo.dev/accounts/volvox-llc/projects/sobers/builds)
 
 ## Documentation & Helpful Links
 
