@@ -792,7 +792,7 @@ describe('SettingsSheet', () => {
         fireEvent.press(privacyLink);
       });
 
-      expect(mockOpenURL).toHaveBeenCalledWith('https://www.sobers.app/privacy');
+      expect(mockOpenURL).toHaveBeenCalledWith('https://sobers.app/privacy');
     });
 
     it('should open terms of service link', async () => {
@@ -803,7 +803,7 @@ describe('SettingsSheet', () => {
         fireEvent.press(termsLink);
       });
 
-      expect(mockOpenURL).toHaveBeenCalledWith('https://www.sobers.app/terms');
+      expect(mockOpenURL).toHaveBeenCalledWith('https://sobers.app/terms');
     });
 
     it('should open source code link', async () => {
@@ -844,7 +844,7 @@ describe('SettingsSheet', () => {
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to open external URL',
         expect.any(Error),
-        expect.objectContaining({ url: 'https://www.sobers.app/privacy' })
+        expect.objectContaining({ url: 'https://sobers.app/privacy' })
       );
     });
   });
