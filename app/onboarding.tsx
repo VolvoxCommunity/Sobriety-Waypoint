@@ -26,6 +26,7 @@ import {
   getUserTimezone,
 } from '@/lib/date';
 import { trackEvent, AnalyticsEvents, calculateDaysSoberBucket } from '@/lib/analytics';
+import { EXTERNAL_LINKS } from '@/components/settings/constants';
 
 // =============================================================================
 // Constants
@@ -291,14 +292,14 @@ export default function OnboardingScreen() {
    * Opens the privacy policy URL in the default browser.
    */
   const openPrivacyPolicy = useCallback(() => {
-    Linking.openURL('https://www.sobers.app/privacy');
+    Linking.openURL(EXTERNAL_LINKS.PRIVACY_POLICY);
   }, []);
 
   /**
    * Opens the terms of service URL in the default browser.
    */
   const openTermsOfService = useCallback(() => {
-    Linking.openURL('https://www.sobers.app/terms');
+    Linking.openURL(EXTERNAL_LINKS.TERMS_OF_SERVICE);
   }, []);
 
   const styles = useMemo(() => createStyles(theme), [theme]);
