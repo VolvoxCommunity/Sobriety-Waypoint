@@ -729,7 +729,7 @@ describe('OnboardingScreen', () => {
 
       fireEvent.press(screen.getByText('Privacy Policy'));
 
-      expect(mockLinking.openURL).toHaveBeenCalledWith('https://www.sobers.app/privacy');
+      expect(mockLinking.openURL).toHaveBeenCalledWith('https://sobers.app/privacy');
     });
 
     it('opens terms of service link', () => {
@@ -737,7 +737,7 @@ describe('OnboardingScreen', () => {
 
       fireEvent.press(screen.getByText('Terms of Service'));
 
-      expect(mockLinking.openURL).toHaveBeenCalledWith('https://www.sobers.app/terms');
+      expect(mockLinking.openURL).toHaveBeenCalledWith('https://sobers.app/terms');
     });
   });
 
