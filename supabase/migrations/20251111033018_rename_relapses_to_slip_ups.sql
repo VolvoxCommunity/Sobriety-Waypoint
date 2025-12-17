@@ -1,8 +1,26 @@
 /*
   # Rename Relapses to Slip Ups
+
+  Handles both cases:
+  - If relapses table exists, rename it to slip_ups
+  - If slip_ups already exists, just ensure RLS policies are correct
 */
-ALTER TABLE IF EXISTS public.relapses RENAME TO slip_ups;
-ALTER TABLE IF EXISTS public.slip_ups RENAME COLUMN relapse_date TO slip_up_date;
+DO $$
+BEGIN
+  -- Only rename if relapses exists and slip_ups doesn't
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'relapses')
+     AND NOT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'slip_ups') THEN
+    ALTER TABLE public.relapses RENAME TO slip_ups;
+  END IF;
+
+  -- Rename column if it exists (from relapses table)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'slip_ups' AND column_name = 'relapse_date'
+  ) THEN
+    ALTER TABLE public.slip_ups RENAME COLUMN relapse_date TO slip_up_date;
+  END IF;
+END $$;
 
 DROP POLICY IF EXISTS "Users can view own relapses" ON public.slip_ups;
 DROP POLICY IF EXISTS "Users can insert own relapses" ON public.slip_ups;
