@@ -1,7 +1,7 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
- * Expo configuration for Sobriety Waypoint app.
+ * Expo configuration for Sobers app.
  *
  * @remarks
  * This configuration includes EAS Update settings for over-the-air updates.

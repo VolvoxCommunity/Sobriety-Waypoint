@@ -298,7 +298,7 @@ jest.mock('expo-linking', () => ({
 
 // Mock expo-auth-session
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: jest.fn(() => 'sobrietywaypoint://auth/callback'),
+  makeRedirectUri: jest.fn(() => 'sobers://auth/callback'),
 }));
 
 // Mock AsyncStorage
