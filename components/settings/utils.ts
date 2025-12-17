@@ -67,7 +67,7 @@ export function getBuildInfo(): BuildInfo {
  */
 export function formatBuildInfoForCopy(buildInfo: BuildInfo): string {
   const lines: string[] = [
-    '=== Sobriety Waypoint Build Info ===',
+    '=== Sobers Build Info ===',
     '',
     `App Version: ${buildInfo.nativeAppVersion ?? packageJson.version}${buildInfo.nativeBuildVersion ? ` (${buildInfo.nativeBuildVersion})` : ''}`,
     `Device: ${buildInfo.deviceModel ?? Platform.OS}`,

@@ -814,7 +814,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Sobriety Waypoint v{packageJson.version}</Text>
+        <Text style={styles.footerText}>Sobers v{packageJson.version}</Text>
         <Text style={styles.footerSubtext}>Supporting recovery, one day at a time</Text>
         <TouchableOpacity
           onPress={() => handleOpenURL(EXTERNAL_LINKS.DEVELOPER)}

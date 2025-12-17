@@ -7,7 +7,7 @@
  */
 export const EXTERNAL_LINKS = {
   PRIVACY_POLICY: 'https://www.volvoxdev.com/privacy',
-  TERMS_OF_SERVICE: 'https://sobrietywaypoint.com/terms',
+  TERMS_OF_SERVICE: 'https://sobers.app/terms',
   SOURCE_CODE: 'https://github.com/VolvoxCommunity/Sobriety-Waypoint',
   DEVELOPER: 'https://billchirico.dev',
 } as const;
