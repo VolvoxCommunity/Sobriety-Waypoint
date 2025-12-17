@@ -1,8 +1,9 @@
 # Rename: Sobriety Waypoint → Sobers
 
 **Date:** 2025-12-16
-**Status:** Approved
+**Status:** Implemented
 **Goal:** Rebrand the app from "Sobriety Waypoint" to "Sobers" across all user-facing and developer-facing references.
+**Implementation Branch:** `refactor/rename-to-sobers`
 
 ---
 
@@ -173,3 +174,50 @@ This rename affects ~30 files with text replacements only. No structural changes
 3. **Domain** — Must be owned and configured before deployment
 
 All changes are reversible via git revert.
+
+---
+
+## Implementation Summary
+
+**Completed:** 2025-12-16
+
+### Commits
+
+| Commit    | Description                                             |
+| --------- | ------------------------------------------------------- |
+| `0e3871a` | refactor(config): rename package to sobers              |
+| `7ed19ef` | refactor(config): update app.config.ts branding         |
+| `dde980c` | refactor(ui): update app layout page titles and meta    |
+| `ec13009` | refactor(ui): update login screen branding              |
+| `9b3873c` | refactor(ui): update onboarding welcome message         |
+| `6734c73` | refactor(ui): update profile share message              |
+| `daf9526` | refactor(ui): update settings components branding       |
+| `996ef78` | test(settings): update branding expectations            |
+| `8a87932` | refactor(auth): update OAuth scheme to sobers           |
+| `aeeed95` | test(auth): update redirect URL expectations            |
+| `04e4f0b` | docs(readme): update branding to Sobers                 |
+| `8372832` | docs(claude): update deep link and Sentry references    |
+| `92e13a8` | docs(agents): update deep link scheme references        |
+| `3ab9a74` | docs(setup): update branding in setup documentation     |
+| `a7fdaae` | docs(plans): update historical plan document references |
+| `cceb9e1` | docs(analytics): update JSDoc branding                  |
+
+### Validation Results
+
+- ✅ Tests: 1883 passed, 1 skipped
+- ✅ TypeScript: No errors
+- ✅ ESLint: No errors
+- ✅ Prettier: All files formatted
+- ⚠️ Web build: Requires `.env` file (not included in worktree)
+
+### Files Modified (30 total)
+
+**Configuration (2):** `package.json`, `app.config.ts`
+
+**Source Files (7):** `app/_layout.tsx`, `app/login.tsx`, `app/onboarding.tsx`, `app/(tabs)/profile.tsx`, `components/settings/SettingsContent.tsx`, `components/settings/constants.ts`, `components/settings/utils.ts`, `contexts/AuthContext.tsx`
+
+**Test Files (5):** `__tests__/app/login.test.tsx`, `__tests__/app/onboarding.test.tsx`, `__tests__/app/settings.test.tsx`, `__tests__/components/SettingsSheet.test.tsx`, `__tests__/contexts/AuthContext.test.tsx`
+
+**Documentation (9):** `README.md`, `CLAUDE.md`, `AGENTS.md`, `.roo/rules-debug/AGENTS.md`, `docs/logger.md`, `docs/APPLE_SIGNIN_SETUP.md`, `docs/GOOGLE_OAUTH_SETUP.md`, historical plan documents
+
+**Types (1):** `types/analytics.ts`, `lib/analytics/index.ts`
