@@ -96,7 +96,7 @@ describe('LoginScreen', () => {
     it('renders the login form', () => {
       renderWithTheme(<LoginScreen />);
 
-      expect(screen.getByText('Sobriety Waypoint')).toBeTruthy();
+      expect(screen.getByText('Sobers')).toBeTruthy();
       expect(screen.getByText('Your journey to recovery')).toBeTruthy();
       expect(screen.getByText('Email')).toBeTruthy();
       expect(screen.getByText('Password')).toBeTruthy();

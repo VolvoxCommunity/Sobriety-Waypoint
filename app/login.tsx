@@ -83,7 +83,7 @@ export default function LoginScreen() {
           <View style={styles.iconContainer}>
             <Heart size={48} color={theme.primary} fill={theme.primary} />
           </View>
-          <Text style={styles.title}>Sobriety Waypoint</Text>
+          <Text style={styles.title}>Sobers</Text>
           <Text style={styles.subtitle}>Your journey to recovery</Text>
         </View>
 
