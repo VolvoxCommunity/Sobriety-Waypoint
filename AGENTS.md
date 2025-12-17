@@ -88,7 +88,7 @@ pnpm start:clean      # Start with cleared Metro cache (when debugging import is
 
 - Google OAuth uses WebBrowser for native, direct redirect for web
 - Storage differs: SecureStore (native) vs localStorage (web)
-- Deep linking scheme: `sobrietywaypoint://` for native OAuth callbacks
+- Deep linking scheme: `sobers://` for native OAuth callbacks
 - Font loading (JetBrains Mono) must complete before hiding splash screen
 - Device timezone captured during profile creation for date display consistency
 
