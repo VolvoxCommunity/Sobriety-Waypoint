@@ -38,7 +38,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.9.2",
     "@react-navigation/native": "^7.1.8",
-    "@sentry/cli": "^2.58.4",
+    "@sentry/cli": "^3.0.1",
     "@sentry/react-native": "7.8.0",
     "@supabase/supabase-js": "^2.88.0",
     "date-fns": "^4.1.0",
