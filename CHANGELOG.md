@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add comprehensive E2E test suite using Playwright for web with 56 tests covering all user flows
+- Add Page Object Model pattern for E2E test maintainability (10 page objects)
+- Add GitHub Actions workflow with 4-shard parallelization for E2E tests on every PR
+- Add testID attributes across all screens for E2E test targeting
+- Add SQL seeding script for E2E test data
+- Add `pnpm test:e2e`, `test:e2e:all`, `test:e2e:ui`, `test:e2e:debug` scripts
 - Add `pnpm release:patch`, `pnpm release:minor`, `pnpm release:major` scripts for automated releases
 - Add npm lifecycle hooks (`version`, `postversion`) to automate version sync, commit, tag, and push
 
