@@ -1,0 +1,28 @@
+import { test, expect } from '@playwright/test';
+import { StepsPage } from '../../pages';
+
+test.describe('Steps List', () => {
+  let stepsPage: StepsPage;
+
+  test.beforeEach(async ({ page }) => {
+    stepsPage = new StepsPage(page);
+    await stepsPage.goto();
+  });
+
+  test('should display all 12 steps', async () => {
+    await stepsPage.expectOnStepsPage();
+    const stepCount = await stepsPage.getStepCount();
+    expect(stepCount).toBe(12);
+  });
+
+  test('should navigate to step detail on click', async ({ page }) => {
+    await stepsPage.clickStep(1);
+    await expect(page).toHaveURL(/.*steps\/1/);
+  });
+
+  test('should display step cards with titles', async ({ page }) => {
+    const firstStep = page.getByTestId('step-card-1');
+    await expect(firstStep).toBeVisible();
+    await expect(firstStep).toContainText('Step 1');
+  });
+});
