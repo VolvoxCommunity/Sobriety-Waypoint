@@ -682,7 +682,7 @@ const createStyles = (theme: ThemeColors) =>
       borderWidth: 1,
       borderColor: theme.border,
       borderRadius: 8,
-      padding: 12,
+      padding: 14,
     },
     dropdownDisabled: {
       opacity: 0.5,
@@ -702,7 +702,7 @@ const createStyles = (theme: ThemeColors) =>
       borderColor: theme.border,
       borderRadius: 12,
       marginBottom: 20,
-      shadowColor: '#000',
+      shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
       shadowRadius: 12,
@@ -712,7 +712,7 @@ const createStyles = (theme: ThemeColors) =>
       maxHeight: 250,
     },
     dropdownItem: {
-      padding: 12,
+      padding: 14,
       borderBottomWidth: 1,
       borderBottomColor: theme.borderLight,
     },
@@ -755,7 +755,7 @@ const createStyles = (theme: ThemeColors) =>
       borderWidth: 1,
       borderColor: theme.border,
       borderRadius: 8,
-      padding: 12,
+      padding: 14,
       gap: 8,
     },
     dateButtonText: {
