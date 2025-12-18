@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Refactor TaskCompletionModal to TaskCompletionSheet using GlassBottomSheet for consistent UI pattern across all modals (swipe-to-dismiss, Liquid Glass styling, imperative API)
 - Extract platform-specific alert/confirm utilities into separate modules (`lib/alert/platform.native.ts`, `lib/alert/platform.web.ts`) following Metro auto-resolution pattern for cleaner architecture
 - Added mandatory CHANGELOG.md update requirement to development workflow in CLAUDE.md
 - Updated release checklist to clarify [Unreleased] → version transition process
