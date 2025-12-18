@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import Toast from 'react-native-toast-message';
 import ProfileScreen from '@/app/(app)/(tabs)/profile';
 
 // =============================================================================
@@ -1432,8 +1433,7 @@ describe('ProfileScreen', () => {
       });
     });
 
-    it('shows error alert when invite code generation fails', async () => {
-      const { Alert } = jest.requireMock('react-native');
+    it('shows error toast when invite code generation fails', async () => {
       render(<ProfileScreen />);
 
       await waitFor(() => {
@@ -1443,10 +1443,8 @@ describe('ProfileScreen', () => {
       fireEvent.press(screen.getByText('Generate Invite Code'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith(
-          'Error',
-          'Failed to generate invite code',
-          undefined
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to generate invite code' })
         );
       });
     });
@@ -1886,7 +1884,9 @@ describe('ProfileScreen', () => {
       fireEvent.press(screen.getByText('Disconnect'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Success', 'Successfully disconnected', undefined);
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'success', text1: 'Successfully disconnected' })
+        );
       });
     });
   });
@@ -2080,7 +2080,9 @@ describe('ProfileScreen', () => {
       fireEvent.press(screen.getByText('Disconnect'));
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to disconnect.', undefined);
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to disconnect.' })
+        );
       });
     });
   });
@@ -2326,11 +2328,9 @@ describe('ProfileScreen', () => {
         // Call the captured callback (simulating sheet submission)
         await capturedOnSubmit!('TEST1234');
 
-        // Should show success alert
-        expect(Alert.alert).toHaveBeenCalledWith(
-          'Success',
-          'Connected with Test Sponsor',
-          undefined
+        // Should show success toast
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'success', text1: 'Connected with Test Sponsor' })
         );
       });
     });

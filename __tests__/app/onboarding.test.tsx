@@ -16,11 +16,8 @@ import OnboardingScreen from '@/app/onboarding';
 // Mocks
 // =============================================================================
 
-// Mock showAlert
-const mockShowAlert = jest.fn();
-jest.mock('@/lib/alert', () => ({
-  showAlert: (...args: unknown[]) => mockShowAlert(...args),
-}));
+// Import Toast mock for assertions
+import Toast from 'react-native-toast-message';
 
 // Mock analytics
 jest.mock('@/lib/analytics', () => ({
@@ -650,7 +647,7 @@ describe('OnboardingScreen', () => {
       });
     });
 
-    it('shows error alert when profile update fails', async () => {
+    it('shows error toast when profile update fails', async () => {
       // Mock upsert to return an error object (Supabase errors have .message but are not Error instances)
       getMockUpsert().mockResolvedValue({
         error: { message: 'Update failed', code: 'PGRST301' },
@@ -666,7 +663,9 @@ describe('OnboardingScreen', () => {
 
       // Note: Supabase error objects are not instanceof Error, so the code uses the fallback message
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to update profile');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to update profile' })
+        );
       });
     });
   });
@@ -698,7 +697,7 @@ describe('OnboardingScreen', () => {
       });
     });
 
-    it('shows error alert when signOut fails with Error object', async () => {
+    it('shows error toast when signOut fails with Error object', async () => {
       mockSignOut.mockRejectedValueOnce(new Error('Sign out failed'));
 
       render(<OnboardingScreen />);
@@ -706,11 +705,13 @@ describe('OnboardingScreen', () => {
       fireEvent.press(screen.getByText('Sign Out'));
 
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Sign out failed');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Sign out failed' })
+        );
       });
     });
 
-    it('shows generic error alert when signOut fails with non-Error', async () => {
+    it('shows generic error toast when signOut fails with non-Error', async () => {
       mockSignOut.mockRejectedValueOnce('string error');
 
       render(<OnboardingScreen />);
@@ -718,7 +719,9 @@ describe('OnboardingScreen', () => {
       fireEvent.press(screen.getByText('Sign Out'));
 
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'An unknown error occurred');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'An unknown error occurred' })
+        );
       });
     });
   });
@@ -820,7 +823,7 @@ describe('OnboardingScreen', () => {
   });
 
   describe('Error Handling', () => {
-    it('shows error alert when refreshProfile fails after successful upsert', async () => {
+    it('shows error toast when refreshProfile fails after successful upsert', async () => {
       // Mock successful upsert but failed refreshProfile
       getMockUpsert().mockResolvedValue({ error: null });
       mockRefreshProfile.mockRejectedValueOnce(new Error('Failed to refresh profile'));
@@ -835,7 +838,9 @@ describe('OnboardingScreen', () => {
 
       // Error should be shown
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to refresh profile');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to refresh profile' })
+        );
       });
 
       // Loading should be cleared
@@ -844,7 +849,7 @@ describe('OnboardingScreen', () => {
       });
     });
 
-    it('shows timeout alert when profile update takes longer than 10 seconds', async () => {
+    it('shows timeout toast when profile update takes longer than 10 seconds', async () => {
       // Enable fake timers for this test
       jest.useFakeTimers();
 
@@ -895,17 +900,19 @@ describe('OnboardingScreen', () => {
         jest.advanceTimersByTime(10000);
       });
 
-      // Timeout alert should be shown
-      expect(mockShowAlert).toHaveBeenCalledWith(
-        'Profile Update Timeout',
-        'Your profile update is taking longer than expected. Please try again.'
+      // Timeout toast should be shown
+      expect(Toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          text1: 'Your profile update is taking longer than expected. Please try again.',
+        })
       );
 
       // Restore real timers
       jest.useRealTimers();
     });
 
-    it('shows error alert when upsert fails with network error', async () => {
+    it('shows error toast when upsert fails with network error', async () => {
       // Mock upsert to throw a network error (simulating connectivity issues)
       getMockUpsert().mockRejectedValueOnce(new Error('Network request failed'));
 
@@ -919,11 +926,13 @@ describe('OnboardingScreen', () => {
 
       // Error should be shown
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Network request failed');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Network request failed' })
+        );
       });
     });
 
-    it('shows error alert when upsert fails with constraint violation', async () => {
+    it('shows error toast when upsert fails with constraint violation', async () => {
       // Mock upsert to return constraint violation error (e.g., unique constraint)
       getMockUpsert().mockResolvedValue({
         error: {
@@ -942,7 +951,9 @@ describe('OnboardingScreen', () => {
 
       // Error should be shown with generic message (Supabase error objects don't have .message accessible)
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to update profile');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to update profile' })
+        );
       });
     });
   });
