@@ -9,8 +9,10 @@ import { BasePage } from './base.page';
  * - profile-days-sober ✅ (SobrietyStats.tsx)
  * - profile-edit-date-button ✅ (SobrietyStats.tsx)
  * - profile-log-slip-up-button ✅ (SobrietyStats.tsx)
- * - profile-invite-code-section ✅ (InviteCodeSection.tsx)
- * - profile-enter-invite-code-button ✅ (InviteCodeSection.tsx)
+ * - profile-sponsor-invite-code-section ✅ (InviteCodeSection.tsx with testIDPrefix="sponsor")
+ * - profile-sponsor-action-button ✅ (InviteCodeSection.tsx - Generate Invite Code)
+ * - profile-sponsee-invite-code-section ✅ (InviteCodeSection.tsx with testIDPrefix="sponsee")
+ * - profile-sponsee-action-button ✅ (InviteCodeSection.tsx - Enter Invite Code)
  *
  * Missing testIDs (need to be added to components):
  * - profile-display-name - needs to be added to ProfileContent
@@ -26,7 +28,9 @@ export class ProfilePage extends BasePage {
   readonly daysSober: Locator;
   readonly editSobrietyDateButton: Locator;
   readonly logSlipUpButton: Locator;
-  readonly inviteCodeSection: Locator;
+  readonly sponsorInviteCodeSection: Locator;
+  readonly generateInviteCodeButton: Locator;
+  readonly sponseeInviteCodeSection: Locator;
   readonly enterInviteCodeButton: Locator;
 
   // Locators needing testIDs to be added to components
@@ -44,8 +48,10 @@ export class ProfilePage extends BasePage {
     this.daysSober = page.getByTestId('profile-days-sober');
     this.editSobrietyDateButton = page.getByTestId('profile-edit-date-button');
     this.logSlipUpButton = page.getByTestId('profile-log-slip-up-button');
-    this.inviteCodeSection = page.getByTestId('profile-invite-code-section');
-    this.enterInviteCodeButton = page.getByTestId('profile-enter-invite-code-button');
+    this.sponsorInviteCodeSection = page.getByTestId('profile-sponsor-invite-code-section');
+    this.generateInviteCodeButton = page.getByTestId('profile-sponsor-action-button');
+    this.sponseeInviteCodeSection = page.getByTestId('profile-sponsee-invite-code-section');
+    this.enterInviteCodeButton = page.getByTestId('profile-sponsee-action-button');
 
     // Missing testIDs - these locators will fail until testIDs are added to components
     this.displayName = page.getByTestId('profile-display-name');

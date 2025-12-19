@@ -22,8 +22,11 @@ test.describe('Profile View', () => {
     expect(daysSober).toBeGreaterThan(0);
   });
 
-  test('should display invite code section', async () => {
-    await expect(profilePage.inviteCodeSection).toBeVisible();
+  test('should display invite code sections', async () => {
+    // Sponsor section (Generate Invite Code)
+    await expect(profilePage.sponsorInviteCodeSection).toBeVisible();
+    // Sponsee section (Enter Invite Code)
+    await expect(profilePage.sponseeInviteCodeSection).toBeVisible();
   });
 
   test('should navigate to settings', async ({ page }) => {
