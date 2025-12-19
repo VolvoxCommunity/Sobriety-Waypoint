@@ -1,32 +1,57 @@
 import { Page, expect, Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 
+/**
+ * Profile page object.
+ *
+ * Available testIDs in the app:
+ * - profile-sobriety-stats ✅ (SobrietyStats.tsx)
+ * - profile-days-sober ✅ (SobrietyStats.tsx)
+ * - profile-edit-date-button ✅ (SobrietyStats.tsx)
+ * - profile-log-slip-up-button ✅ (SobrietyStats.tsx)
+ * - profile-invite-code-section ✅ (InviteCodeSection.tsx)
+ * - profile-enter-invite-code-button ✅ (InviteCodeSection.tsx)
+ *
+ * Missing testIDs (need to be added to components):
+ * - profile-display-name - needs to be added to ProfileContent
+ * - profile-edit-name-button - needs to be added to ProfileContent
+ * - profile-my-invite-code - needs to be added to InviteCodeSection
+ * - profile-copy-invite-code - needs to be added to InviteCodeSection
+ * - profile-relationships-list - needs to be added to RelationshipCard container
+ * - profile-settings-button - settings is a modal trigger
+ */
 export class ProfilePage extends BasePage {
-  readonly displayName: Locator;
+  // Available locators (existing testIDs)
   readonly sobrietyStats: Locator;
   readonly daysSober: Locator;
-  readonly editDisplayNameButton: Locator;
   readonly editSobrietyDateButton: Locator;
   readonly logSlipUpButton: Locator;
   readonly inviteCodeSection: Locator;
+  readonly enterInviteCodeButton: Locator;
+
+  // Locators needing testIDs to be added to components
+  readonly displayName: Locator;
+  readonly editDisplayNameButton: Locator;
   readonly myInviteCode: Locator;
   readonly copyInviteCodeButton: Locator;
-  readonly enterInviteCodeButton: Locator;
   readonly relationshipsList: Locator;
   readonly settingsButton: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.displayName = page.getByTestId('profile-display-name');
+    // Existing testIDs
     this.sobrietyStats = page.getByTestId('profile-sobriety-stats');
     this.daysSober = page.getByTestId('profile-days-sober');
-    this.editDisplayNameButton = page.getByTestId('profile-edit-name-button');
     this.editSobrietyDateButton = page.getByTestId('profile-edit-date-button');
     this.logSlipUpButton = page.getByTestId('profile-log-slip-up-button');
     this.inviteCodeSection = page.getByTestId('profile-invite-code-section');
+    this.enterInviteCodeButton = page.getByTestId('profile-enter-invite-code-button');
+
+    // Missing testIDs - these locators will fail until testIDs are added to components
+    this.displayName = page.getByTestId('profile-display-name');
+    this.editDisplayNameButton = page.getByTestId('profile-edit-name-button');
     this.myInviteCode = page.getByTestId('profile-my-invite-code');
     this.copyInviteCodeButton = page.getByTestId('profile-copy-invite-code');
-    this.enterInviteCodeButton = page.getByTestId('profile-enter-invite-code-button');
     this.relationshipsList = page.getByTestId('profile-relationships-list');
     this.settingsButton = page.getByTestId('profile-settings-button');
   }
@@ -37,7 +62,8 @@ export class ProfilePage extends BasePage {
   }
 
   async expectOnProfilePage(): Promise<void> {
-    await expect(this.displayName).toBeVisible();
+    // Use sobrietyStats which has an existing testID
+    await expect(this.sobrietyStats).toBeVisible();
   }
 
   async getDisplayName(): Promise<string> {
@@ -85,7 +111,8 @@ export class EditDisplayNameSheet extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.displayNameInput = page.getByTestId('edit-name-input');
+    // testID matches SettingsContent.tsx:1244
+    this.displayNameInput = page.getByTestId('edit-display-name-input');
     this.saveButton = page.getByTestId('edit-name-save-button');
     this.cancelButton = page.getByTestId('edit-name-cancel-button');
   }
