@@ -30,6 +30,12 @@ export const TEST_INVITE_CODES = {
   sponsor: 'SPONSOR123',
 } as const;
 
+export const TEST_TASKS = {
+  daily: {
+    id: 'task-1111-1111-1111-111111111111',
+  },
+} as const;
+
 export function generateSignupEmail(): string {
   return `e2e-signup-${Date.now()}@sobers-test.com`;
 }

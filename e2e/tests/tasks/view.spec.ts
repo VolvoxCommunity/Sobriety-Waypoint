@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TasksPage } from '../../pages';
+import { TEST_TASKS } from '../../fixtures/test-data';
 
 test.describe('Tasks View', () => {
   let tasksPage: TasksPage;
@@ -22,7 +23,7 @@ test.describe('Tasks View', () => {
   });
 
   test('should complete a task', async () => {
-    const taskId = 'task-1111-1111-1111-111111111111';
+    const taskId = TEST_TASKS.daily.id;
     await tasksPage.completeTask(taskId);
     await tasksPage.expectToast('Task completed');
 
