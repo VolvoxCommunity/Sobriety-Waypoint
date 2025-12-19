@@ -564,7 +564,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       {/* Sign Out Section */}
       <View style={styles.section}>
         <Pressable
-          testID="settings-signout-button"
+          testID="settings-logout-button"
           style={styles.signOutButton}
           onPress={handleSignOut}
           accessibilityRole="button"
