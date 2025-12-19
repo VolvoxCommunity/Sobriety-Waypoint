@@ -30,5 +30,9 @@ test.describe('Step Detail', () => {
   test('should mark step as complete', async () => {
     await stepDetailPage.markComplete();
     await stepDetailPage.expectToast('Step completed');
+
+    // Verify completion persists by navigating back and checking the step card
+    await stepDetailPage.goBack();
+    await stepsPage.expectStepCompleted(1);
   });
 });
