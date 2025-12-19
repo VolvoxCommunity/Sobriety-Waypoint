@@ -79,61 +79,43 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================
 -- 3. SEED TASKS
 -- ============================================
+-- Note: Tasks table schema requires sponsor_id, sponsee_id, step_number, status
+-- Tasks are assigned by sponsors to sponsees
 
-INSERT INTO public.tasks (id, user_id, title, description, frequency, is_active, created_at)
+INSERT INTO public.tasks (id, sponsor_id, sponsee_id, step_number, title, description, status, created_at)
 VALUES
-  ('task-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'Morning meditation', 'Start day with 10 minutes of meditation', 'daily', true, NOW()),
-  ('task-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
-   'Call sponsor', 'Weekly check-in call with sponsor', 'weekly', true, NOW()),
-  ('task-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111',
-   'Attend meeting', 'Attend AA/NA meeting', 'weekly', true, NOW()),
-  ('task-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111',
-   'Journal entry', 'Write daily gratitude journal', 'daily', true, NOW()),
-  ('task-5555-5555-5555-555555555555', '11111111-1111-1111-1111-111111111111',
-   'Inactive task', 'This task is disabled', 'daily', false, NOW())
+  ('11111111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
+   1, 'Morning meditation', 'Start day with 10 minutes of meditation', 'assigned', NOW()),
+  ('22222222-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
+   2, 'Call sponsor', 'Weekly check-in call with sponsor', 'assigned', NOW()),
+  ('33333333-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
+   3, 'Attend meeting', 'Attend AA/NA meeting', 'assigned', NOW()),
+  ('44444444-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
+   4, 'Journal entry', 'Write daily gratitude journal', 'assigned', NOW()),
+  ('55555555-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
+   5, 'Completed task', 'This task has been completed', 'completed', NOW())
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
-  frequency = EXCLUDED.frequency,
-  is_active = EXCLUDED.is_active;
+  status = EXCLUDED.status;
 
 -- ============================================
--- 4. SEED TASK COMPLETIONS
+-- 4. SEED USER STEP PROGRESS (Milestones are tracked via step completion)
 -- ============================================
+-- Note: The app tracks step progress via user_step_progress table, not a separate milestones table
 
-DELETE FROM public.task_completions
-WHERE user_id IN (
-  '11111111-1111-1111-1111-111111111111',
-  '22222222-2222-2222-2222-222222222222',
-  '33333333-3333-3333-3333-333333333333'
-);
-
-INSERT INTO public.task_completions (id, task_id, user_id, completed_at)
+INSERT INTO public.user_step_progress (id, user_id, step_number, completed, completed_at, created_at, updated_at)
 VALUES
-  (gen_random_uuid(), 'task-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '1 day'),
-  (gen_random_uuid(), 'task-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '2 days'),
-  (gen_random_uuid(), 'task-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '1 day'),
-  (gen_random_uuid(), 'task-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '3 days');
-
--- ============================================
--- 5. SEED MILESTONES
--- ============================================
-
-INSERT INTO public.milestones (id, user_id, type, achieved_at, days_count)
-VALUES
-  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '24_hours', '2024-01-16', 1),
-  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1_week', '2024-01-22', 7),
-  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '30_days', '2024-02-14', 30),
-  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '90_days', '2024-04-14', 90),
-  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '6_months', '2024-07-15', 180)
+  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 1, true, '2024-01-20', NOW(), NOW()),
+  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 2, true, '2024-02-15', NOW(), NOW()),
+  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 3, false, NULL, NOW(), NOW())
 ON CONFLICT DO NOTHING;
 
 -- ============================================
--- 6. SEED INVITE CODES
+-- 5. SEED INVITE CODES
 -- ============================================
 
-INSERT INTO public.invite_codes (code, user_id, created_at, expires_at)
+INSERT INTO public.invite_codes (code, sponsor_id, created_at, expires_at)
 VALUES (
   'SPONSOR123',
   '22222222-2222-2222-2222-222222222222',
@@ -144,24 +126,24 @@ ON CONFLICT (code) DO UPDATE SET
   expires_at = NOW() + INTERVAL '30 days';
 
 -- ============================================
--- 7. CLEANUP FUNCTION
+-- 6. CLEANUP FUNCTION
 -- ============================================
 
 CREATE OR REPLACE FUNCTION reset_e2e_test_data()
 RETURNS void AS $$
 BEGIN
-  DELETE FROM public.task_completions
-  WHERE user_id IN (
-    '11111111-1111-1111-1111-111111111111',
-    '22222222-2222-2222-2222-222222222222',
-    '33333333-3333-3333-3333-333333333333'
-  );
+  -- Reset tasks to assigned status
+  UPDATE public.tasks
+  SET status = 'assigned', completed_at = NULL, completion_notes = NULL
+  WHERE sponsee_id = '11111111-1111-1111-1111-111111111111'
+    AND id != '55555555-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
-  INSERT INTO public.task_completions (id, task_id, user_id, completed_at)
-  VALUES
-    (gen_random_uuid(), 'task-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '1 day'),
-    (gen_random_uuid(), 'task-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '1 day');
+  -- Keep one task as completed for testing
+  UPDATE public.tasks
+  SET status = 'completed', completed_at = NOW()
+  WHERE id = '55555555-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
+  -- Clean up onboarding test user if exists
   DELETE FROM public.profiles WHERE email = 'e2e-onboarding@sobers-test.com';
 END;
 $$ LANGUAGE plpgsql;

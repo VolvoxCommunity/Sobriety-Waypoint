@@ -32,7 +32,12 @@ export const TEST_INVITE_CODES = {
 
 export const TEST_TASKS = {
   daily: {
-    id: 'task-1111-1111-1111-111111111111',
+    id: '11111111-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    title: 'Morning meditation',
+  },
+  completed: {
+    id: '55555555-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    title: 'Completed task',
   },
 } as const;
 
