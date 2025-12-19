@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Enable verbose logging by default in development mode
+- Wire up Verbose Logging toggle to control logger output (when disabled, only warn/error logs are shown)
 
 ### Fixed
 
