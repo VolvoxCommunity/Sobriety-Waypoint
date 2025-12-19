@@ -43,7 +43,12 @@ export class TasksPage extends BasePage {
   }
 
   async expectTaskCompleted(taskId: string): Promise<void> {
-    // Completed tasks no longer show the complete button
+    // Verify task card exists and shows completed state
+    const taskCard = this.page.getByTestId(`task-card-${taskId}`);
+    await expect(taskCard).toBeVisible();
+
+    // Completed tasks have reduced opacity (0.7) via completedCard style
+    // and no longer show the complete button
     const completeButton = this.page.getByTestId(`task-complete-${taskId}`);
     await expect(completeButton).not.toBeVisible();
   }
