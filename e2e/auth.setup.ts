@@ -1,10 +1,17 @@
 import { test as setup, expect } from '@playwright/test';
 import { TEST_USERS } from './fixtures/test-data';
-import { resetTestData } from './utils/supabase-helpers';
+import { resetTestData, ensureTestUserExists } from './utils/supabase-helpers';
 
 const authFile = 'e2e/.auth/primary-state.json';
 
 setup('authenticate', async ({ page }) => {
+  // Ensure test user exists in Supabase Auth
+  await ensureTestUserExists(
+    TEST_USERS.primary.id,
+    TEST_USERS.primary.email,
+    TEST_USERS.primary.password
+  );
+
   // Reset test data before running tests
   await resetTestData();
 

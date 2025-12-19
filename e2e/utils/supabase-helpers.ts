@@ -46,6 +46,18 @@ export async function resetTestData(): Promise<void> {
 
   // Reset onboarding user profile
   await client.from('profiles').delete().eq('email', 'e2e-onboarding@sobers-test.com');
+
+  // Ensure primary user profile exists (required for login to complete successfully)
+  const { error: profileError } = await client.from('profiles').upsert({
+    id: '11111111-1111-1111-1111-111111111111',
+    email: 'e2e-primary@sobers-test.com',
+    display_name: 'E2E Primary User',
+    sobriety_date: '2024-01-15',
+  });
+
+  if (profileError) {
+    throw new Error(`Failed to ensure test profile: ${profileError.message}`);
+  }
 }
 
 export async function cleanupSignupUsers(): Promise<void> {
@@ -72,6 +84,39 @@ export async function createTestUser(email: string, password: string): Promise<s
 
   if (error) throw error;
   return data.user.id;
+}
+
+/**
+ * Ensures a test user exists with the specified ID, email, and password.
+ * Creates the user if they don't exist, or updates their password if they do.
+ */
+export async function ensureTestUserExists(
+  id: string,
+  email: string,
+  password: string
+): Promise<void> {
+  const client = getSupabaseAdmin();
+
+  // Try to get the user first
+  const { data: existingUser } = await client.auth.admin.getUserById(id);
+
+  if (existingUser?.user) {
+    // User exists, update their password to ensure it matches
+    await client.auth.admin.updateUserById(id, { password });
+    return;
+  }
+
+  // User doesn't exist, create with specific ID
+  const { error } = await client.auth.admin.createUser({
+    id,
+    email,
+    password,
+    email_confirm: true,
+  });
+
+  if (error && !error.message.includes('already been registered')) {
+    throw error;
+  }
 }
 
 export async function deleteTestUser(userId: string): Promise<void> {
