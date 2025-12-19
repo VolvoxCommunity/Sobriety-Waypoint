@@ -222,6 +222,9 @@ importers:
       lint-staged:
         specifier: ^16.2.7
         version: 16.2.7
+      metro-minify-terser:
+        specifier: ^0.83.3
+        version: 0.83.3
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
