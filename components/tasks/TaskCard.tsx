@@ -62,7 +62,7 @@ export default function TaskCard({
 
   return (
     <View
-      testID={`task-item-${task.id}`}
+      testID={`task-card-${task.id}`}
       style={[
         styles.taskCard,
         isCompleted && styles.completedCard,
@@ -143,7 +143,7 @@ export default function TaskCard({
         <View style={styles.taskFooter}>
           <Text style={styles.sponsorText}>From: {formatProfileName(task.sponsor)}</Text>
           <TouchableOpacity
-            testID="task-complete-button"
+            testID={`task-complete-${task.id}`}
             style={styles.completeButton}
             onPress={() => onComplete?.(task)}
             accessibilityRole="button"
