@@ -42,14 +42,17 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
-      - name: Start web server
-        run: pnpm web &
+      - name: Build web app
+        run: pnpm build:web
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
 
+      - name: Start web server
+        run: npx serve dist -l 8081 &
+
       - name: Wait for server
-        run: npx wait-on http://localhost:8081 --timeout 120000
+        run: npx wait-on http://localhost:8081 --timeout 60000
 
       - name: Run E2E tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}

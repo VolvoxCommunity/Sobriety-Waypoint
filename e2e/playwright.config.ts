@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI
-    ? [['blob', { outputDir: 'e2e/blob-report' }], ['github']]
+    ? [['blob', { outputDir: 'blob-report' }], ['github']]
     : [['html', { open: 'never' }]],
 
   timeout: 30_000,
@@ -51,10 +51,14 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'pnpm web',
-    url: 'http://localhost:8081',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  // In CI, the web server is started by the workflow (build + serve)
+  // Locally, Playwright starts the dev server
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: 'pnpm web',
+        url: 'http://localhost:8081',
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });
