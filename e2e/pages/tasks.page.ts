@@ -42,6 +42,12 @@ export class TasksPage extends BasePage {
     await this.page.getByTestId(`task-complete-${taskId}`).click();
   }
 
+  async expectTaskCompleted(taskId: string): Promise<void> {
+    // Completed tasks no longer show the complete button
+    const completeButton = this.page.getByTestId(`task-complete-${taskId}`);
+    await expect(completeButton).not.toBeVisible();
+  }
+
   async filterByFrequency(frequency: 'all' | 'daily' | 'weekly'): Promise<void> {
     switch (frequency) {
       case 'all':

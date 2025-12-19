@@ -22,8 +22,12 @@ test.describe('Tasks View', () => {
   });
 
   test('should complete a task', async () => {
-    await tasksPage.completeTask('task-1111-1111-1111-111111111111');
+    const taskId = 'task-1111-1111-1111-111111111111';
+    await tasksPage.completeTask(taskId);
     await tasksPage.expectToast('Task completed');
+
+    // Verify task completion persists in UI
+    await tasksPage.expectTaskCompleted(taskId);
   });
 
   test('should show add task button', async () => {
