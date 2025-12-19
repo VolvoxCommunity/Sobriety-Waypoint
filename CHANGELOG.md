@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add stateful `GlassBottomSheet` mock to `jest.setup.js` for proper modal visibility testing
 - Add `BottomSheetTextInput`, `BottomSheetFooter`, and `BottomSheetHandle` to `@gorhom/bottom-sheet` mock
 
+### Changed
+
+- Enable verbose logging by default in development mode
+
 ### Fixed
 
 - Fix toast messages being cut off by replacing BaseToast with custom component that properly wraps text without truncation

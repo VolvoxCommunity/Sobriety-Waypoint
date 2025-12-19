@@ -65,7 +65,7 @@ interface DevToolsProviderProps {
  * Only provides actual functionality in __DEV__ mode.
  */
 export function DevToolsProvider({ children }: DevToolsProviderProps) {
-  const [verboseLogging, setVerboseLogging] = useState(false);
+  const [verboseLogging, setVerboseLogging] = useState(true);
   const [sobrietyDateOverride, setSobrietyDateOverride] = useState<string | null>(null);
   const [timeTravelDays, setTimeTravelDays] = useState(0);
   const [offlineMode, setOfflineMode] = useState(false);
@@ -82,7 +82,7 @@ export function DevToolsProvider({ children }: DevToolsProviderProps) {
   }, [timeTravelDays]);
 
   const resetAll = useCallback(() => {
-    setVerboseLogging(false);
+    setVerboseLogging(true);
     setSobrietyDateOverride(null);
     setTimeTravelDays(0);
     setOfflineMode(false);
