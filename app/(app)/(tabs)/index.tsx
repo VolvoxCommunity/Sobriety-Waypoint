@@ -241,7 +241,10 @@ export default function HomeScreen() {
           <Text testID="home-days-sober-label" style={styles.daysSoberLabel}>
             Days Sober
           </Text>
-          <View style={[styles.milestoneBadge, { backgroundColor: milestone.color }]}>
+          <View
+            testID="home-milestones-preview"
+            style={[styles.milestoneBadge, { backgroundColor: milestone.color }]}
+          >
             <Award size={16} color={theme.white} />
             <Text style={styles.milestoneText}>{milestone.text}</Text>
           </View>
