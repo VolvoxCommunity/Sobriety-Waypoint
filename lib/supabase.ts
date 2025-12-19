@@ -9,14 +9,9 @@ import { CHUNK_SIZE, CHUNK_COUNT_SUFFIX } from '@/lib/supabase-constants';
 // Re-export constants for backward compatibility
 export { CHUNK_SIZE, CHUNK_COUNT_SUFFIX } from '@/lib/supabase-constants';
 
+// Environment variables - validated at runtime when client is first used
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are configured in your environment.'
-  );
-}
 
 // Check if we're in a browser/client environment (not SSR/Node.js)
 const isClient = typeof window !== 'undefined';
@@ -254,7 +249,12 @@ let supabaseInstance: SupabaseClient | null = null;
 
 function getSupabaseClient(): SupabaseClient {
   if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl!, supabaseAnonKey!, {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error(
+        'Missing Supabase environment variables. Please ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are configured in your environment.'
+      );
+    }
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         storage: SupabaseStorageAdapter,
         autoRefreshToken: isClient,
