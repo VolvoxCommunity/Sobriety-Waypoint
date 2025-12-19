@@ -23,17 +23,20 @@ test.describe('Signup', () => {
 
   test('should show error for invalid email format', async () => {
     await signupPage.signup('invalid-email', 'Password123!');
-    await signupPage.expectEmailError('Invalid email');
+    // Email validation is handled by Supabase - expect backend error
+    await signupPage.expectError('invalid');
   });
 
   test('should show error for weak password', async () => {
     await signupPage.signup('test@example.com', '123');
-    await signupPage.expectPasswordError('Password must be at least');
+    // Password validation shows toast for requirements not met
+    await signupPage.expectError('Password must be at least');
   });
 
   test('should show error for password mismatch', async () => {
     await signupPage.signup('test@example.com', 'Password123!', 'DifferentPassword!');
-    await signupPage.expectPasswordError('Passwords do not match');
+    // Password mismatch shows toast
+    await signupPage.expectError('Passwords do not match');
   });
 
   test('should signup successfully and redirect to onboarding', async ({ page }) => {

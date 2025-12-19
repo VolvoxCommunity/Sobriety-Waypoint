@@ -9,9 +9,6 @@ export class SignupPage extends BasePage {
   readonly loginLink: Locator;
   readonly googleButton: Locator;
   readonly appleButton: Locator;
-  readonly errorMessage: Locator;
-  readonly emailError: Locator;
-  readonly passwordError: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -22,9 +19,6 @@ export class SignupPage extends BasePage {
     this.loginLink = page.getByTestId('signup-login-link');
     this.googleButton = page.getByTestId('signup-google-button');
     this.appleButton = page.getByTestId('signup-apple-button');
-    this.errorMessage = page.getByTestId('signup-error-message');
-    this.emailError = page.getByTestId('signup-email-error');
-    this.passwordError = page.getByTestId('signup-password-error');
   }
 
   async goto(): Promise<void> {
@@ -44,14 +38,7 @@ export class SignupPage extends BasePage {
   }
 
   async expectError(message: string): Promise<void> {
-    await expect(this.errorMessage).toContainText(message);
-  }
-
-  async expectEmailError(message: string): Promise<void> {
-    await expect(this.emailError).toContainText(message);
-  }
-
-  async expectPasswordError(message: string): Promise<void> {
-    await expect(this.passwordError).toContainText(message);
+    // Signup errors are displayed via toast messages
+    await this.expectToast(message);
   }
 }

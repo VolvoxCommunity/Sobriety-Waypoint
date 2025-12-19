@@ -8,7 +8,6 @@ export class LoginPage extends BasePage {
   readonly signupLink: Locator;
   readonly googleButton: Locator;
   readonly appleButton: Locator;
-  readonly errorMessage: Locator;
   readonly forgotPasswordLink: Locator;
 
   constructor(page: Page) {
@@ -19,7 +18,6 @@ export class LoginPage extends BasePage {
     this.signupLink = page.getByTestId('login-signup-link');
     this.googleButton = page.getByTestId('login-google-button');
     this.appleButton = page.getByTestId('login-apple-button');
-    this.errorMessage = page.getByTestId('login-error-message');
     this.forgotPasswordLink = page.getByTestId('login-forgot-password-link');
   }
 
@@ -35,7 +33,8 @@ export class LoginPage extends BasePage {
   }
 
   async expectError(message: string): Promise<void> {
-    await expect(this.errorMessage).toContainText(message);
+    // Login errors are displayed via toast messages
+    await this.expectToast(message);
   }
 
   async expectOnLoginPage(): Promise<void> {
