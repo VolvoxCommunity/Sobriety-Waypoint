@@ -16,9 +16,20 @@ test.describe('Settings Preferences', () => {
   });
 
   test('should toggle theme', async ({ page }) => {
+    const html = page.locator('html');
+    const initialTheme = await html.getAttribute('data-theme');
+
     await settingsPage.toggleTheme();
-    // Verify theme changed (check for dark mode class or attribute)
-    await expect(page.locator('html')).toHaveAttribute('data-theme', /(dark|light)/);
+
+    const newTheme = await html.getAttribute('data-theme');
+
+    // Verify theme actually changed to the opposite value
+    expect(newTheme).not.toBe(initialTheme);
+    if (initialTheme === 'dark') {
+      expect(newTheme).toBe('light');
+    } else if (initialTheme === 'light') {
+      expect(newTheme).toBe('dark');
+    }
   });
 
   test('should display app version', async () => {
