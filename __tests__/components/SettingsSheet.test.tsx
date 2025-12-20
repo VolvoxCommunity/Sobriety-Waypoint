@@ -17,6 +17,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Platform, Linking } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-toast-message';
 import SettingsSheet, { SettingsSheetRef } from '@/components/SettingsSheet';
 
 // Mock Linking.openURL
@@ -156,12 +157,11 @@ jest.mock('expo-clipboard', () => ({
 
 // Mock alert utilities
 jest.mock('@/lib/alert', () => ({
-  showAlert: jest.fn(),
   showConfirm: jest.fn().mockResolvedValue(true), // Default to confirmed
 }));
 
 // Get references to the mocked functions
-const { showAlert: mockShowAlert, showConfirm: mockShowConfirm } = jest.requireMock('@/lib/alert');
+const { showConfirm: mockShowConfirm } = jest.requireMock('@/lib/alert');
 
 // Mock Constants
 jest.mock('expo-constants', () => ({
@@ -521,7 +521,9 @@ describe('SettingsSheet', () => {
       });
 
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to sign out: Network error');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to sign out: Network error' })
+        );
       });
     });
   });
@@ -595,7 +597,9 @@ describe('SettingsSheet', () => {
       });
 
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith('Error', 'Failed to sign out: Network error');
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'error', text1: 'Failed to sign out: Network error' })
+        );
       });
     });
   });
@@ -680,9 +684,11 @@ describe('SettingsSheet', () => {
       });
 
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith(
-          'Error',
-          'Failed to delete account: Delete failed'
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'error',
+            text1: 'Failed to delete account: Delete failed',
+          })
         );
       });
     });
@@ -722,9 +728,11 @@ describe('SettingsSheet', () => {
         );
         expect(mockDismiss).toHaveBeenCalled();
         expect(mockDeleteAccount).toHaveBeenCalled();
-        expect(mockShowAlert).toHaveBeenCalledWith(
-          'Account Deleted',
-          expect.stringContaining('account has been deleted')
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'success',
+            text1: expect.stringContaining('account has been deleted'),
+          })
         );
       });
     });
@@ -775,9 +783,11 @@ describe('SettingsSheet', () => {
       });
 
       await waitFor(() => {
-        expect(mockShowAlert).toHaveBeenCalledWith(
-          'Error',
-          'Failed to delete account: Delete error'
+        expect(Toast.show).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'error',
+            text1: 'Failed to delete account: Delete error',
+          })
         );
       });
     });
@@ -792,7 +802,7 @@ describe('SettingsSheet', () => {
         fireEvent.press(privacyLink);
       });
 
-      expect(mockOpenURL).toHaveBeenCalledWith('https://www.volvoxdev.com/privacy');
+      expect(mockOpenURL).toHaveBeenCalledWith('https://sobers.app/privacy');
     });
 
     it('should open terms of service link', async () => {
@@ -803,7 +813,7 @@ describe('SettingsSheet', () => {
         fireEvent.press(termsLink);
       });
 
-      expect(mockOpenURL).toHaveBeenCalledWith('https://sobrietywaypoint.com/terms');
+      expect(mockOpenURL).toHaveBeenCalledWith('https://sobers.app/terms');
     });
 
     it('should open source code link', async () => {
@@ -844,7 +854,7 @@ describe('SettingsSheet', () => {
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to open external URL',
         expect.any(Error),
-        expect.objectContaining({ url: 'https://www.volvoxdev.com/privacy' })
+        expect.objectContaining({ url: 'https://sobers.app/privacy' })
       );
     });
   });
@@ -1142,7 +1152,7 @@ describe('SettingsSheet', () => {
     it('should render version and tagline', () => {
       render(<SettingsSheet />);
 
-      expect(screen.getByText(/Sobriety Waypoint v/)).toBeTruthy();
+      expect(screen.getByText(/Sobers v/)).toBeTruthy();
       expect(screen.getByText('Supporting recovery, one day at a time')).toBeTruthy();
       expect(screen.getByText('By Bill Chirico')).toBeTruthy();
     });

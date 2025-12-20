@@ -23,12 +23,12 @@ interface ProfileHeaderProps {
 // =============================================================================
 
 /**
- * Render a centered profile header with a circular avatar initial, display name, and email.
+ * Renders a centered profile header showing a circular avatar initial, the user's name, and email.
  *
- * @param displayName - The user's display name; if null/undefined a `'?'` placeholder is shown.
- * @param email - The user's email address (may be undefined).
- * @param theme - Theme object used to derive component styles.
- * @returns A React element containing the profile header UI
+ * @param displayName - User's display name; shows '?' if null or undefined.
+ * @param email - User's email address; may be undefined and render empty.
+ * @param theme - Theme colors used to generate component styles.
+ * @returns The React element that renders the profile header.
  */
 export default function ProfileHeader({
   displayName,
@@ -45,10 +45,10 @@ export default function ProfileHeader({
       <View style={styles.avatar} accessibilityRole="image">
         <Text style={styles.avatarText}>{initial}</Text>
       </View>
-      <Text style={styles.name} accessibilityRole="header">
+      <Text testID="profile-display-name" style={styles.name} accessibilityRole="header">
         {displayName ?? '?'}
       </Text>
-      <Text style={styles.email} accessibilityRole="text">
+      <Text testID="profile-email" style={styles.email} accessibilityRole="text">
         {email}
       </Text>
     </View>

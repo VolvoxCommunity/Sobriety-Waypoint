@@ -11,19 +11,80 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
-import { Heart, ArrowLeft } from 'lucide-react-native';
+import { Heart, ArrowLeft, Check, X } from 'lucide-react-native';
+import { validatePassword, checkPasswordRequirements } from '@/lib/validation';
 import { GoogleLogo } from '@/components/auth/SocialLogos';
 import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { logger, LogCategory } from '@/lib/logger';
-import { showAlert } from '@/lib/alert';
+import { showToast } from '@/lib/toast';
+
+interface PasswordRequirementProps {
+  met: boolean;
+  text: string;
+  theme: ThemeColors;
+  styles: ReturnType<typeof createStyles>;
+}
 
 /**
- * Renders the sign-up screen with fields and actions to create a new account.
+ * Render a single password requirement row with an indicator (icon or fallback glyph) and label.
  *
- * The screen validates email and password inputs, performs email/password sign-up,
- * supports Google and Apple sign-in flows, and navigates to onboarding on successful account creation.
+ * The indicator shows a check when the requirement is met and an X when it is not; if the icon components are unavailable
+ * or throw, a textual glyph (✓ / ✗) is used as a fallback.
  *
- * @returns A React element representing the sign-up screen.
+ * @param met - Whether the requirement is satisfied
+ * @param text - The requirement description to display
+ * @param theme - Theme colors used for the indicator styling
+ * @param styles - StyleSheet object containing `requirementRow`, `requirementText`, and `requirementMet`
+ */
+function PasswordRequirement({ met, text, theme, styles }: PasswordRequirementProps) {
+  const CheckIcon = Check;
+  const XIcon = X;
+
+  // Render icon or fallback text
+  const renderIndicator = () => {
+    if (met) {
+      // Check if Check icon is a valid React component
+      if (CheckIcon && typeof CheckIcon === 'function') {
+        try {
+          return <CheckIcon size={14} color={theme.success} testID={`check-${text}`} />;
+        } catch {
+          // Fallback to text
+        }
+      }
+      return (
+        <Text style={{ color: theme.success, fontSize: 14, width: 14 }} testID={`check-${text}`}>
+          ✓
+        </Text>
+      );
+    } else {
+      // Check if X icon is a valid React component
+      if (XIcon && typeof XIcon === 'function') {
+        try {
+          return <XIcon size={14} color={theme.textTertiary} testID={`x-${text}`} />;
+        } catch {
+          // Fallback to text
+        }
+      }
+      return (
+        <Text style={{ color: theme.textTertiary, fontSize: 14, width: 14 }} testID={`x-${text}`}>
+          ✗
+        </Text>
+      );
+    }
+  };
+
+  return (
+    <View style={styles.requirementRow}>
+      {renderIndicator()}
+      <Text style={[styles.requirementText, met && styles.requirementMet]}>{text}</Text>
+    </View>
+  );
+}
+
+/**
+ * Display the create-account screen with email and confirm-password inputs, inline password requirement feedback, and Google/Apple sign-in options.
+ *
+ * @returns A React element that renders the sign-up screen UI
  */
 export default function SignupScreen() {
   const { theme } = useTheme();
@@ -42,17 +103,18 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      showAlert('Error', 'Please fill in all fields');
+      showToast.error('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      showAlert('Error', 'Passwords do not match');
+      showToast.error('Passwords do not match');
       return;
     }
 
-    if (password.length < 6) {
-      showAlert('Error', 'Password must be at least 6 characters');
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      showToast.error(passwordError);
       return;
     }
 
@@ -63,7 +125,7 @@ export default function SignupScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to create account');
       logger.error('Sign up failed', err, { category: LogCategory.AUTH });
-      showAlert('Error', err.message);
+      showToast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -76,13 +138,14 @@ export default function SignupScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to sign in with Google');
       logger.error('Google sign in failed', err, { category: LogCategory.AUTH });
-      showAlert('Error', err.message);
+      showToast.error(err.message);
     } finally {
       setGoogleLoading(false);
     }
   };
 
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const passwordChecks = useMemo(() => checkPasswordRequirements(password), [password]);
 
   return (
     <View style={styles.container}>
@@ -110,6 +173,7 @@ export default function SignupScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
             <TextInput
+              testID="signup-email-input"
               ref={emailRef}
               style={styles.input}
               placeholder="your@email.com"
@@ -130,6 +194,7 @@ export default function SignupScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
             <TextInput
+              testID="signup-password-input"
               ref={passwordRef}
               style={styles.input}
               placeholder="••••••••"
@@ -144,11 +209,46 @@ export default function SignupScreen() {
               autoComplete="password-new"
               textContentType="newPassword"
             />
+            {password.length > 0 && (
+              <View style={styles.requirementsContainer} testID="password-requirements">
+                <PasswordRequirement
+                  met={passwordChecks.minLength}
+                  text="At least 8 characters"
+                  theme={theme}
+                  styles={styles}
+                />
+                <PasswordRequirement
+                  met={passwordChecks.hasUppercase}
+                  text="One uppercase letter"
+                  theme={theme}
+                  styles={styles}
+                />
+                <PasswordRequirement
+                  met={passwordChecks.hasLowercase}
+                  text="One lowercase letter"
+                  theme={theme}
+                  styles={styles}
+                />
+                <PasswordRequirement
+                  met={passwordChecks.hasNumber}
+                  text="One number"
+                  theme={theme}
+                  styles={styles}
+                />
+                <PasswordRequirement
+                  met={passwordChecks.hasSymbol}
+                  text="One symbol (!@#$%...)"
+                  theme={theme}
+                  styles={styles}
+                />
+              </View>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Confirm Password</Text>
             <TextInput
+              testID="signup-confirm-password-input"
               ref={confirmPasswordRef}
               style={styles.input}
               placeholder="••••••••"
@@ -165,6 +265,7 @@ export default function SignupScreen() {
           </View>
 
           <TouchableOpacity
+            testID="signup-submit-button"
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSignup}
             disabled={loading || googleLoading}
@@ -186,6 +287,7 @@ export default function SignupScreen() {
           </View>
 
           <TouchableOpacity
+            testID="signup-google-button"
             style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
             onPress={handleGoogleSignIn}
             disabled={loading || googleLoading}
@@ -205,15 +307,17 @@ export default function SignupScreen() {
 
           {/* Apple Sign In - only renders on iOS */}
           <AppleSignInButton
+            testID="signup-apple-button"
             onError={(error) => {
               logger.error('Apple sign in failed', error, { category: LogCategory.AUTH });
-              showAlert('Error', error.message);
+              showToast.error(error.message);
             }}
           />
 
           <TouchableOpacity
+            testID="signup-login-link"
             style={styles.loginLink}
-            onPress={() => router.back()}
+            onPress={() => router.push('/login')}
             disabled={loading || googleLoading}
           >
             <Text style={styles.loginLinkText}>
@@ -351,5 +455,23 @@ const createStyles = (theme: ThemeColors) =>
     loginLinkBold: {
       color: theme.primary,
       fontWeight: '600',
+    },
+    requirementsContainer: {
+      marginTop: 8,
+      paddingHorizontal: 4,
+    },
+    requirementRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    requirementText: {
+      fontSize: 12,
+      fontFamily: theme.fontRegular,
+      color: theme.textTertiary,
+      marginLeft: 6,
+    },
+    requirementMet: {
+      color: theme.success,
     },
   });

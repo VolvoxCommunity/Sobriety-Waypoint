@@ -60,14 +60,14 @@ export function getBuildInfo(): BuildInfo {
 }
 
 /**
- * Formats all build information as a copyable string for debugging/support.
+ * Produce a formatted, copyable string containing build, app, and device details.
  *
- * @param buildInfo - The build info object to format
- * @returns Formatted string with all build details
+ * @param buildInfo - Build and environment information to include in the output
+ * @returns A single newline-separated string with labeled build, app, device, update, and generation timestamp details
  */
 export function formatBuildInfoForCopy(buildInfo: BuildInfo): string {
   const lines: string[] = [
-    '=== Sobriety Waypoint Build Info ===',
+    '=== Sobers Build Info ===',
     '',
     `App Version: ${buildInfo.nativeAppVersion ?? packageJson.version}${buildInfo.nativeBuildVersion ? ` (${buildInfo.nativeBuildVersion})` : ''}`,
     `Device: ${buildInfo.deviceModel ?? Platform.OS}`,

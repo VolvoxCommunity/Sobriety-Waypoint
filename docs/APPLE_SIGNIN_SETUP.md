@@ -1,6 +1,6 @@
 # Apple Sign In Setup Guide
 
-This guide walks through configuring Apple Sign In for Sobriety Waypoint on iOS.
+This guide walks through configuring Apple Sign In for Sobers on iOS.
 
 ## Overview
 
@@ -36,7 +36,7 @@ We chose iOS-only support for simplicity:
 3. Select **App IDs** → Continue
 4. Select **App** → Continue
 5. Configure:
-   - Description: `Sobriety Waypoint`
+   - Description: `Sobers`
    - Bundle ID: `com.volvox.sobrietywaypoint` (Explicit)
 6. Scroll to **Capabilities** and enable **Sign in with Apple**
 7. Click **Continue** → **Register**
@@ -212,7 +212,7 @@ npx expo run:ios
 To get the name prompt again for testing:
 
 1. Go to **Settings** → **Apple ID** → **Password & Security** → **Apps Using Apple ID**
-2. Find and remove "Sobriety Waypoint"
+2. Find and remove "Sobers"
 3. Sign in again to get the first-time experience
 
 ## Troubleshooting

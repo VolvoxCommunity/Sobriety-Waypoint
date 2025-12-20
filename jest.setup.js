@@ -212,26 +212,35 @@ global.document = {
 };
 
 // Mock expo-router
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-    canGoBack: jest.fn(() => true),
-  }),
-  useNavigation: () => ({
-    setOptions: jest.fn(),
-    navigate: jest.fn(),
-    goBack: jest.fn(),
-    addListener: jest.fn(() => jest.fn()),
-  }),
-  useSegments: () => [],
-  usePathname: () => '/',
-  Link: ({ children, ...props }) => children,
-  Slot: ({ children }) => children,
-  Stack: ({ children }) => children,
-  Tabs: ({ children }) => children,
-}));
+jest.mock('expo-router', () => {
+  const React = require('react');
+  return {
+    useRouter: () => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+      canGoBack: jest.fn(() => true),
+    }),
+    useNavigation: () => ({
+      setOptions: jest.fn(),
+      navigate: jest.fn(),
+      goBack: jest.fn(),
+      addListener: jest.fn(() => jest.fn()),
+    }),
+    useSegments: () => [],
+    usePathname: () => '/',
+    Link: ({ children, ...props }) => children,
+    Slot: ({ children }) => children,
+    Stack: ({ children }) => children,
+    Tabs: ({ children }) => children,
+    // useFocusEffect runs the callback immediately (simulating focused state)
+    useFocusEffect: (callback) => {
+      React.useEffect(() => {
+        callback();
+      }, [callback]);
+    },
+  };
+});
 
 // Mock expo-font
 jest.mock('expo-font', () => ({
@@ -298,7 +307,7 @@ jest.mock('expo-linking', () => ({
 
 // Mock expo-auth-session
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: jest.fn(() => 'sobrietywaypoint://auth/callback'),
+  makeRedirectUri: jest.fn(() => 'sobers://auth/callback'),
 }));
 
 // Mock AsyncStorage
@@ -434,6 +443,54 @@ jest.mock('@/lib/supabase', () => {
   };
 });
 
+// Mock @/lib/alert platform module
+// Uses React Native Alert by default, but switches to window.alert/confirm for web tests
+jest.mock('@/lib/alert/platform', () => {
+  const { Alert, Platform } = require('react-native');
+  return {
+    showAlertPlatform: (title, message, buttons) => {
+      // Check Platform.OS at runtime to support web tests
+      if (Platform.OS === 'web' && typeof global.window?.alert === 'function') {
+        const alertText = message ? `${title}: ${message}` : title;
+        global.window.alert(alertText);
+      } else {
+        Alert.alert(title, message, buttons);
+      }
+    },
+    showConfirmPlatform: (
+      title,
+      message,
+      confirmText = 'Confirm',
+      cancelText = 'Cancel',
+      destructive = false
+    ) => {
+      // Check Platform.OS at runtime to support web tests
+      if (Platform.OS === 'web' && typeof global.window?.confirm === 'function') {
+        const confirmMessage = `${title}\n\n${message}`;
+        return Promise.resolve(global.window.confirm(confirmMessage));
+      }
+      return new Promise((resolve) => {
+        Alert.alert(
+          title,
+          message,
+          [
+            { text: cancelText, style: 'cancel', onPress: () => resolve(false) },
+            {
+              text: confirmText,
+              style: destructive ? 'destructive' : 'default',
+              onPress: () => resolve(true),
+            },
+          ],
+          {
+            cancelable: true,
+            onDismiss: () => resolve(false),
+          }
+        );
+      });
+    },
+  };
+});
+
 // Mock react-native-bottom-tabs
 jest.mock('react-native-bottom-tabs', () => {
   const React = require('react');
@@ -448,6 +505,7 @@ jest.mock('react-native-bottom-tabs', () => {
 // Mock @gorhom/bottom-sheet
 jest.mock('@gorhom/bottom-sheet', () => {
   const React = require('react');
+  const { TextInput } = require('react-native');
   return {
     __esModule: true,
     default: ({ children, ...props }) => React.createElement('BottomSheet', props, children),
@@ -460,6 +518,15 @@ jest.mock('@gorhom/bottom-sheet', () => {
       React.createElement('BottomSheetScrollView', props, children),
     BottomSheetBackdrop: ({ children, ...props }) =>
       React.createElement('BottomSheetBackdrop', props, children),
+    BottomSheetTextInput: Object.assign(
+      React.forwardRef(function BottomSheetTextInput(props, ref) {
+        return React.createElement(TextInput, { ...props, ref });
+      }),
+      { displayName: 'BottomSheetTextInput' }
+    ),
+    BottomSheetFooter: ({ children, ...props }) =>
+      React.createElement('BottomSheetFooter', props, children),
+    BottomSheetHandle: (props) => React.createElement('BottomSheetHandle', props),
     // Touchable components for use inside bottom sheets
     TouchableOpacity: ({ children, onPress, ...props }) =>
       React.createElement('TouchableOpacity', { onPress, ...props }, children),
@@ -471,6 +538,37 @@ jest.mock('@gorhom/bottom-sheet', () => {
       dismiss: jest.fn(),
       present: jest.fn(),
     }),
+  };
+});
+
+// Mock GlassBottomSheet with visibility state tracking
+jest.mock('@/components/GlassBottomSheet', () => {
+  const React = require('react');
+  const { forwardRef, useImperativeHandle, useState } = React;
+
+  const MockGlassBottomSheet = forwardRef(function MockGlassBottomSheet(
+    { children, onDismiss },
+    ref
+  ) {
+    const [isVisible, setIsVisible] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+      present: () => setIsVisible(true),
+      dismiss: () => {
+        setIsVisible(false);
+        onDismiss?.();
+      },
+      snapToIndex: () => {},
+    }));
+
+    // Only render children when visible (mimics real bottom sheet behavior)
+    if (!isVisible) return null;
+    return React.createElement('View', { testID: 'glass-bottom-sheet' }, children);
+  });
+
+  return {
+    __esModule: true,
+    default: MockGlassBottomSheet,
   };
 });
 
@@ -545,3 +643,20 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }) => children,
   SafeAreaView: ({ children }) => children,
 }));
+
+// lucide-react-native is mocked via moduleNameMapper in jest.config.js
+
+// Mock react-native-toast-message
+jest.mock('react-native-toast-message', () => {
+  const React = require('react');
+  const mockToast = ({ config, position, topOffset }) =>
+    React.createElement('Toast', { config, position, topOffset });
+  mockToast.show = jest.fn();
+  mockToast.hide = jest.fn();
+
+  return {
+    __esModule: true,
+    default: mockToast,
+    BaseToast: ({ children, ...props }) => React.createElement('BaseToast', props, children),
+  };
+});

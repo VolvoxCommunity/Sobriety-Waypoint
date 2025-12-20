@@ -27,12 +27,12 @@ import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 // =============================================================================
 
 /**
- * Renders a full-screen, scrollable detail view for a single step with navigation and completion controls.
+ * Render a full-screen, scrollable detail view for a single step with navigation and completion controls.
  *
- * Fetches step content and, when a user is authenticated, their progress; displays loading and error states,
- * allows toggling completion for the current step, and enables previous/next step navigation.
+ * Fetches step content and, when a user is signed in, their progress; displays loading and error states,
+ * lets the user mark the step complete/uncomplete, and enables navigation to previous/next steps.
  *
- * @returns The Step detail screen component
+ * @returns The step detail screen component element
  */
 export default function StepDetailScreen() {
   // ---------------------------------------------------------------------------
@@ -253,7 +253,7 @@ export default function StepDetailScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
+        <Pressable testID="step-detail-back-button" onPress={handleBack} style={styles.backButton}>
           <ChevronLeft size={24} color={theme.text} />
         </Pressable>
         <Text style={styles.stepIndicator}>
@@ -271,12 +271,14 @@ export default function StepDetailScreen() {
         {/* Step Title Section */}
         <View style={styles.titleSection}>
           <Text style={styles.stepNumber}>Step {step.step_number}</Text>
-          <Text style={styles.title}>{step.title}</Text>
+          <Text testID="step-detail-title" style={styles.title}>
+            {step.title}
+          </Text>
           <Text style={styles.description}>{step.description}</Text>
         </View>
 
         {/* Detailed Content Section */}
-        <View style={styles.section}>
+        <View testID="step-detail-content" style={styles.section}>
           <Text style={styles.sectionTitle}>Understanding This Step</Text>
           <Text style={styles.sectionContent}>{step.detailed_content}</Text>
         </View>
@@ -298,6 +300,7 @@ export default function StepDetailScreen() {
         <View style={styles.actionSection}>
           {/* Completion Button */}
           <Pressable
+            testID="step-detail-complete-button"
             style={[
               styles.completeButton,
               isCompleted && styles.completeButtonActive,

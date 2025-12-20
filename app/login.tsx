@@ -10,14 +10,14 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { Heart } from 'lucide-react-native';
 import { GoogleLogo } from '@/components/auth/SocialLogos';
 import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import { logger, LogCategory } from '@/lib/logger';
-import { showAlert } from '@/lib/alert';
+import { showToast } from '@/lib/toast';
 
 /**
  * Render the app's login screen and manage email/password, Google, and Apple sign-in flows.
@@ -34,7 +34,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const { user, signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   // Refs for field navigation
@@ -42,7 +42,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showAlert('Error', 'Please fill in all fields');
+      showToast.error('Please fill in all fields');
       return;
     }
 
@@ -52,7 +52,7 @@ export default function LoginScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to sign in');
       logger.error('Sign in failed', err, { category: LogCategory.AUTH, email });
-      showAlert('Error', err.message);
+      showToast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -65,13 +65,18 @@ export default function LoginScreen() {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error('Failed to sign in with Google');
       logger.error('Google sign in failed', err, { category: LogCategory.AUTH });
-      showAlert('Error', err.message);
+      showToast.error(err.message);
     } finally {
       setGoogleLoading(false);
     }
   };
 
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  // Redirect authenticated users to the app
+  if (user) {
+    return <Redirect href="/(app)" />;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -83,7 +88,7 @@ export default function LoginScreen() {
           <View style={styles.iconContainer}>
             <Heart size={48} color={theme.primary} fill={theme.primary} />
           </View>
-          <Text style={styles.title}>Sobriety Waypoint</Text>
+          <Text style={styles.title}>Sobers</Text>
           <Text style={styles.subtitle}>Your journey to recovery</Text>
         </View>
 
@@ -91,6 +96,7 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
             <TextInput
+              testID="login-email-input"
               style={styles.input}
               placeholder="your@email.com"
               accessibilityLabel="Email address"
@@ -110,6 +116,7 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
             <TextInput
+              testID="login-password-input"
               ref={passwordRef}
               style={styles.input}
               placeholder="••••••••"
@@ -126,6 +133,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
+            testID="login-submit-button"
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading || googleLoading}
@@ -147,6 +155,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
+            testID="login-google-button"
             style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
             onPress={handleGoogleSignIn}
             disabled={loading || googleLoading}
@@ -166,13 +175,15 @@ export default function LoginScreen() {
 
           {/* Apple Sign In - only renders on iOS */}
           <AppleSignInButton
+            testID="login-apple-button"
             onError={(error) => {
               logger.error('Apple sign in failed', error, { category: LogCategory.AUTH });
-              showAlert('Error', error.message);
+              showToast.error(error.message);
             }}
           />
 
           <TouchableOpacity
+            testID="login-signup-link"
             style={styles.secondaryButton}
             onPress={() => router.push('/signup')}
             disabled={loading || googleLoading}

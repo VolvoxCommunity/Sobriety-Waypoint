@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Platform, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,11 +10,11 @@ import { CheckCircle } from 'lucide-react-native';
 import { logger, LogCategory } from '@/lib/logger';
 
 /**
- * Display the list of the 12 steps with per-step completion indicators and navigation to each step's detail screen.
+ * Render the Steps screen showing the 12 steps with per-step completion indicators and navigation to each step's detail screen.
  *
- * Renders a header, handles loading/error/empty states, and shows a scrollable list of step cards; tapping a card navigates to /steps/{id}.
+ * Shows header and a scrollable list, and reflects loading, error, and empty states.
  *
- * @returns The rendered Steps list screen component
+ * @returns The React element for the Steps list screen
  */
 export default function StepsScreen() {
   const { theme } = useTheme();
@@ -86,11 +86,17 @@ export default function StepsScreen() {
     }
   };
 
-  // Refetch progress when returning from detail screen
+  // Fetch steps on mount
   useEffect(() => {
     fetchSteps();
-    fetchProgress();
-  }, [fetchProgress]);
+  }, []);
+
+  // Refetch progress when screen gains focus (e.g., returning from detail screen)
+  useFocusEffect(
+    useCallback(() => {
+      fetchProgress();
+    }, [fetchProgress])
+  );
 
   /**
    * Handler for when a step is selected.
@@ -111,7 +117,11 @@ export default function StepsScreen() {
         <Text style={styles.headerSubtitle}>Your path to recovery</Text>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: tabBarHeight }}>
+      <ScrollView
+        testID="steps-list"
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: tabBarHeight }}
+      >
         {loading && (
           <View style={styles.centerContainer}>
             <Text style={styles.loadingText}>Loading steps...</Text>
@@ -136,6 +146,7 @@ export default function StepsScreen() {
             const isCompleted = !!progress[step.step_number];
             return (
               <Pressable
+                testID={`step-card-${step.step_number}`}
                 key={step.id}
                 style={[styles.stepCard, isCompleted && styles.stepCardCompleted]}
                 onPress={() => handleStepPress(step)}
@@ -149,7 +160,7 @@ export default function StepsScreen() {
                     {step.description}
                   </Text>
                   {isCompleted && (
-                    <View style={styles.completedBadge}>
+                    <View testID="step-completed-icon" style={styles.completedBadge}>
                       <CheckCircle size={14} color={theme.successAlt} />
                       <Text style={styles.completedText}>Completed</Text>
                     </View>

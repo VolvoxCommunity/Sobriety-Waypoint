@@ -18,12 +18,16 @@ describe('lib/supabase', () => {
 
   it('throws error if EXPO_PUBLIC_SUPABASE_URL is missing', () => {
     process.env.EXPO_PUBLIC_SUPABASE_URL = '';
-    expect(() => require('@/lib/supabase')).toThrow('Missing Supabase environment variables');
+    // Lazy validation: module loads successfully, but accessing supabase throws
+    const { supabase } = require('@/lib/supabase');
+    expect(() => supabase.auth).toThrow('Missing Supabase environment variables');
   });
 
   it('throws error if EXPO_PUBLIC_SUPABASE_ANON_KEY is missing', () => {
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = '';
-    expect(() => require('@/lib/supabase')).toThrow('Missing Supabase environment variables');
+    // Lazy validation: module loads successfully, but accessing supabase throws
+    const { supabase } = require('@/lib/supabase');
+    expect(() => supabase.auth).toThrow('Missing Supabase environment variables');
   });
 
   describe('Supabase Client Initialization', () => {
@@ -86,11 +90,17 @@ describe('lib/supabase', () => {
         storageAdapter = getStorageAdapter();
       });
 
-      // SecureStore.getItemAsync returns null, so it falls back to AsyncStorage migration
-      // For this test, we simulate value found in SecureStore
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('stored-value');
+      // Mock SecureStore to handle chunked storage logic:
+      // - Return null for chunk count key (key_chunk_count) to indicate non-chunked value
+      // - Return 'stored-value' for the actual key
+      (SecureStore.getItemAsync as jest.Mock).mockImplementation(async (k: string) => {
+        if (k.endsWith('_chunk_count')) return null; // Not chunked
+        if (k === 'key') return 'stored-value';
+        return null;
+      });
 
       await expect(storageAdapter.getItem('key')).resolves.toBe('stored-value');
+      expect(SecureStore.getItemAsync).toHaveBeenCalledWith('key_chunk_count');
       expect(SecureStore.getItemAsync).toHaveBeenCalledWith('key');
 
       await storageAdapter.setItem('key', 'value');

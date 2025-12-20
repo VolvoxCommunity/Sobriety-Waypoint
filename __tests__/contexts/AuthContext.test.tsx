@@ -97,7 +97,7 @@ jest.mock('expo-linking', () => ({
 
 // Mock expo-auth-session
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: jest.fn(() => 'sobrietywaypoint://auth/callback'),
+  makeRedirectUri: jest.fn(() => 'sobers://auth/callback'),
 }));
 
 // Mock sentry functions
@@ -957,7 +957,7 @@ describe('AuthContext', () => {
     it('handles deep links with OAuth tokens', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=test-token&refresh_token=test-refresh'
+        'sobers://auth/callback#access_token=test-token&refresh_token=test-refresh'
       );
 
       mockSetSession.mockResolvedValue({
@@ -977,7 +977,7 @@ describe('AuthContext', () => {
 
     it('ignores URLs without OAuth tokens', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
-      mockGetInitialURL.mockResolvedValueOnce('sobrietywaypoint://some-other-path');
+      mockGetInitialURL.mockResolvedValueOnce('sobers://some-other-path');
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -1057,7 +1057,7 @@ describe('AuthContext', () => {
       const WebBrowser = require('expo-web-browser');
       WebBrowser.openAuthSessionAsync.mockResolvedValue({
         type: 'success',
-        url: 'sobrietywaypoint://auth/callback#access_token=token&refresh_token=refresh',
+        url: 'sobers://auth/callback#access_token=token&refresh_token=refresh',
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -1109,7 +1109,7 @@ describe('AuthContext', () => {
     it('handles URL with tokens in hash fragment', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=hash-access&refresh_token=hash-refresh'
+        'sobers://auth/callback#access_token=hash-access&refresh_token=hash-refresh'
       );
 
       mockSetSession.mockResolvedValue({
@@ -1132,7 +1132,7 @@ describe('AuthContext', () => {
     it('handles URL with tokens in query params (PKCE flow)', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback?access_token=query-access&refresh_token=query-refresh'
+        'sobers://auth/callback?access_token=query-access&refresh_token=query-refresh'
       );
 
       mockSetSession.mockResolvedValue({
@@ -1155,7 +1155,7 @@ describe('AuthContext', () => {
     it('handles session creation error gracefully', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=test&refresh_token=test'
+        'sobers://auth/callback#access_token=test&refresh_token=test'
       );
 
       mockSetSession.mockResolvedValue({
@@ -1194,9 +1194,7 @@ describe('AuthContext', () => {
     it('handles URL with missing access_token', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Only refresh_token, no access_token
-      mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#refresh_token=only-refresh'
-      );
+      mockGetInitialURL.mockResolvedValueOnce('sobers://auth/callback#refresh_token=only-refresh');
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -1211,9 +1209,7 @@ describe('AuthContext', () => {
     it('handles URL with missing refresh_token', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Only access_token, no refresh_token
-      mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=only-access'
-      );
+      mockGetInitialURL.mockResolvedValueOnce('sobers://auth/callback#access_token=only-access');
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -1229,7 +1225,7 @@ describe('AuthContext', () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Empty access_token
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=&refresh_token=valid-refresh'
+        'sobers://auth/callback#access_token=&refresh_token=valid-refresh'
       );
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -1246,7 +1242,7 @@ describe('AuthContext', () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Empty refresh_token
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=valid-access&refresh_token='
+        'sobers://auth/callback#access_token=valid-access&refresh_token='
       );
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -1263,7 +1259,7 @@ describe('AuthContext', () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Both hash and query params - hash should take precedence
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback?access_token=query-access&refresh_token=query-refresh#access_token=hash-access&refresh_token=hash-refresh'
+        'sobers://auth/callback?access_token=query-access&refresh_token=query-refresh#access_token=hash-access&refresh_token=hash-refresh'
       );
 
       mockSetSession.mockResolvedValue({
@@ -1288,7 +1284,7 @@ describe('AuthContext', () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Hash has only access_token, query has both - should fall back to query
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback?access_token=query-access&refresh_token=query-refresh#access_token=hash-access'
+        'sobers://auth/callback?access_token=query-access&refresh_token=query-refresh#access_token=hash-access'
       );
 
       mockSetSession.mockResolvedValue({
@@ -1313,7 +1309,7 @@ describe('AuthContext', () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // OAuth error response
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#error=access_denied&error_description=User+denied+access'
+        'sobers://auth/callback#error=access_denied&error_description=User+denied+access'
       );
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -1330,7 +1326,7 @@ describe('AuthContext', () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Tokens with URL-encoded special characters
       mockGetInitialURL.mockResolvedValueOnce(
-        'sobrietywaypoint://auth/callback#access_token=token%2Bwith%2Fspecial%3Dchars&refresh_token=refresh%2Btoken%3D%3D'
+        'sobers://auth/callback#access_token=token%2Bwith%2Fspecial%3Dchars&refresh_token=refresh%2Btoken%3D%3D'
       );
 
       mockSetSession.mockResolvedValue({
@@ -1354,7 +1350,7 @@ describe('AuthContext', () => {
     it('handles URL without any OAuth-related parameters', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
       // Regular deep link without OAuth params
-      mockGetInitialURL.mockResolvedValueOnce('sobrietywaypoint://profile/view');
+      mockGetInitialURL.mockResolvedValueOnce('sobers://profile/view');
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -1368,8 +1364,7 @@ describe('AuthContext', () => {
 
     it('handles duplicate URL processing by ignoring second attempt', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
-      const duplicateUrl =
-        'sobrietywaypoint://auth/callback#access_token=duplicate&refresh_token=duplicate';
+      const duplicateUrl = 'sobers://auth/callback#access_token=duplicate&refresh_token=duplicate';
 
       mockGetInitialURL.mockResolvedValueOnce(duplicateUrl);
 
@@ -1408,8 +1403,7 @@ describe('AuthContext', () => {
 
     it('handles concurrent OAuth processing by preventing race conditions', async () => {
       const mockGetInitialURL = require('expo-linking').getInitialURL;
-      const oauthUrl =
-        'sobrietywaypoint://auth/callback#access_token=concurrent&refresh_token=concurrent';
+      const oauthUrl = 'sobers://auth/callback#access_token=concurrent&refresh_token=concurrent';
 
       mockGetInitialURL.mockResolvedValueOnce(oauthUrl);
 

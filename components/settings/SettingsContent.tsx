@@ -6,7 +6,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Platform,
   Linking,
   ActivityIndicator,
@@ -16,8 +15,10 @@ import {
   TextInput,
   Pressable,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useDevTools } from '@/contexts/DevToolsContext';
 import {
   LogOut,
   Moon,
@@ -26,6 +27,7 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronLeft,
+  ChevronRight,
   Shield,
   FileText,
   Github,
@@ -38,14 +40,24 @@ import {
   Info,
   Copy,
   User,
+  Bell,
+  Bug,
+  Terminal,
+  Clock,
+  BarChart2,
+  RotateCcw,
+  Zap,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { logger, LogCategory } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
+import { captureSentryException } from '@/lib/sentry';
+import { trackEvent } from '@/lib/analytics';
 import { validateDisplayName } from '@/lib/validation';
 import { hexWithAlpha } from '@/lib/format';
-import { showAlert, showConfirm } from '@/lib/alert';
+import { showConfirm } from '@/lib/alert';
+import { showToast } from '@/lib/toast';
 import packageJson from '../../package.json';
 
 import type { SettingsContentProps } from './types';
@@ -55,6 +67,371 @@ import { getBuildInfo, formatBuildInfoForCopy } from './utils';
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// =============================================================================
+// Developer Tools Section (DEV only)
+// =============================================================================
+
+interface DevToolsSectionProps {
+  theme: ReturnType<typeof useTheme>['theme'];
+  styles: ReturnType<typeof createStyles>;
+  profile: ReturnType<typeof useAuth>['profile'];
+  refreshProfile: ReturnType<typeof useAuth>['refreshProfile'];
+}
+
+/**
+ * Renders a Developer Tools section exposing debug utilities for testing toasts, error reporting, analytics, and test data manipulation.
+ *
+ * Includes controls for triggering test toasts, sending a test Sentry error, firing a test analytics event, copying the current user ID, resetting onboarding, clearing slip-ups, adjusting a time-travel offset (days), and toggles for verbose logging and analytics debug.
+ *
+ * @param props - DevToolsSectionProps containing theme, styles, profile, and refreshProfile used to render controls and perform actions
+ */
+function DevToolsSection({ theme, styles, profile, refreshProfile }: DevToolsSectionProps) {
+  const router = useRouter();
+  const {
+    verboseLogging,
+    setVerboseLogging,
+    timeTravelDays,
+    setTimeTravelDays,
+    analyticsDebug,
+    setAnalyticsDebug,
+  } = useDevTools();
+
+  const [timeTravelInput, setTimeTravelInput] = useState(timeTravelDays.toString());
+
+  // Handle test Sentry error
+  const handleTestSentryError = useCallback(() => {
+    const testError = new Error('Test Sentry Error from Developer Tools');
+    captureSentryException(testError, { source: 'dev_tools', test: true });
+    showToast.success('Test error sent to Sentry');
+    logger.info('Test Sentry error triggered', { category: LogCategory.ERROR });
+  }, []);
+
+  // Handle copy user ID
+  const handleCopyUserId = useCallback(async () => {
+    if (profile?.id) {
+      await Clipboard.setStringAsync(profile.id);
+      showToast.success('User ID copied to clipboard');
+    } else {
+      showToast.error('No user ID available');
+    }
+  }, [profile?.id]);
+
+  // Handle reset onboarding
+  const handleResetOnboarding = useCallback(async () => {
+    if (!profile?.id) {
+      showToast.error('No profile to reset');
+      return;
+    }
+
+    const confirmed = await showConfirm(
+      'Reset Onboarding',
+      'This will clear your profile data and redirect you to onboarding. Continue?',
+      'Reset',
+      'Cancel',
+      true
+    );
+
+    if (confirmed) {
+      try {
+        // Clear the onboarding-related fields to make the profile "incomplete"
+        // This triggers the onboarding redirect without deleting the profile
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            display_name: null,
+            sobriety_date: null,
+          })
+          .eq('id', profile.id);
+
+        if (error) throw error;
+
+        showToast.success('Profile reset. Redirecting to onboarding...');
+        logger.info('Profile reset via dev tools', { category: LogCategory.AUTH });
+
+        // Refresh profile state and navigate to onboarding
+        await refreshProfile();
+        router.replace('/onboarding');
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        showToast.error('Failed to reset profile');
+        logger.error('Failed to reset profile', err, { category: LogCategory.AUTH });
+      }
+    }
+  }, [profile?.id, refreshProfile, router]);
+
+  // Handle time travel
+  const handleApplyTimeTravel = useCallback(() => {
+    const days = parseInt(timeTravelInput, 10);
+    if (!isNaN(days)) {
+      setTimeTravelDays(days);
+      if (days === 0) {
+        showToast.info('Time travel disabled');
+      } else {
+        showToast.success(`Time traveling ${days > 0 ? '+' : ''}${days} days`);
+      }
+    }
+  }, [timeTravelInput, setTimeTravelDays]);
+
+  // Handle fire test event
+  const handleFireTestEvent = useCallback(() => {
+    trackEvent('dev_tools_test_event', {
+      timestamp: new Date().toISOString(),
+      source: 'developer_tools',
+    });
+    showToast.success('Test analytics event fired');
+    logger.info('Test analytics event fired', { category: LogCategory.ANALYTICS });
+  }, []);
+
+  // Handle clear slip-ups
+  const handleClearSlipUps = useCallback(async () => {
+    if (!profile?.id) {
+      showToast.error('No profile found');
+      return;
+    }
+
+    const confirmed = await showConfirm(
+      'Clear Slip-Ups',
+      'This will delete all slip-up records. Your sobriety streak will reset to your original sobriety date. Continue?',
+      'Clear',
+      'Cancel',
+      true
+    );
+
+    if (confirmed) {
+      try {
+        const { error } = await supabase.from('slip_ups').delete().eq('user_id', profile.id);
+
+        if (error) throw error;
+
+        showToast.success('All slip-ups cleared');
+        logger.info('Slip-ups cleared via dev tools', { category: LogCategory.DATABASE });
+
+        // Refresh profile to update any dependent state
+        await refreshProfile();
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        showToast.error('Failed to clear slip-ups');
+        logger.error('Failed to clear slip-ups', err, { category: LogCategory.DATABASE });
+      }
+    }
+  }, [profile?.id, refreshProfile]);
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Developer Tools</Text>
+      <View style={styles.card}>
+        {/* Toast Testing */}
+        <View style={styles.devToolsContainer}>
+          <Text style={styles.devToolsDescription}>Test toast notifications</Text>
+          <View style={styles.toastButtonsRow}>
+            <Pressable
+              style={[styles.toastButton, styles.toastButtonSuccess]}
+              onPress={() => showToast.success('Success! This is a test message.')}
+              accessibilityRole="button"
+              accessibilityLabel="Test success toast"
+              testID="test-toast-success"
+            >
+              <CheckCircle size={18} color="#fff" />
+              <Text style={styles.toastButtonText}>Success</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.toastButton, styles.toastButtonError]}
+              onPress={() => showToast.error('Error! Something went wrong.')}
+              accessibilityRole="button"
+              accessibilityLabel="Test error toast"
+              testID="test-toast-error"
+            >
+              <AlertCircle size={18} color="#fff" />
+              <Text style={styles.toastButtonText}>Error</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.toastButton, styles.toastButtonInfo]}
+              onPress={() => showToast.info('Info: Here is some information.')}
+              accessibilityRole="button"
+              accessibilityLabel="Test info toast"
+              testID="test-toast-info"
+            >
+              <Bell size={18} color="#fff" />
+              <Text style={styles.toastButtonText}>Info</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.separator} />
+
+        {/* Error & Logging */}
+        <Pressable
+          style={styles.menuItem}
+          onPress={handleTestSentryError}
+          accessibilityRole="button"
+          testID="test-sentry-error"
+        >
+          <View style={styles.menuItemLeft}>
+            <Bug size={20} color={theme.error} />
+            <Text style={styles.menuItemText}>Test Sentry Error</Text>
+          </View>
+          <ChevronRight size={20} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={() => setVerboseLogging(!verboseLogging)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: verboseLogging }}
+          testID="toggle-verbose-logging"
+        >
+          <View style={styles.menuItemLeft}>
+            <Terminal size={20} color={theme.text} />
+            <Text style={styles.menuItemText}>Verbose Logging</Text>
+          </View>
+          <View style={[styles.toggle, verboseLogging && styles.toggleActive]}>
+            <Text style={styles.toggleText}>{verboseLogging ? 'ON' : 'OFF'}</Text>
+          </View>
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        {/* User & Data */}
+        <Pressable
+          style={styles.menuItem}
+          onPress={handleCopyUserId}
+          accessibilityRole="button"
+          testID="copy-user-id"
+        >
+          <View style={styles.menuItemLeft}>
+            <Copy size={20} color={theme.text} />
+            <View>
+              <Text style={styles.menuItemText}>Copy User ID</Text>
+              {profile?.id && (
+                <Text style={styles.menuItemSubtext}>{profile.id.substring(0, 8)}...</Text>
+              )}
+            </View>
+          </View>
+          <ChevronRight size={20} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={handleResetOnboarding}
+          accessibilityRole="button"
+          testID="reset-onboarding"
+        >
+          <View style={styles.menuItemLeft}>
+            <RotateCcw size={20} color={theme.error} />
+            <Text style={styles.menuItemText}>Reset Onboarding</Text>
+          </View>
+          <ChevronRight size={20} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={handleClearSlipUps}
+          accessibilityRole="button"
+          testID="clear-slip-ups"
+        >
+          <View style={styles.menuItemLeft}>
+            <Trash2 size={20} color={theme.warning} />
+            <Text style={styles.menuItemText}>Clear Slip-Ups</Text>
+          </View>
+          <ChevronRight size={20} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        {/* Time Travel */}
+        <View style={styles.devToolsContainer}>
+          <View style={styles.menuItemLeft}>
+            <Clock size={20} color={theme.primary} />
+            <Text style={styles.menuItemText}>Time Travel (days)</Text>
+          </View>
+          <View style={styles.timeTravelRow}>
+            <TextInput
+              style={styles.timeTravelInput}
+              value={timeTravelInput}
+              onChangeText={setTimeTravelInput}
+              keyboardType="number-pad"
+              placeholder="0"
+              placeholderTextColor={theme.textSecondary}
+              testID="time-travel-input"
+            />
+            <Pressable
+              style={styles.timeTravelButton}
+              onPress={handleApplyTimeTravel}
+              accessibilityRole="button"
+              testID="apply-time-travel"
+            >
+              <Text style={styles.timeTravelButtonText}>Apply</Text>
+            </Pressable>
+            {timeTravelDays !== 0 && (
+              <Pressable
+                style={[styles.timeTravelButton, styles.timeTravelResetButton]}
+                onPress={() => {
+                  setTimeTravelInput('0');
+                  setTimeTravelDays(0);
+                  showToast.info('Time travel reset');
+                }}
+                accessibilityRole="button"
+                testID="reset-time-travel"
+              >
+                <Text style={styles.timeTravelButtonText}>Reset</Text>
+              </Pressable>
+            )}
+          </View>
+          {timeTravelDays !== 0 && (
+            <Text style={styles.timeTravelStatus}>
+              Currently: {timeTravelDays > 0 ? '+' : ''}
+              {timeTravelDays} days
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.separator} />
+
+        {/* Analytics */}
+        <Pressable
+          style={styles.menuItem}
+          onPress={handleFireTestEvent}
+          accessibilityRole="button"
+          testID="fire-test-event"
+        >
+          <View style={styles.menuItemLeft}>
+            <Zap size={20} color={theme.warning} />
+            <Text style={styles.menuItemText}>Fire Test Analytics Event</Text>
+          </View>
+          <ChevronRight size={20} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={() => {
+            setAnalyticsDebug(!analyticsDebug);
+            showToast.info(analyticsDebug ? 'Analytics debug disabled' : 'Analytics debug enabled');
+          }}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: analyticsDebug }}
+          testID="toggle-analytics-debug"
+        >
+          <View style={styles.menuItemLeft}>
+            <BarChart2 size={20} color={theme.text} />
+            <Text style={styles.menuItemText}>Analytics Debug</Text>
+          </View>
+          <View style={[styles.toggle, analyticsDebug && styles.toggleActive]}>
+            <Text style={styles.toggleText}>{analyticsDebug ? 'ON' : 'OFF'}</Text>
+          </View>
+        </Pressable>
+      </View>
+    </View>
+  );
 }
 
 // =============================================================================
@@ -154,7 +531,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
         logger.error('Sign out failed', err, {
           category: LogCategory.AUTH,
         });
-        showAlert('Error', 'Failed to sign out: ' + err.message);
+        showToast.error('Failed to sign out: ' + err.message);
       }
     }
   };
@@ -191,10 +568,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
     try {
       await deleteAccount();
       // Show success message before dismiss to ensure user sees it
-      showAlert(
-        'Account Deleted',
-        'Your account has been deleted. We wish you well on your journey.'
-      );
+      showToast.success('Your account has been deleted. We wish you well on your journey.');
       // Dismiss after alert to ensure user sees confirmation
       // Auth guard in _layout.tsx handles redirect to /login
       onDismiss?.();
@@ -203,7 +577,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       logger.error('Account deletion failed in settings', err, {
         category: LogCategory.AUTH,
       });
-      showAlert('Error', 'Failed to delete account: ' + err.message);
+      showToast.error('Failed to delete account: ' + err.message);
     } finally {
       setIsDeleting(false);
     }
@@ -263,7 +637,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       logger.error('Name save attempted with null profile', new Error(errorMessage), {
         category: LogCategory.DATABASE,
       });
-      showAlert('Error', errorMessage);
+      showToast.error(errorMessage);
       return;
     }
 
@@ -289,7 +663,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       setIsEditNameModalVisible(false);
       setNameValidationError(null);
 
-      showAlert('Success', 'Display name updated successfully');
+      showToast.success('Display name updated successfully');
     } catch (error: unknown) {
       // Handle both Error objects and Supabase error objects with message property
       const errorMessage =
@@ -302,7 +676,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       logger.error('Display name update failed', err, {
         category: LogCategory.DATABASE,
       });
-      showAlert('Error', errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setIsSavingName(false);
     }
@@ -319,7 +693,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.card}>
-          <TouchableOpacity
+          <Pressable
             style={styles.menuItem}
             testID="account-name-row"
             onPress={() => {
@@ -345,7 +719,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               color={theme.textTertiary}
               style={{ transform: [{ rotate: '180deg' }] }}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
@@ -353,15 +727,19 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Appearance</Text>
         <View style={styles.card}>
-          <View style={styles.themeOptions}>
-            <TouchableOpacity
+          <View testID="settings-theme-toggle" style={styles.themeOptions}>
+            <Pressable
               style={[styles.themeOption, themeMode === 'light' && styles.themeOptionSelected]}
               onPress={() => setThemeMode('light')}
               accessibilityRole="radio"
               accessibilityState={{ checked: themeMode === 'light' }}
               accessibilityLabel="Light theme"
             >
-              <Sun size={24} color={themeMode === 'light' ? theme.primary : theme.textSecondary} />
+              <Sun
+                key={`sun-${themeMode}`}
+                size={24}
+                color={themeMode === 'light' ? theme.primary : theme.textSecondary}
+              />
               <Text
                 style={[
                   styles.themeOptionText,
@@ -370,16 +748,20 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               >
                 Light
               </Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               style={[styles.themeOption, themeMode === 'dark' && styles.themeOptionSelected]}
               onPress={() => setThemeMode('dark')}
               accessibilityRole="radio"
               accessibilityState={{ checked: themeMode === 'dark' }}
               accessibilityLabel="Dark theme"
             >
-              <Moon size={24} color={themeMode === 'dark' ? theme.primary : theme.textSecondary} />
+              <Moon
+                key={`moon-${themeMode}`}
+                size={24}
+                color={themeMode === 'dark' ? theme.primary : theme.textSecondary}
+              />
               <Text
                 style={[
                   styles.themeOptionText,
@@ -388,9 +770,9 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               >
                 Dark
               </Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               style={[styles.themeOption, themeMode === 'system' && styles.themeOptionSelected]}
               onPress={() => setThemeMode('system')}
               accessibilityRole="radio"
@@ -398,6 +780,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               accessibilityLabel="System theme"
             >
               <Monitor
+                key={`monitor-${themeMode}`}
                 size={24}
                 color={themeMode === 'system' ? theme.primary : theme.textSecondary}
               />
@@ -409,7 +792,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               >
                 System
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -418,7 +801,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>About</Text>
         <View style={styles.card}>
-          <TouchableOpacity
+          <Pressable
             style={styles.menuItem}
             onPress={() => handleOpenURL(EXTERNAL_LINKS.PRIVACY_POLICY)}
             accessibilityRole="link"
@@ -433,9 +816,9 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               color={theme.textTertiary}
               style={{ transform: [{ rotate: '180deg' }] }}
             />
-          </TouchableOpacity>
+          </Pressable>
           <View style={styles.separator} />
-          <TouchableOpacity
+          <Pressable
             style={styles.menuItem}
             onPress={() => handleOpenURL(EXTERNAL_LINKS.TERMS_OF_SERVICE)}
             accessibilityRole="link"
@@ -450,9 +833,9 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               color={theme.textTertiary}
               style={{ transform: [{ rotate: '180deg' }] }}
             />
-          </TouchableOpacity>
+          </Pressable>
           <View style={styles.separator} />
-          <TouchableOpacity
+          <Pressable
             style={styles.menuItem}
             onPress={() => handleOpenURL(EXTERNAL_LINKS.SOURCE_CODE)}
             accessibilityRole="link"
@@ -467,7 +850,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               color={theme.textTertiary}
               style={{ transform: [{ rotate: '180deg' }] }}
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
@@ -478,7 +861,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
           <View style={styles.card}>
             <View style={styles.updateContainer}>
               {updateStatus === 'idle' && (
-                <TouchableOpacity
+                <Pressable
                   style={styles.updateButton}
                   onPress={checkForUpdates}
                   accessibilityRole="button"
@@ -486,7 +869,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                 >
                   <RefreshCw size={20} color={theme.primary} />
                   <Text style={styles.updateButtonText}>Check for Updates</Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
 
               {(isChecking || isDownloading) && (
@@ -504,14 +887,14 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                   <Text style={[styles.updateStatusText, { color: theme.success }]}>
                     App is up to date
                   </Text>
-                  <TouchableOpacity
+                  <Pressable
                     style={styles.checkAgainButton}
                     onPress={checkForUpdates}
                     accessibilityRole="button"
                     accessibilityLabel="Check again for updates"
                   >
                     <Text style={styles.checkAgainText}>Check Again</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
 
@@ -521,14 +904,14 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                     <Download size={20} color={theme.primary} />
                     <Text style={styles.updateReadyText}>Update ready to install</Text>
                   </View>
-                  <TouchableOpacity
+                  <Pressable
                     style={styles.applyUpdateButton}
                     onPress={applyUpdate}
                     accessibilityRole="button"
                     accessibilityLabel="Restart app to apply update"
                   >
                     <Text style={styles.applyUpdateText}>Restart to Update</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
 
@@ -538,14 +921,14 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                   <Text style={[styles.updateStatusText, { color: theme.error }]}>
                     {updateError || 'Failed to check for updates'}
                   </Text>
-                  <TouchableOpacity
+                  <Pressable
                     style={styles.checkAgainButton}
                     onPress={checkForUpdates}
                     accessibilityRole="button"
                     accessibilityLabel="Try again"
                   >
                     <Text style={styles.checkAgainText}>Try Again</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
             </View>
@@ -555,7 +938,8 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
 
       {/* Sign Out Section */}
       <View style={styles.section}>
-        <TouchableOpacity
+        <Pressable
+          testID="settings-logout-button"
           style={styles.signOutButton}
           onPress={handleSignOut}
           accessibilityRole="button"
@@ -563,12 +947,12 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
         >
           <LogOut size={20} color={theme.error} />
           <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Danger Zone Section */}
       <View style={styles.section}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.dangerZoneHeader, isDangerZoneExpanded && styles.dangerZoneHeaderExpanded]}
           onPress={toggleDangerZone}
           accessibilityRole="button"
@@ -585,13 +969,14 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
           ) : (
             <ChevronDown size={20} color={theme.danger} />
           )}
-        </TouchableOpacity>
+        </Pressable>
         <View style={{ maxHeight: isDangerZoneExpanded ? undefined : 0, overflow: 'hidden' }}>
           <View style={styles.dangerCard}>
             <Text style={styles.dangerDescription}>
               Permanently delete your account and all associated data. This action cannot be undone.
             </Text>
-            <TouchableOpacity
+            <Pressable
+              testID="settings-delete-account-button"
               style={[styles.deleteAccountButton, isDeleting && styles.buttonDisabled]}
               onPress={handleDeleteAccount}
               disabled={isDeleting}
@@ -607,14 +992,14 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                   <Text style={styles.deleteAccountText}>Delete Account</Text>
                 </>
               )}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
 
       {/* Build Info Section */}
       <View style={styles.section}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.buildInfoHeader, isBuildInfoExpanded && styles.buildInfoHeaderExpanded]}
           onPress={toggleBuildInfo}
           accessibilityRole="button"
@@ -631,7 +1016,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
           ) : (
             <ChevronDown size={20} color={theme.primary} />
           )}
-        </TouchableOpacity>
+        </Pressable>
         <View style={{ maxHeight: isBuildInfoExpanded ? undefined : 0, overflow: 'hidden' }}>
           <View style={styles.buildInfoCard}>
             {/* App Version & Build Number */}
@@ -681,7 +1066,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
             )}
             {buildInfo.updateId != null && (
               <>
-                <TouchableOpacity
+                <Pressable
                   style={styles.buildInfoRow}
                   onPress={() => copyToClipboard(buildInfo.updateId ?? '', 'updateId')}
                   accessibilityRole="button"
@@ -698,7 +1083,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                       <Copy size={14} color={theme.textTertiary} />
                     )}
                   </View>
-                </TouchableOpacity>
+                </Pressable>
                 <View style={styles.buildInfoSeparator} />
               </>
             )}
@@ -726,7 +1111,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
             {buildInfo.easBuildGitCommitHash != null && (
               <>
                 <View style={styles.buildInfoSeparator} />
-                <TouchableOpacity
+                <Pressable
                   style={styles.buildInfoRow}
                   onPress={() => copyToClipboard(buildInfo.easBuildGitCommitHash ?? '', 'commit')}
                   accessibilityRole="button"
@@ -743,7 +1128,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                       <Copy size={14} color={theme.textTertiary} />
                     )}
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               </>
             )}
 
@@ -751,7 +1136,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
             {buildInfo.easBuildId != null && (
               <>
                 <View style={styles.buildInfoSeparator} />
-                <TouchableOpacity
+                <Pressable
                   style={styles.buildInfoRow}
                   onPress={() => copyToClipboard(buildInfo.easBuildId ?? '', 'buildId')}
                   accessibilityRole="button"
@@ -768,7 +1153,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                       <Copy size={14} color={theme.textTertiary} />
                     )}
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               </>
             )}
 
@@ -790,7 +1175,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
 
             {/* Copy All Button */}
             <View style={styles.buildInfoSeparator} />
-            <TouchableOpacity
+            <Pressable
               style={styles.copyAllButton}
               onPress={() => copyToClipboard(formatBuildInfoForCopy(buildInfo), 'all')}
               accessibilityRole="button"
@@ -807,22 +1192,32 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                   <Text style={styles.copyAllText}>Copy All Build Info</Text>
                 </>
               )}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
 
+      {/* Developer Tools Section - Only visible in development */}
+      {__DEV__ && (
+        <DevToolsSection
+          theme={theme}
+          styles={styles}
+          profile={profile}
+          refreshProfile={refreshProfile}
+        />
+      )}
+
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Sobriety Waypoint v{packageJson.version}</Text>
+        <Text style={styles.footerText}>Sobers v{packageJson.version}</Text>
         <Text style={styles.footerSubtext}>Supporting recovery, one day at a time</Text>
-        <TouchableOpacity
+        <Pressable
           onPress={() => handleOpenURL(EXTERNAL_LINKS.DEVELOPER)}
           accessibilityRole="link"
           accessibilityLabel="Visit developer website"
         >
           <Text style={styles.footerCredit}>By Bill Chirico</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Edit Display Name Modal */}
@@ -876,7 +1271,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
             )}
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity
+              <Pressable
                 testID="cancel-name-button"
                 style={styles.modalCancelButton}
                 onPress={() => {
@@ -887,8 +1282,8 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                 accessibilityLabel="Cancel name editing"
               >
                 <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 testID="save-name-button"
                 style={[styles.modalSaveButton, isSavingName && styles.buttonDisabled]}
                 onPress={handleSaveName}
@@ -902,7 +1297,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
                 ) : (
                   <Text style={styles.modalSaveText}>Save</Text>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </Pressable>
         </Pressable>
@@ -1364,6 +1759,99 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontFamily: theme.fontRegular,
       fontWeight: '600',
       color: theme.white,
+    },
+    devToolsContainer: {
+      padding: 16,
+    },
+    devToolsDescription: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      color: theme.textSecondary,
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    toastButtonsRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    toastButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+      borderRadius: 10,
+      gap: 6,
+    },
+    toastButtonSuccess: {
+      backgroundColor: theme.successAlt,
+    },
+    toastButtonError: {
+      backgroundColor: theme.error,
+    },
+    toastButtonInfo: {
+      backgroundColor: theme.info,
+    },
+    toastButtonText: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: theme.white,
+    },
+    toggle: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+      backgroundColor: theme.borderLight,
+    },
+    toggleActive: {
+      backgroundColor: theme.primary,
+    },
+    toggleText: {
+      fontSize: 12,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: theme.white,
+    },
+    timeTravelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginTop: 12,
+    },
+    timeTravelInput: {
+      flex: 1,
+      height: 44,
+      backgroundColor: theme.card,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.border,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      fontFamily: theme.fontRegular,
+      color: theme.text,
+    },
+    timeTravelButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      backgroundColor: theme.primary,
+      borderRadius: 10,
+    },
+    timeTravelResetButton: {
+      backgroundColor: theme.textSecondary,
+    },
+    timeTravelButtonText: {
+      fontSize: 14,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      color: theme.white,
+    },
+    timeTravelStatus: {
+      fontSize: 12,
+      fontFamily: theme.fontRegular,
+      color: theme.primary,
+      marginTop: 8,
+      textAlign: 'center',
     },
   });
 

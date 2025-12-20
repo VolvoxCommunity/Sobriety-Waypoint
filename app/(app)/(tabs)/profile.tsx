@@ -28,6 +28,7 @@ import EnterInviteCodeSheet, {
 } from '@/components/sheets/EnterInviteCodeSheet';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { showAlert, showConfirm } from '@/lib/alert';
+import { showToast } from '@/lib/toast';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import SobrietyStats from '@/components/profile/SobrietyStats';
 import RelationshipCard from '@/components/profile/RelationshipCard';
@@ -188,7 +189,7 @@ export default function ProfileScreen() {
     });
 
     if (error) {
-      showAlert('Error', 'Failed to generate invite code');
+      showToast.error('Failed to generate invite code');
     } else {
       if (Platform.OS === 'web') {
         const shouldCopy = await showConfirm(
@@ -199,7 +200,7 @@ export default function ProfileScreen() {
         );
         if (shouldCopy) {
           navigator.clipboard.writeText(code);
-          showAlert('Success', 'Invite code copied to clipboard!');
+          showToast.success('Invite code copied to clipboard!');
         }
       } else {
         showAlert(
@@ -210,7 +211,7 @@ export default function ProfileScreen() {
               text: 'Share',
               onPress: () =>
                 Share.share({
-                  message: `Join me on Sobriety Waypoint! Use invite code: ${code}`,
+                  message: `Join me on Sobers! Use invite code: ${code}`,
                 }),
             },
             { text: 'OK' },
@@ -264,23 +265,19 @@ export default function ProfileScreen() {
       }
 
       if (new Date(invite.expires_at) < new Date()) {
-        throw new Error('This invite code has expired');
-      }
-
-      if (invite.used_by) {
-        throw new Error('This invite code has already been used');
+        throw new Error('This invite code has expired. Please ask your sponsor for a new one.');
       }
 
       if (invite.sponsor_id === user.id || invite.sponsor_id === profile.id) {
-        throw new Error('You cannot connect to yourself as a sponsor');
+        throw new Error('You cannot connect to yourself as a sponsor.');
       }
 
+      // Check for any existing relationship (active or inactive)
       const { data: existingRelationship, error: existingRelationshipError } = await supabase
         .from('sponsor_sponsee_relationships')
-        .select('id')
+        .select('id, status')
         .eq('sponsor_id', invite.sponsor_id)
         .eq('sponsee_id', user.id)
-        .eq('status', 'active')
         .maybeSingle();
 
       if (existingRelationshipError) {
@@ -294,26 +291,57 @@ export default function ProfileScreen() {
         throw new Error('Failed to verify existing connections');
       }
 
-      if (existingRelationship) {
-        throw new Error('You are already connected to this sponsor');
+      if (existingRelationship?.status === 'active') {
+        throw new Error('You are already connected to this sponsor.');
       }
 
-      // Use user.id for sponsee_id to satisfy RLS policy: sponsee_id = auth.uid()
-      const { error: relationshipError } = await supabase
-        .from('sponsor_sponsee_relationships')
-        .insert({
-          sponsor_id: invite.sponsor_id,
-          sponsee_id: user.id,
-          status: 'active',
-        });
-
-      if (relationshipError) {
-        logger.error('Sponsor-sponsee relationship creation failed', relationshipError as Error, {
-          category: LogCategory.DATABASE,
-        });
+      // Check if invite code has been used - provide contextual messages
+      if (invite.used_by) {
+        if (invite.used_by === user.id && existingRelationship) {
+          // User used this code before and has a relationship (now inactive)
+          throw new Error(
+            'You previously used this invite code. Please ask your sponsor for a new code to reconnect.'
+          );
+        }
+        // Code was used by someone else
         throw new Error(
-          relationshipError.message || 'Failed to connect with sponsor. Please try again.'
+          'This invite code has already been used. Please ask your sponsor for a new code.'
         );
+      }
+
+      // Reactivate existing inactive relationship or create new one
+      if (existingRelationship) {
+        // Reactivate the inactive relationship
+        const { error: reactivateError } = await supabase
+          .from('sponsor_sponsee_relationships')
+          .update({
+            status: 'active',
+            disconnected_at: null,
+          })
+          .eq('id', existingRelationship.id);
+
+        if (reactivateError) {
+          logger.error('Failed to reactivate relationship', reactivateError as Error, {
+            category: LogCategory.DATABASE,
+          });
+          throw new Error('Failed to reconnect with sponsor. Please try again.');
+        }
+      } else {
+        // Create new relationship
+        const { error: relationshipError } = await supabase
+          .from('sponsor_sponsee_relationships')
+          .insert({
+            sponsor_id: invite.sponsor_id,
+            sponsee_id: user.id,
+            status: 'active',
+          });
+
+        if (relationshipError) {
+          logger.error('Sponsor-sponsee relationship creation failed', relationshipError as Error, {
+            category: LogCategory.DATABASE,
+          });
+          throw new Error('Failed to connect with sponsor. Please try again.');
+        }
       }
 
       // Use user.id (auth.uid()) instead of profile.id to satisfy RLS policy
@@ -324,8 +352,15 @@ export default function ProfileScreen() {
         .eq('id', invite.id);
 
       if (updateError) {
+        // Log with context for debugging - relationship already created so this is non-blocking
         logger.error('Invite code update failed', updateError as Error, {
           category: LogCategory.DATABASE,
+          context: {
+            inviteId: invite.id,
+            userId: user.id,
+            errorCode: updateError.code,
+            hint: updateError.hint,
+          },
         });
       }
 
@@ -349,7 +384,7 @@ export default function ProfileScreen() {
       await fetchRelationships();
 
       // Show success message
-      showAlert('Success', `Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
+      showToast.success(`Connected with ${sponsorProfile.display_name ?? 'Unknown'}`);
     } catch (error: unknown) {
       logger.error('Join with invite code failed', error as Error, {
         category: LogCategory.DATABASE,
@@ -414,13 +449,13 @@ export default function ProfileScreen() {
 
       await fetchRelationships();
 
-      showAlert('Success', 'Successfully disconnected');
+      showToast.success('Successfully disconnected');
     } catch (error: unknown) {
       logger.error('Disconnect relationship failed', error as Error, {
         category: LogCategory.DATABASE,
       });
       const message = error instanceof Error ? error.message : 'Failed to disconnect.';
-      showAlert('Error', message);
+      showToast.error(message);
     }
   };
 
@@ -445,7 +480,7 @@ export default function ProfileScreen() {
       selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate > today) {
-        showAlert('Invalid Date', 'Sobriety date cannot be in the future');
+        showToast.error('Sobriety date cannot be in the future');
         return;
       }
 
@@ -472,13 +507,13 @@ export default function ProfileScreen() {
 
         await refreshProfile();
 
-        showAlert('Success', 'Sobriety date updated successfully');
+        showToast.success('Sobriety date updated successfully');
       } catch (error: unknown) {
         logger.error('Sobriety date update failed', error as Error, {
           category: LogCategory.DATABASE,
         });
         const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
-        showAlert('Error', message);
+        showToast.error(message);
       }
     },
     [profile, userTimezone, refreshProfile]
@@ -541,7 +576,7 @@ export default function ProfileScreen() {
           accessibilityRole="button"
           accessibilityLabel="Open settings"
           accessibilityLabelledBy="profile-title"
-          testID="settings-button"
+          testID="profile-settings-button"
         >
           <Settings size={22} color={theme.text} />
         </TouchableOpacity>
@@ -579,6 +614,7 @@ export default function ProfileScreen() {
             showGenerateNew={sponseeRelationships.length > 0}
             theme={theme}
             onPrimaryAction={generateInviteCode}
+            testIDPrefix="sponsor"
           >
             {sponseeRelationships.map((rel) => (
               <RelationshipCard
@@ -616,6 +652,7 @@ export default function ProfileScreen() {
             onSecondaryAction={
               sponsorRelationships.length > 0 ? handleShowInviteCodeSheet : undefined
             }
+            testIDPrefix="sponsee"
           >
             {sponsorRelationships.map((rel) => (
               <RelationshipCard

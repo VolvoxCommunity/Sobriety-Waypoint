@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Transform Sobriety Waypoint into a native-first app with iOS 26 Liquid Glass aesthetics, native tab navigation, keyboard handling, bottom sheets, and Airbnb code standards.
+**Goal:** Transform Sobers into a native-first app with iOS 26 Liquid Glass aesthetics, native tab navigation, keyboard handling, bottom sheets, and Airbnb code standards.
 
 **Architecture:** Replace JS-animated navigation with native iOS `UITabBarController` via `react-native-bottom-tabs`, convert all modals to gesture-driven `@gorhom/bottom-sheet` with blur backdrops, use `react-native-keyboard-controller` for native keyboard handling, and adopt `eslint-config-airbnb-extended` for strict linting.
 

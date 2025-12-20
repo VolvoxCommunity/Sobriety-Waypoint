@@ -85,7 +85,7 @@ The Supabase auth trigger that creates profiles on signup needs updating to set 
 
 ```
 ┌─────────────────────────────────────────┐
-│  Welcome to Sobriety Waypoint           │
+│  Welcome to Sobers                      │
 │  Let's set up your profile.             │
 │                                         │
 │  ┌─────────────────────────────────┐    │

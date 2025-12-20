@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { validateDisplayName } from '@/lib/validation';
-import { showAlert } from '@/lib/alert';
+import { showToast } from '@/lib/toast';
 import { Calendar, LogOut, Info, Square, CheckSquare } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import OnboardingStep from '@/components/onboarding/OnboardingStep';
@@ -26,6 +26,7 @@ import {
   getUserTimezone,
 } from '@/lib/date';
 import { trackEvent, AnalyticsEvents, calculateDaysSoberBucket } from '@/lib/analytics';
+import { EXTERNAL_LINKS } from '@/components/settings/constants';
 
 // =============================================================================
 // Constants
@@ -143,10 +144,7 @@ export default function OnboardingScreen() {
       if (awaitingProfileUpdate) {
         setAwaitingProfileUpdate(false);
         setLoading(false);
-        showAlert(
-          'Profile Update Timeout',
-          'Your profile update is taking longer than expected. Please try again.'
-        );
+        showToast.error('Your profile update is taking longer than expected. Please try again.');
       }
     }, 10000); // 10 second timeout
 
@@ -194,9 +192,9 @@ export default function OnboardingScreen() {
       router.replace('/login');
     } catch (error) {
       if (error instanceof Error) {
-        showAlert('Error', error.message);
+        showToast.error(error.message);
       } else {
-        showAlert('Error', 'An unknown error occurred');
+        showToast.error('An unknown error occurred');
       }
     }
   };
@@ -264,7 +262,7 @@ export default function OnboardingScreen() {
       setAwaitingProfileUpdate(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update profile';
-      showAlert('Error', message);
+      showToast.error(message);
     } finally {
       setLoading(false);
     }
@@ -291,14 +289,14 @@ export default function OnboardingScreen() {
    * Opens the privacy policy URL in the default browser.
    */
   const openPrivacyPolicy = useCallback(() => {
-    Linking.openURL('https://www.volvoxdev.com/privacy');
+    Linking.openURL(EXTERNAL_LINKS.PRIVACY_POLICY);
   }, []);
 
   /**
    * Opens the terms of service URL in the default browser.
    */
   const openTermsOfService = useCallback(() => {
-    Linking.openURL('https://www.volvoxdev.com/terms');
+    Linking.openURL(EXTERNAL_LINKS.TERMS_OF_SERVICE);
   }, []);
 
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -313,7 +311,7 @@ export default function OnboardingScreen() {
         >
           <OnboardingStep>
             <View style={styles.headerContainer}>
-              <Text style={styles.title}>Welcome to Sobriety Waypoint</Text>
+              <Text style={styles.title}>Welcome to Sobers</Text>
               <Text style={styles.subtitle}>Let&apos;s set up your profile.</Text>
             </View>
 
@@ -324,6 +322,7 @@ export default function OnboardingScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Display Name</Text>
                 <TextInput
+                  testID="onboarding-display-name-input"
                   style={[styles.input, displayNameError && styles.inputError]}
                   placeholder="e.g. John D."
                   placeholderTextColor={theme.textTertiary}
@@ -375,6 +374,7 @@ export default function OnboardingScreen() {
               <Text style={styles.cardTitle}>📅 YOUR JOURNEY</Text>
 
               <TouchableOpacity
+                testID="onboarding-sobriety-date-input"
                 style={styles.dateDisplay}
                 onPress={() => setShowDatePicker(true)}
                 accessibilityRole="button"
@@ -477,6 +477,7 @@ export default function OnboardingScreen() {
             {/* Complete Setup Button */}
             <View style={styles.footer}>
               <TouchableOpacity
+                testID="onboarding-next-button"
                 style={[styles.button, (!isFormValid || loading) && styles.buttonDisabled]}
                 onPress={handleComplete}
                 disabled={!isFormValid || loading}

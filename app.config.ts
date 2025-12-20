@@ -1,7 +1,7 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
- * Expo configuration for Sobriety Waypoint app.
+ * Expo configuration for Sobers app.
  *
  * @remarks
  * This configuration includes EAS Update settings for over-the-air updates.
@@ -45,13 +45,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     easBuildGitCommitHash: process.env.EAS_BUILD_GIT_COMMIT_HASH ?? null,
     easBuildRunner: process.env.EAS_BUILD_RUNNER ?? null,
     eas: {
+      // TODO: Replace projectId with new EAS project ID after creating 'sobers' project at expo.dev
       projectId: '8d64bbe4-27d4-41ac-9421-9c2758e4765a',
     },
   },
-  name: 'Sobriety Waypoint',
+  name: 'Sobers',
   owner: 'volvox-llc',
-  slug: 'sobriety-waypoint',
-  scheme: 'sobrietywaypoint',
+  slug: 'sobers',
+  scheme: 'sobers',
   userInterfaceStyle: 'automatic',
   icon: './assets/images/logo.png',
   version: '1.0.0',
@@ -121,7 +122,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // Setting the origin is required to fix a <Head> component handoff error in expo-router.
         // Without this, server/client rendering can mismatch <head> contents, causing hydration errors.
         // See: https://github.com/expo/router/issues/856
-        origin: 'https://sobrietywaypoint.com',
+        origin: 'https://sobers.app',
       },
     ],
     'expo-apple-authentication',
@@ -154,7 +155,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       '@sentry/react-native/expo',
       {
         url: 'https://sentry.io/',
-        project: 'sobriety-waypoint',
+        project: 'sobers',
         organization: 'volvox',
       },
     ],

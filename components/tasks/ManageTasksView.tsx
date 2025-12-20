@@ -253,6 +253,7 @@ export default function ManageTasksView({
       {/* FAB */}
       {sponsees.length > 0 && (
         <TouchableOpacity
+          testID="tasks-add-button"
           style={styles.fab}
           onPress={onCreateTask}
           accessibilityRole="button"
@@ -368,7 +369,7 @@ const createStyles = (theme: ThemeColors) =>
     fab: {
       position: 'absolute',
       right: 20,
-      bottom: Platform.OS === 'ios' ? IOS_TAB_BAR_HEIGHT + 20 : 20,
+      bottom: Platform.OS === 'ios' ? IOS_TAB_BAR_HEIGHT + 40 : 40,
       width: 56,
       height: 56,
       borderRadius: 28,
