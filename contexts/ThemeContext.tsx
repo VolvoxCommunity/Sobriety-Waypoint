@@ -78,7 +78,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setThemeMode,
       isDark,
     }),
-    [themeMode, systemColorScheme, setThemeMode, isDark]
+    [themeMode, systemColorScheme, setThemeMode]
   );
 
   return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
