@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { TEST_USERS } from '../fixtures/test-data';
 
 // Lazy-initialized client to avoid errors when listing tests without env vars
 let supabaseAdmin: SupabaseClient | null = null;
@@ -35,24 +36,24 @@ function getSupabaseAdmin(): SupabaseClient {
 export async function resetTestData(): Promise<void> {
   const client = getSupabaseAdmin();
 
-  // Reset task completions for test users
+  // Reset task completions for test users (IDs from test-data.ts fixtures)
   const testUserIds = [
-    'b81936a6-125f-420a-a736-eeb5943c28b1',
-    '3a28e197-e07d-4cba-b7e4-01804e7cca73',
-    '80f409b9-db2d-4c84-aa41-ad90ba1b212a',
+    TEST_USERS.primary.id,
+    TEST_USERS.sponsor.id,
+    TEST_USERS.sponsee.id,
   ];
 
   await client.from('task_completions').delete().in('user_id', testUserIds);
 
   // Reset onboarding user profile
-  await client.from('profiles').delete().eq('email', 'e2e-onboarding@sobers-test.com');
+  await client.from('profiles').delete().eq('email', TEST_USERS.onboarding.email);
 
   // Ensure primary user profile exists (required for login to complete successfully)
   const { error: profileError } = await client.from('profiles').upsert({
-    id: 'b81936a6-125f-420a-a736-eeb5943c28b1',
-    email: 'e2e-primary@sobers-test.com',
-    display_name: 'E2E Primary User',
-    sobriety_date: '2024-01-15',
+    id: TEST_USERS.primary.id,
+    email: TEST_USERS.primary.email,
+    display_name: TEST_USERS.primary.displayName,
+    sobriety_date: TEST_USERS.primary.sobrietyDate,
   });
 
   if (profileError) {
