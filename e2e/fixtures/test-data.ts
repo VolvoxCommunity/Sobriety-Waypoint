@@ -33,8 +33,8 @@ export const TEST_INVITE_CODES = {
 /**
  * Test tasks matching the seed-test-data.sql definitions.
  * Task IDs use valid 8-4-4-4-12 UUID format from the seed script.
- * Note: Tasks use step_number (1-12) and status ('assigned'|'in_progress'|'completed')
- * instead of frequency/is_active in the current schema.
+ * Tasks use step_number (1-12) and status ('assigned'|'in_progress'|'completed')
+ * fields consistent with the current schema.
  */
 export const TEST_TASKS = {
   meditation: {
