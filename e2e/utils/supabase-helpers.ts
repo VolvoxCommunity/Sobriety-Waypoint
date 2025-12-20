@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { TEST_USERS } from '../fixtures/test-data';
 
 // Lazy-initialized client to avoid errors when listing tests without env vars
-let supabaseAdmin: SupabaseClient | null = null;
+let adminClient: SupabaseClient | null = null;
 
 /**
  * Get a singleton Supabase admin client configured with the service role key.
@@ -14,8 +14,8 @@ let supabaseAdmin: SupabaseClient | null = null;
  * @throws If EXPO_PUBLIC_SUPABASE_URL or E2E_SUPABASE_SERVICE_KEY are not set when called.
  * @returns The configured Supabase admin client
  */
-function getSupabaseAdmin(): SupabaseClient {
-  if (!supabaseAdmin) {
+function getAdminClient(): SupabaseClient {
+  if (!adminClient) {
     const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.E2E_SUPABASE_SERVICE_KEY;
 
@@ -25,11 +25,11 @@ function getSupabaseAdmin(): SupabaseClient {
       );
     }
 
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    adminClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
   }
-  return supabaseAdmin;
+  return adminClient;
 }
 
 /**
@@ -42,14 +42,10 @@ function getSupabaseAdmin(): SupabaseClient {
  * @throws Error if upserting the primary test user profile fails
  */
 export async function resetTestData(): Promise<void> {
-  const client = getSupabaseAdmin();
+  const client = getAdminClient();
 
   // Reset task completions for test users (IDs from test-data.ts fixtures)
-  const testUserIds = [
-    TEST_USERS.primary.id,
-    TEST_USERS.sponsor.id,
-    TEST_USERS.sponsee.id,
-  ];
+  const testUserIds = [TEST_USERS.primary.id, TEST_USERS.sponsor.id, TEST_USERS.sponsee.id];
 
   await client.from('task_completions').delete().in('user_id', testUserIds);
 
@@ -75,7 +71,7 @@ export async function resetTestData(): Promise<void> {
  * Removes all users whose email begins with `e2e-signup-` via the Supabase admin API.
  */
 export async function cleanupSignupUsers(): Promise<void> {
-  const client = getSupabaseAdmin();
+  const client = getAdminClient();
 
   // Delete dynamically created signup test users
   const { data: users } = await client.auth.admin.listUsers();
@@ -94,7 +90,7 @@ export async function cleanupSignupUsers(): Promise<void> {
  * @throws If user creation fails
  */
 export async function createTestUser(email: string, password: string): Promise<string> {
-  const client = getSupabaseAdmin();
+  const client = getAdminClient();
 
   const { data, error } = await client.auth.admin.createUser({
     email,
@@ -119,7 +115,7 @@ export async function ensureTestUserExists(
   email: string,
   password: string
 ): Promise<void> {
-  const client = getSupabaseAdmin();
+  const client = getAdminClient();
 
   // Try to get the user first
   const { data: existingUser } = await client.auth.admin.getUserById(id);
@@ -149,6 +145,6 @@ export async function ensureTestUserExists(
  * @param userId - The ID of the Supabase user to delete
  */
 export async function deleteTestUser(userId: string): Promise<void> {
-  const client = getSupabaseAdmin();
+  const client = getAdminClient();
   await client.auth.admin.deleteUser(userId);
 }
