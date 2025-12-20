@@ -8,7 +8,10 @@ export class BasePage {
   }
 
   async expectToast(message: string): Promise<void> {
-    await expect(this.page.getByText(message)).toBeVisible({ timeout: 10_000 });
+    // Use the toast testID to target the visible toast container,
+    // then verify it contains the expected message text
+    const toast = this.page.getByTestId('toast-message').filter({ hasText: message });
+    await expect(toast).toBeVisible({ timeout: 10_000 });
   }
 
   async expectNoErrors(): Promise<void> {

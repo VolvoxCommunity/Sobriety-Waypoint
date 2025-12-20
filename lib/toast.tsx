@@ -51,7 +51,9 @@ function CustomToast({
   ];
 
   return (
-    <View style={containerStyle}>{text1 ? <Text style={textStyle}>{text1}</Text> : null}</View>
+    <View testID="toast-message" style={containerStyle}>
+      {text1 ? <Text style={textStyle}>{text1}</Text> : null}
+    </View>
   );
 }
 
