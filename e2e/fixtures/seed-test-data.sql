@@ -1,6 +1,6 @@
 -- E2E Test Data Seeding Script
 -- Run against staging Supabase to set up E2E test accounts and data
--- Prerequisites: Test users must be created via Supabase Auth API first
+-- Prerequisites: Test users must be created via the Supabase Auth API (see E2E test setup documentation) before running this script
 
 -- ============================================
 -- 1. SEED PROFILES
