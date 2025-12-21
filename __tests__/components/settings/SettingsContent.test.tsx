@@ -406,3 +406,194 @@ describe('SettingsContent - Accessibility', () => {
     expect(button).toBeTruthy();
   });
 });
+
+describe('SettingsContent - Build Info', () => {
+  const mockOnDismiss = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateState = {
+      status: 'idle',
+      isChecking: false,
+      isDownloading: false,
+      errorMessage: null,
+      checkForUpdates: mockCheckForUpdates,
+      applyUpdate: mockApplyUpdate,
+      isSupported: false,
+    };
+  });
+
+  it('renders build info section header', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    // Build info header is in uppercase
+    expect(screen.getByText('BUILD INFO')).toBeTruthy();
+  });
+
+  it('shows app version', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    // App version is visible in the build info section (may appear in multiple places)
+    expect(screen.getAllByText(/1\.0\.0/).length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('SettingsContent - Display Name', () => {
+  const mockOnDismiss = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateState = {
+      status: 'idle',
+      isChecking: false,
+      isDownloading: false,
+      errorMessage: null,
+      checkForUpdates: mockCheckForUpdates,
+      applyUpdate: mockApplyUpdate,
+      isSupported: false,
+    };
+  });
+
+  it('renders current display name', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Test User')).toBeTruthy();
+  });
+
+  it('shows display name section', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Display Name')).toBeTruthy();
+  });
+});
+
+describe('SettingsContent - Theme Selection', () => {
+  const mockOnDismiss = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateState = {
+      status: 'idle',
+      isChecking: false,
+      isDownloading: false,
+      errorMessage: null,
+      checkForUpdates: mockCheckForUpdates,
+      applyUpdate: mockApplyUpdate,
+      isSupported: false,
+    };
+  });
+
+  it('renders theme selection section', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Appearance')).toBeTruthy();
+  });
+
+  it('shows theme options', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Light')).toBeTruthy();
+    expect(screen.getByText('Dark')).toBeTruthy();
+    expect(screen.getByText('System')).toBeTruthy();
+  });
+
+  it('changes theme when light option is pressed', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    fireEvent.press(screen.getByText('Light'));
+
+    expect(mockSetThemeMode).toHaveBeenCalledWith('light');
+  });
+
+  it('changes theme when dark option is pressed', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    fireEvent.press(screen.getByText('Dark'));
+
+    expect(mockSetThemeMode).toHaveBeenCalledWith('dark');
+  });
+
+  it('changes theme when system option is pressed', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    fireEvent.press(screen.getByText('System'));
+
+    expect(mockSetThemeMode).toHaveBeenCalledWith('system');
+  });
+});
+
+describe('SettingsContent - External Links', () => {
+  const mockOnDismiss = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateState = {
+      status: 'idle',
+      isChecking: false,
+      isDownloading: false,
+      errorMessage: null,
+      checkForUpdates: mockCheckForUpdates,
+      applyUpdate: mockApplyUpdate,
+      isSupported: false,
+    };
+  });
+
+  it('renders legal links section', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Privacy Policy')).toBeTruthy();
+    expect(screen.getByText('Terms of Service')).toBeTruthy();
+  });
+
+  it('renders source code link', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Source Code')).toBeTruthy();
+  });
+});
+
+describe('SettingsContent - Sign Out', () => {
+  const mockOnDismiss = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateState = {
+      status: 'idle',
+      isChecking: false,
+      isDownloading: false,
+      errorMessage: null,
+      checkForUpdates: mockCheckForUpdates,
+      applyUpdate: mockApplyUpdate,
+      isSupported: false,
+    };
+  });
+
+  it('renders sign out button', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Sign Out')).toBeTruthy();
+  });
+});
+
+describe('SettingsContent - Delete Account', () => {
+  const mockOnDismiss = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateState = {
+      status: 'idle',
+      isChecking: false,
+      isDownloading: false,
+      errorMessage: null,
+      checkForUpdates: mockCheckForUpdates,
+      applyUpdate: mockApplyUpdate,
+      isSupported: false,
+    };
+  });
+
+  it('renders delete account button', () => {
+    render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+    expect(screen.getByText('Delete Account')).toBeTruthy();
+  });
+});
