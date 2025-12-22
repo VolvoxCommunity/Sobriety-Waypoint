@@ -14,40 +14,40 @@
 
 **Files:**
 
-- Create: `supabase/migrations/20251221000000_add_addiction_spending_to_profiles.sql`
+- Create: `supabase/migrations/20251221000000_add_spending_to_profiles.sql`
 
 **Step 1: Write the migration**
 
 ```sql
--- Add addiction spending tracking to profiles
+-- Add spending tracking to profiles
 -- Both fields are nullable (feature is optional during onboarding)
 -- Amount must be non-negative, frequency must be a valid enum value
 
 ALTER TABLE public.profiles
-ADD COLUMN addiction_spending_amount DECIMAL(10,2) NULL
-  CONSTRAINT addiction_spending_amount_non_negative CHECK (addiction_spending_amount >= 0);
+ADD COLUMN spend_amount DECIMAL(10,2) NULL
+  CONSTRAINT spend_amount_non_negative CHECK (spend_amount >= 0);
 
 ALTER TABLE public.profiles
-ADD COLUMN addiction_spending_frequency TEXT NULL
-  CONSTRAINT addiction_spending_frequency_valid CHECK (
-    addiction_spending_frequency IN ('daily', 'weekly', 'monthly', 'yearly')
+ADD COLUMN spend_frequency TEXT NULL
+  CONSTRAINT spend_frequency_valid CHECK (
+    spend_frequency IN ('daily', 'weekly', 'monthly', 'yearly')
   );
 
 -- Add comment for documentation
-COMMENT ON COLUMN public.profiles.addiction_spending_amount IS 'Historical spending amount on addiction (USD). Nullable for optional tracking.';
-COMMENT ON COLUMN public.profiles.addiction_spending_frequency IS 'Frequency of spending: daily, weekly, monthly, or yearly.';
+COMMENT ON COLUMN public.profiles.spend_amount IS 'Historical spending amount on addiction (USD). Nullable for optional tracking.';
+COMMENT ON COLUMN public.profiles.spend_frequency IS 'Frequency of spending: daily, weekly, monthly, or yearly.';
 ```
 
 **Step 2: Verify migration file exists**
 
-Run: `ls -la supabase/migrations/ | grep addiction`
-Expected: File `20251221000000_add_addiction_spending_to_profiles.sql` listed
+Run: `ls -la supabase/migrations/ | grep spending`
+Expected: File `20251221000000_add_spending_to_profiles.sql` listed
 
 **Step 3: Commit**
 
 ```bash
-git add supabase/migrations/20251221000000_add_addiction_spending_to_profiles.sql
-git commit -m "feat(supabase): add addiction spending fields to profiles table"
+git add supabase/migrations/20251221000000_add_spending_to_profiles.sql
+git commit -m "feat(supabase): add spending fields to profiles table"
 ```
 
 ---
@@ -64,15 +64,15 @@ Add after the `terms_accepted_at` field (around line 63):
 
 ```typescript
   /**
-   * Historical spending amount on addiction in USD.
+   * Historical spending amount in USD.
    * Nullable - only set if user opts into savings tracking during onboarding.
    */
-  addiction_spending_amount?: number | null;
+  spend_amount?: number | null;
   /**
-   * Frequency of the addiction spending amount.
-   * Used with addiction_spending_amount to calculate daily spending rate.
+   * Frequency of the spending amount.
+   * Used with spend_amount to calculate daily spending rate.
    */
-  addiction_spending_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  spend_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
 ```
 
 **Step 2: Run typecheck to verify**
@@ -84,7 +84,7 @@ Expected: No errors
 
 ```bash
 git add types/database.ts
-git commit -m "feat(types): add addiction spending fields to Profile interface"
+git commit -m "feat(types): add spending fields to Profile interface"
 ```
 
 ---
@@ -1048,8 +1048,8 @@ describe('EditSavingsSheet', () => {
     id: 'user-123',
     email: 'test@example.com',
     display_name: 'Test User',
-    addiction_spending_amount: 50,
-    addiction_spending_frequency: 'weekly' as const,
+    spend_amount: 50,
+    spend_frequency: 'weekly' as const,
     notification_preferences: { tasks: true, messages: true, milestones: true, daily: true },
     created_at: '2024-01-01',
     updated_at: '2024-01-01',
@@ -1176,10 +1176,10 @@ const EditSavingsSheet = forwardRef<EditSavingsSheetRef, EditSavingsSheetProps>(
     const sheetRef = useRef<GlassBottomSheetRef>(null);
 
     const [amount, setAmount] = useState(
-      profile.addiction_spending_amount?.toString() ?? ''
+      profile.spend_amount?.toString() ?? ''
     );
     const [frequency, setFrequency] = useState<SpendingFrequency>(
-      profile.addiction_spending_frequency ?? 'weekly'
+      profile.spend_frequency ?? 'weekly'
     );
     const [error, setError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -1188,8 +1188,8 @@ const EditSavingsSheet = forwardRef<EditSavingsSheetRef, EditSavingsSheetProps>(
     useImperativeHandle(ref, () => ({
       present: () => {
         // Reset to current values when presenting
-        setAmount(profile.addiction_spending_amount?.toString() ?? '');
-        setFrequency(profile.addiction_spending_frequency ?? 'weekly');
+        setAmount(profile.spend_amount?.toString() ?? '');
+        setFrequency(profile.spend_frequency ?? 'weekly');
         setError('');
         sheetRef.current?.present();
       },
@@ -1222,8 +1222,8 @@ const EditSavingsSheet = forwardRef<EditSavingsSheetRef, EditSavingsSheetProps>(
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
-            addiction_spending_amount: parseFloat(amount),
-            addiction_spending_frequency: frequency,
+            spend_amount: parseFloat(amount),
+            spend_frequency: frequency,
           })
           .eq('id', profile.id);
 
@@ -1258,8 +1258,8 @@ const EditSavingsSheet = forwardRef<EditSavingsSheetRef, EditSavingsSheetProps>(
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
-            addiction_spending_amount: null,
-            addiction_spending_frequency: null,
+            spend_amount: null,
+            spend_frequency: null,
           })
           .eq('id', profile.id);
 
@@ -1628,8 +1628,8 @@ const profileData = {
   // Add spending data if enabled
   ...(isSavingsEnabled &&
     spendingAmount.trim() && {
-      addiction_spending_amount: parseFloat(spendingAmount),
-      addiction_spending_frequency: spendingFrequency,
+      spend_amount: parseFloat(spendingAmount),
+      spend_frequency: spendingFrequency,
     }),
 };
 ```
@@ -1699,10 +1699,10 @@ Add after the sobrietyCard (around line 252):
   /* Money Saved Card - only show if user has spending data */
 }
 {
-  profile?.addiction_spending_amount != null && profile?.addiction_spending_frequency != null && (
+  profile?.spend_amount != null && profile?.spend_frequency != null && (
     <MoneySavedCard
-      amount={profile.addiction_spending_amount}
-      frequency={profile.addiction_spending_frequency}
+      amount={profile.spend_amount}
+      frequency={profile.spend_frequency}
       daysSober={daysSober}
       onPress={() => savingsSheetRef.current?.present()}
     />
@@ -2030,7 +2030,7 @@ Add under `## [Unreleased]`:
 - Add optional savings tracking setup during onboarding with amount and frequency inputs
 - Add Money Saved dashboard card showing total savings and daily/weekly/monthly breakdown
 - Add edit bottom sheet to modify or clear savings tracking data
-- Add `addiction_spending_amount` and `addiction_spending_frequency` fields to profiles table
+- Add `spend_amount` and `spend_frequency` fields to profiles table
 - Add savings calculation utilities with currency formatting
 ```
 

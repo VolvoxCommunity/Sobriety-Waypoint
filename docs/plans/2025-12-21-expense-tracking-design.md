@@ -23,10 +23,10 @@ Enable users to visualize financial savings accumulated since beginning their so
 **New fields in `profiles` table:**
 
 ```sql
-addiction_spending_amount DECIMAL(10,2) NULL
-  CHECK (addiction_spending_amount >= 0),
-addiction_spending_frequency TEXT NULL
-  CHECK (addiction_spending_frequency IN ('daily', 'weekly', 'monthly', 'yearly'))
+spend_amount DECIMAL(10,2) NULL
+  CHECK (spend_amount >= 0),
+spend_frequency TEXT NULL
+  CHECK (spend_frequency IN ('daily', 'weekly', 'monthly', 'yearly'))
 ```
 
 **Constraints:**
@@ -140,8 +140,8 @@ New card below Sobriety Journey card:
 
 ```typescript
 // Add to Profile interface (types/database.ts):
-addiction_spending_amount?: number | null;
-addiction_spending_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+spend_amount?: number | null;
+spend_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
 
 // New type (lib/savings.ts):
 type SpendingFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -156,13 +156,13 @@ interface SavingsCalculation {
 
 ## Files to Create
 
-| File                                                                        | Purpose                       |
-| --------------------------------------------------------------------------- | ----------------------------- |
-| `supabase/migrations/YYYYMMDDHHMMSS_add_addiction_spending_to_profiles.sql` | Database migration            |
-| `lib/savings.ts`                                                            | Calculation utilities + types |
-| `components/onboarding/SavingsTrackingCard.tsx`                             | Onboarding toggle + inputs    |
-| `components/dashboard/MoneySavedCard.tsx`                                   | Dashboard display             |
-| `components/sheets/EditSavingsSheet.tsx`                                    | Edit bottom sheet             |
+| File                                                              | Purpose                       |
+| ----------------------------------------------------------------- | ----------------------------- |
+| `supabase/migrations/YYYYMMDDHHMMSS_add_spending_to_profiles.sql` | Database migration            |
+| `lib/savings.ts`                                                  | Calculation utilities + types |
+| `components/onboarding/SavingsTrackingCard.tsx`                   | Onboarding toggle + inputs    |
+| `components/dashboard/MoneySavedCard.tsx`                         | Dashboard display             |
+| `components/sheets/EditSavingsSheet.tsx`                          | Edit bottom sheet             |
 
 ## Files to Modify
 
