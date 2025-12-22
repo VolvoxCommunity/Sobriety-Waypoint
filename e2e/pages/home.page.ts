@@ -11,6 +11,9 @@ export class HomePage extends BasePage {
   readonly manageTasksQuickAction: Locator;
   readonly moneySavedCard: Locator;
   readonly moneySavedTotal: Locator;
+  readonly breakdownDay: Locator;
+  readonly breakdownWeek: Locator;
+  readonly breakdownMonth: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -27,6 +30,9 @@ export class HomePage extends BasePage {
     // Money saved card (only visible when user has spending data)
     this.moneySavedCard = page.getByTestId('money-saved-card');
     this.moneySavedTotal = page.getByTestId('money-saved-total');
+    this.breakdownDay = page.getByTestId('breakdown-day');
+    this.breakdownWeek = page.getByTestId('breakdown-week');
+    this.breakdownMonth = page.getByTestId('breakdown-month');
   }
 
   async goto(): Promise<void> {

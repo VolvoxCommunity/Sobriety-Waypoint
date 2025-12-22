@@ -31,13 +31,9 @@ test.describe('Savings Tracking', () => {
     test('should display breakdown values', async () => {
       const hasCard = await homePage.hasMoneySavedCard();
       if (hasCard) {
-        const breakdownDay = homePage.page.getByTestId('breakdown-day');
-        const breakdownWeek = homePage.page.getByTestId('breakdown-week');
-        const breakdownMonth = homePage.page.getByTestId('breakdown-month');
-
-        await expect(breakdownDay).toBeVisible();
-        await expect(breakdownWeek).toBeVisible();
-        await expect(breakdownMonth).toBeVisible();
+        await expect(homePage.breakdownDay).toBeVisible();
+        await expect(homePage.breakdownWeek).toBeVisible();
+        await expect(homePage.breakdownMonth).toBeVisible();
       }
     });
   });
