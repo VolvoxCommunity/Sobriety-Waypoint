@@ -61,6 +61,16 @@ export interface Profile {
    * @remarks Stored as ISO 8601 timestamp for legal audit trail.
    */
   terms_accepted_at?: string;
+  /**
+   * Historical spending amount on addiction in USD.
+   * Nullable - only set if user opts into savings tracking during onboarding.
+   */
+  spend_amount?: number | null;
+  /**
+   * Frequency of the spending amount.
+   * Used with spend_amount to calculate daily spending rate.
+   */
+  spend_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
   notification_preferences: {
     tasks: boolean;
     messages: boolean;

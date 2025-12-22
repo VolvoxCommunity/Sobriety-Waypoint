@@ -7,9 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add expense tracking feature to visualize money saved since sobriety start date
+- Add optional savings tracking setup during onboarding with amount and frequency inputs
+- Add Money Saved dashboard card showing total savings and daily/weekly/monthly breakdown
+- Add edit bottom sheet to modify or clear savings tracking data
+- Add `spend_amount` and `spend_frequency` fields to profiles table
+- Add savings calculation utilities with currency formatting
+
 ### Changed
 
 - Add React.memo to TaskCard, MyTasksView, and ManageTasksView components to prevent unnecessary re-renders during list interactions
+
+### Fixed
+
+- Fix Money Saved card not updating on home tab after editing savings amount or frequency
+- Fix `_scrollRef` null error when dismissing LogSlipUpSheet by replacing BottomSheetTextInput with standard TextInput
+- Fix potential race condition in EditSavingsSheet where profile refresh could show stale data by awaiting onSave callback before sheet dismissal
 
 ## [1.1.0] - 2025-12-19
 

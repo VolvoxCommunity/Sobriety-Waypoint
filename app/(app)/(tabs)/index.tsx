@@ -26,6 +26,8 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import TaskCreationSheet, { TaskCreationSheetRef } from '@/components/TaskCreationSheet';
+import MoneySavedCard from '@/components/dashboard/MoneySavedCard';
+import EditSavingsSheet, { EditSavingsSheetRef } from '@/components/sheets/EditSavingsSheet';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 import { showConfirm } from '@/lib/alert';
@@ -39,7 +41,7 @@ import { showToast } from '@/lib/toast';
  * @returns The Home screen React element
  */
 export default function HomeScreen() {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { theme } = useTheme();
   // Get safe area insets for scroll padding
   const insets = useSafeAreaInsets();
@@ -52,6 +54,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { daysSober, currentStreakStartDate, loading: loadingDaysSober } = useDaysSober();
   const taskSheetRef = useRef<TaskCreationSheetRef>(null);
+  const savingsSheetRef = useRef<EditSavingsSheetRef>(null);
 
   const fetchData = useCallback(async () => {
     if (!profile) return;
@@ -251,6 +254,16 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* Money Saved Card - only show if user has spending data */}
+      {profile?.spend_amount != null && profile?.spend_frequency != null && (
+        <MoneySavedCard
+          amount={profile.spend_amount}
+          frequency={profile.spend_frequency}
+          daysSober={daysSober}
+          onPress={() => savingsSheetRef.current?.present()}
+        />
+      )}
+
       {relationships.filter((rel) => rel.sponsor_id !== profile?.id).length > 0 && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -350,6 +363,15 @@ export default function HomeScreen() {
         preselectedSponseeId={selectedSponseeId}
         theme={theme}
       />
+
+      {profile && (
+        <EditSavingsSheet
+          ref={savingsSheetRef}
+          profile={profile}
+          onClose={() => {}}
+          onSave={refreshProfile}
+        />
+      )}
 
       {tasks.length > 0 && (
         <View testID="home-tasks-section" style={styles.card}>
