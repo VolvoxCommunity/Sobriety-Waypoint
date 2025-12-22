@@ -117,10 +117,5 @@ play-store-key.json
 worktrees/
 .worktrees/
 
-<<<<<<< Updated upstream
 # Serena AI tool
 .serena/
-=======
-# Serena
-.serena/
->>>>>>> Stashed changes
