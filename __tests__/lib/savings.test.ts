@@ -1,5 +1,4 @@
 import {
-  SpendingFrequency,
   FREQUENCY_DIVISORS,
   calculateDailyRate,
   calculateSavings,

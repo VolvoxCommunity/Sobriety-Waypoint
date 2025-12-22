@@ -672,33 +672,37 @@ jest.mock('react-native-reanimated', () => {
   const mockSharedValue = (initialValue) => ({ value: initialValue });
 
   // Create View component for Animated.View
-  const AnimatedView = React.forwardRef(({ children, entering, exiting, layout, ...props }, ref) =>
-    React.createElement('View', { ...props, ref }, children)
+  // Note: entering, exiting, layout are destructured to prevent them from being passed to native View
+  const AnimatedView = React.forwardRef(
+    ({ children, entering: _entering, exiting: _exiting, layout: _layout, ...props }, ref) =>
+      React.createElement('View', { ...props, ref }, children)
   );
   AnimatedView.displayName = 'Animated.View';
 
   // Create Text component for Animated.Text
-  const AnimatedText = React.forwardRef(({ children, entering, exiting, layout, ...props }, ref) =>
-    React.createElement('Text', { ...props, ref }, children)
+  const AnimatedText = React.forwardRef(
+    ({ children, entering: _entering, exiting: _exiting, layout: _layout, ...props }, ref) =>
+      React.createElement('Text', { ...props, ref }, children)
   );
   AnimatedText.displayName = 'Animated.Text';
 
   // Create Image component for Animated.Image
-  const AnimatedImage = React.forwardRef(({ entering, exiting, layout, ...props }, ref) =>
-    React.createElement('Image', { ...props, ref })
+  const AnimatedImage = React.forwardRef(
+    ({ entering: _entering, exiting: _exiting, layout: _layout, ...props }, ref) =>
+      React.createElement('Image', { ...props, ref })
   );
   AnimatedImage.displayName = 'Animated.Image';
 
   // Create ScrollView component for Animated.ScrollView
   const AnimatedScrollView = React.forwardRef(
-    ({ children, entering, exiting, layout, ...props }, ref) =>
+    ({ children, entering: _entering, exiting: _exiting, layout: _layout, ...props }, ref) =>
       React.createElement('ScrollView', { ...props, ref }, children)
   );
   AnimatedScrollView.displayName = 'Animated.ScrollView';
 
   // Create FlatList component for Animated.FlatList
   const AnimatedFlatList = React.forwardRef(
-    ({ children, entering, exiting, layout, ...props }, ref) =>
+    ({ children, entering: _entering, exiting: _exiting, layout: _layout, ...props }, ref) =>
       React.createElement('FlatList', { ...props, ref }, children)
   );
   AnimatedFlatList.displayName = 'Animated.FlatList';
