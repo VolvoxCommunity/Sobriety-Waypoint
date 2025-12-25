@@ -32,8 +32,8 @@ A cross-platform recovery companion app connecting sponsors and sponsees through
 git clone <repository-url> && cd Sobers && pnpm install
 
 # Configure .env
-EXPO_PUBLIC_SUPABASE_URL=<your-url>
-EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-key>
+SUPABASE_URL=<your-url>
+SUPABASE_PUBLISHABLE_KEY=<your-key>
 
 # Run
 pnpm web      # Web

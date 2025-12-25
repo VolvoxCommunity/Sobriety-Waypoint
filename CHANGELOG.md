@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `dev`, `supabase:start`, and `supabase:stop` scripts for local development with OAuth env vars
 - Add expense tracking feature to visualize money saved since sobriety start date
 - Add optional savings tracking setup during onboarding with amount and frequency inputs
 - Add Money Saved dashboard card showing total savings and daily/weekly/monthly breakdown
@@ -23,10 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Enable Google OAuth provider in Supabase auth configuration with GOOGLE_CLIENT_ID and GOOGLE_SECRET environment variables
 - Add React.memo to TaskCard, MyTasksView, and ManageTasksView components to prevent unnecessary re-renders during list interactions
 - Update MoneySavedCard to support configured and unconfigured variants via discriminated union types
 - Update Money Saved card to require menu interaction for editing (removed card tap-to-edit behavior)
-- Rename Supabase environment variables from `EXPO_PUBLIC_SUPABASE_*` to `SUPABASE_*` (exposed via app.config.ts extra)
+- Rename Supabase environment variables from `EXPO_PUBLIC_SUPABASE_*` to `SUPABASE_*` and `SUPABASE_ANON_KEY` to `SUPABASE_PUBLISHABLE_KEY` (exposed via app.config.ts extra)
 
 ### Fixed
 

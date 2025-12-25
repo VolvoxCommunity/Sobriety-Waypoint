@@ -108,7 +108,7 @@ client_id = "env(APPLE_CLIENT_ID)"
 skip_nonce_check = false
 
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_SECRET)"
 skip_nonce_check = true

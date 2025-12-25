@@ -4,8 +4,11 @@
   "version": "1.1.0",
   "packageManager": "pnpm@10.26.0",
   "scripts": {
+    "dev": ". ./.env && supabase start && expo start",
     "start": "expo start",
     "start:clean": "pnpm clean:metro && expo start --clear",
+    "supabase:start": ". ./.env && supabase start",
+    "supabase:stop": "supabase stop",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",

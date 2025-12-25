@@ -13,7 +13,7 @@ concurrency:
 
 # Minimal permissions for security (required secrets)
 # - E2E_SUPABASE_URL: Supabase project URL
-# - E2E_SUPABASE_ANON_KEY: Supabase anonymous/public key
+# - SUPABASE_PUBLISHABLE_KEY: Supabase publishable key
 # - E2E_SUPABASE_SERVICE_KEY: Supabase service role key (for test data management)
 # - E2E_TEST_PASSWORD: Password for E2E test user accounts
 permissions:
@@ -69,7 +69,7 @@ jobs:
         run: pnpm build:web
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Start web server
         run: npx serve dist -l 8081 &
