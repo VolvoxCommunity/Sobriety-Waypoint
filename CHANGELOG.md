@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add "What's New" row in Settings About section to manually view latest release features
+- Add What's New popup feature showing release highlights when users have unseen content
+- Add `whats_new_releases` and `whats_new_features` Supabase tables for managing release content
 - Add `WhatsNewSheet` component for displaying new features in a bottom sheet modal with release info, feature cards, and dismiss button
 - Add `WhatsNewFeatureCard` component for displaying feature highlights in What's New popup
 - Add `useWhatsNew` hook for fetching and managing What's New release data
 - Add `last_seen_version` field to Profile type for tracking seen What's New releases
+- Add "What's New" row in Settings About section to manually view latest release features
 - Add `dev`, `supabase:start`, and `supabase:stop` scripts for local development with OAuth env vars
 - Add expense tracking feature to visualize money saved since sobriety start date
 - Add optional savings tracking setup during onboarding with amount and frequency inputs
