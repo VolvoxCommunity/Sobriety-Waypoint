@@ -194,6 +194,39 @@ export default function HomeScreen() {
   const milestone = getMilestone(daysSober);
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  /**
+   * Handles hiding the savings card from dashboard.
+   * Shows confirmation dialog, then updates profile in Supabase.
+   */
+  const handleHideSavingsCard = async () => {
+    const confirmed = await showConfirm(
+      'Hide Savings Card?',
+      'You can re-enable this from Settings > Dashboard anytime.',
+      'Hide',
+      'Cancel',
+      false
+    );
+
+    if (!confirmed || !profile) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ hide_savings_card: true })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+      showToast.success('Card hidden from dashboard');
+    } catch (error) {
+      logger.error('Failed to hide savings card', error as Error, {
+        category: LogCategory.DATABASE,
+      });
+      showToast.error('Failed to hide card. Please try again.');
+    }
+  };
+
   return (
     <ScrollView
       testID="home-scroll-view"
@@ -254,15 +287,23 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Money Saved Card - only show if user has spending data */}
-      {profile?.spend_amount != null && profile?.spend_frequency != null && (
-        <MoneySavedCard
-          amount={profile.spend_amount}
-          frequency={profile.spend_frequency}
-          daysSober={daysSober}
-          onPress={() => savingsSheetRef.current?.present()}
-        />
-      )}
+      {/* Money Saved Card - show if not hidden */}
+      {!profile?.hide_savings_card &&
+        (profile?.spend_amount != null && profile?.spend_frequency != null ? (
+          <MoneySavedCard
+            amount={profile.spend_amount}
+            frequency={profile.spend_frequency}
+            daysSober={daysSober}
+            onPress={() => savingsSheetRef.current?.present()}
+            onHide={handleHideSavingsCard}
+          />
+        ) : (
+          <MoneySavedCard
+            variant="unconfigured"
+            onSetup={() => savingsSheetRef.current?.present()}
+            onHide={handleHideSavingsCard}
+          />
+        ))}
 
       {relationships.filter((rel) => rel.sponsor_id !== profile?.id).length > 0 && (
         <View style={styles.card}>
