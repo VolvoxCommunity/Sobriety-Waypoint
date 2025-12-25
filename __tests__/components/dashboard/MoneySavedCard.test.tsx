@@ -24,6 +24,7 @@ describe('MoneySavedCard', () => {
     frequency: 'weekly' as const,
     daysSober: 30,
     onPress: jest.fn(),
+    onHide: jest.fn(),
   };
 
   beforeEach(() => {
@@ -139,6 +140,74 @@ describe('MoneySavedCard', () => {
       const totalText = screen.getByTestId('money-saved-total');
       // $3650/year / 365 = $10/day * 365 days = $3650
       expect(totalText).toHaveTextContent('$3,650.00');
+    });
+  });
+
+  describe('Three-Dot Menu (Configured)', () => {
+    it('should render three-dot menu button', () => {
+      renderWithProviders(<MoneySavedCard {...defaultProps} />);
+      expect(screen.getByTestId('money-saved-menu-button')).toBeTruthy();
+    });
+
+    it('should show menu options when button is pressed', () => {
+      renderWithProviders(<MoneySavedCard {...defaultProps} />);
+      fireEvent.press(screen.getByTestId('money-saved-menu-button'));
+      expect(screen.getByText('Edit savings')).toBeTruthy();
+      expect(screen.getByText('Hide from dashboard')).toBeTruthy();
+    });
+
+    it('should call onPress when Edit savings is selected', () => {
+      renderWithProviders(<MoneySavedCard {...defaultProps} />);
+      fireEvent.press(screen.getByTestId('money-saved-menu-button'));
+      fireEvent.press(screen.getByText('Edit savings'));
+      expect(defaultProps.onPress).toHaveBeenCalled();
+    });
+
+    it('should call onHide when Hide from dashboard is selected', () => {
+      renderWithProviders(<MoneySavedCard {...defaultProps} />);
+      fireEvent.press(screen.getByTestId('money-saved-menu-button'));
+      fireEvent.press(screen.getByText('Hide from dashboard'));
+      expect(defaultProps.onHide).toHaveBeenCalled();
+    });
+  });
+
+  describe('Unconfigured State', () => {
+    const unconfiguredProps = {
+      variant: 'unconfigured' as const,
+      onSetup: jest.fn(),
+      onHide: jest.fn(),
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should render setup prompt', () => {
+      renderWithProviders(<MoneySavedCard {...unconfiguredProps} />);
+      expect(screen.getByText('Track Money Saved')).toBeTruthy();
+    });
+
+    it('should render setup description', () => {
+      renderWithProviders(<MoneySavedCard {...unconfiguredProps} />);
+      expect(screen.getByText(/Set up spending tracking/)).toBeTruthy();
+    });
+
+    it('should call onSetup when card is pressed', () => {
+      renderWithProviders(<MoneySavedCard {...unconfiguredProps} />);
+      fireEvent.press(screen.getByTestId('money-saved-card'));
+      expect(unconfiguredProps.onSetup).toHaveBeenCalled();
+    });
+
+    it('should render three-dot menu', () => {
+      renderWithProviders(<MoneySavedCard {...unconfiguredProps} />);
+      expect(screen.getByTestId('money-saved-menu-button')).toBeTruthy();
+    });
+
+    it('should call onHide when hide option is selected', () => {
+      renderWithProviders(<MoneySavedCard {...unconfiguredProps} />);
+      fireEvent.press(screen.getByTestId('money-saved-menu-button'));
+      fireEvent.press(screen.getByText('Hide from dashboard'));
+      expect(unconfiguredProps.onHide).toHaveBeenCalled();
     });
   });
 });
