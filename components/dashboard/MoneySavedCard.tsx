@@ -346,10 +346,8 @@ const createMenuStyles = (theme: ThemeColors) =>
     overlay: {
       flex: 1,
       backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      justifyContent: 'flex-start',
-      alignItems: 'flex-end',
-      paddingTop: 180,
-      paddingRight: 32,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     menu: {
       backgroundColor: theme.card,
