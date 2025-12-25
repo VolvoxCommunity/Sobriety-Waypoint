@@ -5,7 +5,7 @@
  * - Total saved amount rendering
  * - Spending basis text display
  * - Breakdown values for day/week/month
- * - Press interaction
+ * - Menu interactions (edit, hide)
  * - Edge cases (zero days, large amounts)
  */
 
@@ -94,16 +94,17 @@ describe('MoneySavedCard', () => {
   });
 
   describe('Card Interaction', () => {
-    it('should call onPress when card is pressed', () => {
-      renderWithProviders(<MoneySavedCard {...defaultProps} />);
-      fireEvent.press(screen.getByTestId('money-saved-card'));
-      expect(defaultProps.onPress).toHaveBeenCalled();
-    });
-
-    it('should have correct accessibility role', () => {
+    it('should not have onPress handler (edit via menu only)', () => {
       renderWithProviders(<MoneySavedCard {...defaultProps} />);
       const card = screen.getByTestId('money-saved-card');
-      expect(card.props.accessibilityRole).toBe('button');
+      // Card is a View, not TouchableOpacity, so it has no onPress prop
+      expect(card.props.onPress).toBeUndefined();
+    });
+
+    it('should have correct accessibility label', () => {
+      renderWithProviders(<MoneySavedCard {...defaultProps} />);
+      const card = screen.getByTestId('money-saved-card');
+      expect(card.props.accessibilityLabel).toContain('Use menu to edit');
     });
   });
 

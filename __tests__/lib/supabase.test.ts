@@ -1,30 +1,45 @@
 // Unmock the module we are testing
 jest.unmock('@/lib/supabase');
 
-describe('lib/supabase', () => {
-  const OLD_ENV = process.env;
+// Mock expo-constants
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    extra: {
+      supabaseUrl: 'https://example.com',
+      supabaseAnonKey: 'anon-key',
+    },
+  },
+}));
 
+describe('lib/supabase', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    process.env = { ...OLD_ENV };
-    process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://example.com';
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'anon-key';
   });
 
-  afterAll(() => {
-    process.env = OLD_ENV;
-  });
-
-  it('throws error if EXPO_PUBLIC_SUPABASE_URL is missing', () => {
-    process.env.EXPO_PUBLIC_SUPABASE_URL = '';
+  it('throws error if supabaseUrl is missing', () => {
+    jest.doMock('expo-constants', () => ({
+      expoConfig: {
+        extra: {
+          supabaseUrl: undefined,
+          supabaseAnonKey: 'anon-key',
+        },
+      },
+    }));
     // Lazy validation: module loads successfully, but accessing supabase throws
     const { supabase } = require('@/lib/supabase');
     expect(() => supabase.auth).toThrow('Missing Supabase environment variables');
   });
 
-  it('throws error if EXPO_PUBLIC_SUPABASE_ANON_KEY is missing', () => {
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = '';
+  it('throws error if supabaseAnonKey is missing', () => {
+    jest.doMock('expo-constants', () => ({
+      expoConfig: {
+        extra: {
+          supabaseUrl: 'https://example.com',
+          supabaseAnonKey: undefined,
+        },
+      },
+    }));
     // Lazy validation: module loads successfully, but accessing supabase throws
     const { supabase } = require('@/lib/supabase');
     expect(() => supabase.auth).toThrow('Missing Supabase environment variables');
@@ -32,6 +47,15 @@ describe('lib/supabase', () => {
 
   describe('Supabase Client Initialization', () => {
     it('initializes Supabase client with correct config on native', () => {
+      jest.doMock('expo-constants', () => ({
+        expoConfig: {
+          extra: {
+            supabaseUrl: 'https://example.com',
+            supabaseAnonKey: 'anon-key',
+          },
+        },
+      }));
+
       const { Platform } = require('react-native');
       Platform.OS = 'ios';
       const { createClient } = require('@supabase/supabase-js');
@@ -57,6 +81,14 @@ describe('lib/supabase', () => {
     let storageAdapter: any;
 
     const getStorageAdapter = () => {
+      jest.doMock('expo-constants', () => ({
+        expoConfig: {
+          extra: {
+            supabaseUrl: 'https://example.com',
+            supabaseAnonKey: 'anon-key',
+          },
+        },
+      }));
       const { createClient } = require('@supabase/supabase-js');
       const { supabase } = require('@/lib/supabase');
       const _ = supabase.auth; // Trigger init
@@ -148,6 +180,15 @@ describe('lib/supabase', () => {
 
   describe('Proxy Behavior', () => {
     it('proxies function calls binding context', () => {
+      jest.doMock('expo-constants', () => ({
+        expoConfig: {
+          extra: {
+            supabaseUrl: 'https://example.com',
+            supabaseAnonKey: 'anon-key',
+          },
+        },
+      }));
+
       const { createClient } = require('@supabase/supabase-js');
 
       const mockSignOut = jest.fn();
@@ -164,6 +205,15 @@ describe('lib/supabase', () => {
     });
 
     it('proxies property access', () => {
+      jest.doMock('expo-constants', () => ({
+        expoConfig: {
+          extra: {
+            supabaseUrl: 'https://example.com',
+            supabaseAnonKey: 'anon-key',
+          },
+        },
+      }));
+
       const { createClient } = require('@supabase/supabase-js');
       createClient.mockReturnValue({
         someProp: 123,

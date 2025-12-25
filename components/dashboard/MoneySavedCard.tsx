@@ -2,7 +2,7 @@
  * @fileoverview Dashboard card displaying money saved since sobriety.
  *
  * Shows total savings calculated from historical spending patterns and days sober.
- * Includes breakdown by day/week/month and opens edit sheet on press.
+ * Includes breakdown by day/week/month and a menu for editing.
  * Supports unconfigured state for users who haven't set up spending tracking.
  */
 
@@ -183,13 +183,10 @@ export default function MoneySavedCard(props: MoneySavedCardProps) {
 
   return (
     <>
-      <TouchableOpacity
+      <View
         testID="money-saved-card"
         style={styles.card}
-        onPress={onPress}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={`Money saved: ${formatCurrency(savings.totalSaved)}. Tap to edit.`}
+        accessibilityLabel={`Money saved: ${formatCurrency(savings.totalSaved)}. Use menu to edit.`}
       >
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -229,7 +226,7 @@ export default function MoneySavedCard(props: MoneySavedCardProps) {
             <Text style={styles.breakdownValue}>{formatCurrency(savings.perMonth)}</Text>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
 
       <CardMenu
         isVisible={menuVisible}
