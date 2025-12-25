@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add "What's New" row in Settings About section to manually view latest release features
 - Add `WhatsNewSheet` component for displaying new features in a bottom sheet modal with release info, feature cards, and dismiss button
 - Add `WhatsNewFeatureCard` component for displaying feature highlights in What's New popup
 - Add `useWhatsNew` hook for fetching and managing What's New release data

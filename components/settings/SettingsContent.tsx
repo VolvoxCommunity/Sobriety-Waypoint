@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -48,6 +48,7 @@ import {
   RotateCcw,
   Zap,
   Layout,
+  Sparkles,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
@@ -59,6 +60,8 @@ import { validateDisplayName } from '@/lib/validation';
 import { hexWithAlpha } from '@/lib/format';
 import { showConfirm } from '@/lib/alert';
 import { showToast } from '@/lib/toast';
+import { useWhatsNew } from '@/lib/whats-new';
+import { WhatsNewSheet, type WhatsNewSheetRef } from '@/components/whats-new';
 import packageJson from '../../package.json';
 
 import type { SettingsContentProps } from './types';
@@ -469,6 +472,8 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
   // ---------------------------------------------------------------------------
   const { signOut, deleteAccount, profile, refreshProfile } = useAuth();
   const { theme, themeMode, setThemeMode } = useTheme();
+  const whatsNewRef = useRef<WhatsNewSheetRef>(null);
+  const { activeRelease } = useWhatsNew();
 
   // ---------------------------------------------------------------------------
   // State
@@ -907,6 +912,25 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
             <View style={styles.menuItemLeft}>
               <Github size={20} color={theme.textSecondary} />
               <Text style={styles.menuItemText}>Source Code</Text>
+            </View>
+            <ChevronLeft
+              size={20}
+              color={theme.textTertiary}
+              style={{ transform: [{ rotate: '180deg' }] }}
+            />
+          </Pressable>
+          <View style={styles.separator} />
+          <Pressable
+            testID="settings-whats-new-row"
+            style={styles.menuItem}
+            onPress={() => whatsNewRef.current?.present()}
+            disabled={!activeRelease}
+            accessibilityRole="button"
+            accessibilityLabel="View What's New"
+          >
+            <View style={styles.menuItemLeft}>
+              <Sparkles size={20} color={theme.textSecondary} />
+              <Text style={styles.menuItemText}>What&apos;s New</Text>
             </View>
             <ChevronLeft
               size={20}
@@ -1367,6 +1391,11 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* What's New Sheet */}
+      {activeRelease && (
+        <WhatsNewSheet ref={whatsNewRef} release={activeRelease} onDismiss={() => {}} />
+      )}
     </>
   );
 }
