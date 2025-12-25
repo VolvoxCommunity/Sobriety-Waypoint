@@ -142,4 +142,5 @@ module.exports = {
   Terminal: createIconMock('Terminal'),
   RotateCcw: createIconMock('RotateCcw'),
   DollarSign: createIconMock('DollarSign'),
+  Layout: createIconMock('Layout'),
 };

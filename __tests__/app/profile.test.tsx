@@ -205,6 +205,7 @@ jest.mock('lucide-react-native', () => ({
   Copy: () => null,
   User: () => null,
   ChevronLeft: () => null,
+  Layout: () => null,
 }));
 
 // Mock DateTimePicker

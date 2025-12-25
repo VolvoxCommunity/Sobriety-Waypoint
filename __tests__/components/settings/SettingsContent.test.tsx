@@ -46,6 +46,7 @@ jest.mock('lucide-react-native', () => ({
   Info: () => null,
   Copy: () => null,
   User: () => null,
+  Layout: () => null,
 }));
 
 // Mock package.json

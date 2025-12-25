@@ -217,6 +217,7 @@ jest.mock('lucide-react-native', () => ({
   ChevronLeft: () => null,
   X: () => null,
   Settings: () => null,
+  Layout: () => null,
 }));
 
 // Mock GlassBottomSheet
