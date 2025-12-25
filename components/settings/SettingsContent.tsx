@@ -47,6 +47,7 @@ import {
   BarChart2,
   RotateCcw,
   Zap,
+  Layout,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
@@ -480,6 +481,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
   const [editDisplayName, setEditDisplayName] = useState('');
   const [nameValidationError, setNameValidationError] = useState<string | null>(null);
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingDashboard, setIsSavingDashboard] = useState(false);
   const buildInfo = getBuildInfo();
   const {
     status: updateStatus,
@@ -682,6 +684,36 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
     }
   };
 
+  /**
+   * Handles toggling the savings card visibility.
+   * Updates profile in Supabase and refreshes profile state.
+   */
+  const handleToggleSavingsCard = useCallback(async () => {
+    if (!profile?.id || isSavingDashboard) return;
+
+    setIsSavingDashboard(true);
+    try {
+      const newValue = !profile.hide_savings_card;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ hide_savings_card: newValue })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+      showToast.success(newValue ? 'Savings card hidden' : 'Savings card visible');
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to update setting');
+      logger.error('Failed to toggle savings card visibility', err, {
+        category: LogCategory.DATABASE,
+      });
+      showToast.error('Failed to update. Please try again.');
+    } finally {
+      setIsSavingDashboard(false);
+    }
+  }, [profile?.id, profile?.hide_savings_card, isSavingDashboard, refreshProfile]);
+
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // ---------------------------------------------------------------------------
@@ -794,6 +826,37 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               </Text>
             </Pressable>
           </View>
+        </View>
+      </View>
+
+      {/* Dashboard Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Dashboard</Text>
+        <View style={styles.card}>
+          <Pressable
+            testID="settings-show-savings-toggle"
+            style={styles.menuItem}
+            onPress={handleToggleSavingsCard}
+            disabled={isSavingDashboard}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: !profile?.hide_savings_card }}
+            accessibilityLabel="Show savings card on dashboard"
+          >
+            <View style={styles.menuItemLeft}>
+              <Layout size={20} color={theme.textSecondary} />
+              <View>
+                <Text style={styles.menuItemText}>Show savings card</Text>
+                <Text style={styles.menuItemSubtext}>Display money saved on home screen</Text>
+              </View>
+            </View>
+            {isSavingDashboard ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <View style={[styles.toggle, !profile?.hide_savings_card && styles.toggleActive]}>
+                <Text style={styles.toggleText}>{profile?.hide_savings_card ? 'OFF' : 'ON'}</Text>
+              </View>
+            )}
+          </Pressable>
         </View>
       </View>
 
