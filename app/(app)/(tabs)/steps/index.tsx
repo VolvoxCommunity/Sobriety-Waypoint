@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Platform, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StepContent, UserStepProgress } from '@/types/database';
 import { CheckCircle } from 'lucide-react-native';
 import { logger, LogCategory } from '@/lib/logger';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 
 /**
  * Render the Steps screen showing the 12 steps with per-step completion indicators and navigation to each step's detail screen.
@@ -20,9 +20,7 @@ export default function StepsScreen() {
   const { theme } = useTheme();
   const { profile } = useAuth();
   const router = useRouter();
-  // Get safe area insets for scroll padding
-  const insets = useSafeAreaInsets();
-  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
+  const tabBarHeight = useTabBarPadding();
   const [steps, setSteps] = useState<StepContent[]>([]);
   const [progress, setProgress] = useState<Record<number, UserStepProgress>>({});
   const [loading, setLoading] = useState(true);

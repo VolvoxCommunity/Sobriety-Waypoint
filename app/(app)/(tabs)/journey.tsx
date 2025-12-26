@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDaysSober } from '@/hooks/useDaysSober';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { logger, LogCategory } from '@/lib/logger';
 import { parseDateAsLocal } from '@/lib/date';
 
@@ -69,9 +69,7 @@ interface TimelineEvent {
 export default function JourneyScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
-  // Get safe area insets for scroll padding
-  const insets = useSafeAreaInsets();
-  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
+  const tabBarHeight = useTabBarPadding();
   const {
     daysSober,
     journeyDays,

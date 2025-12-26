@@ -2,8 +2,7 @@
 // Imports
 // =============================================================================
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
@@ -19,6 +18,7 @@ import { logger, LogCategory } from '@/lib/logger';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
 import { showConfirm } from '@/lib/alert';
 import { showToast } from '@/lib/toast';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 
 // =============================================================================
 // Types & Interfaces
@@ -40,9 +40,7 @@ type ViewMode = 'my-tasks' | 'manage';
 export default function TasksScreen() {
   const { profile } = useAuth();
   const { theme } = useTheme();
-  // Get safe area insets for scroll padding
-  const insets = useSafeAreaInsets();
-  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
+  const tabBarHeight = useTabBarPadding();
 
   // =============================================================================
   // State
