@@ -13,7 +13,7 @@ concurrency:
 
 # Minimal permissions for security (required secrets)
 # - EXPO_PUBLIC_SUPABASE_URL: Supabase project URL
-# - EXPO_PUBLIC_SUPABASE_ANON_KEY: Supabase anon/publishable key
+# - EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: Supabase publishable key
 # - E2E_SUPABASE_SERVICE_KEY: Supabase service role key (for test data management)
 # - E2E_TEST_PASSWORD: Password for E2E test user accounts
 permissions:
