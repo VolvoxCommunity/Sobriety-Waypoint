@@ -7,21 +7,21 @@ let adminClient: SupabaseClient | null = null;
 /**
  * Get a singleton Supabase admin client configured with the service role key.
  *
- * Initializes the client on first call using SUPABASE_URL and
+ * Initializes the client on first call using EXPO_PUBLIC_SUPABASE_URL and
  * E2E_SUPABASE_SERVICE_KEY. Initialization is deferred so test discovery can
  * run without requiring those environment variables.
  *
- * @throws If SUPABASE_URL or E2E_SUPABASE_SERVICE_KEY are not set when called.
+ * @throws If EXPO_PUBLIC_SUPABASE_URL or E2E_SUPABASE_SERVICE_KEY are not set when called.
  * @returns The configured Supabase admin client
  */
 function getAdminClient(): SupabaseClient {
   if (!adminClient) {
-    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.E2E_SUPABASE_SERVICE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error(
-        'E2E tests require SUPABASE_URL and E2E_SUPABASE_SERVICE_KEY environment variables'
+        'E2E tests require EXPO_PUBLIC_SUPABASE_URL and E2E_SUPABASE_SERVICE_KEY environment variables'
       );
     }
 
