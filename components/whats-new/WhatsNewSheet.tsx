@@ -11,7 +11,11 @@
 // =============================================================================
 import React, { forwardRef, useRef, useImperativeHandle, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { BottomSheetScrollView, BottomSheetFooter, BottomSheetFooterProps } from '@gorhom/bottom-sheet';
+import {
+  BottomSheetScrollView,
+  BottomSheetFooter,
+  BottomSheetFooterProps,
+} from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
 import GlassBottomSheet, { type GlassBottomSheetRef } from '@/components/GlassBottomSheet';
