@@ -15,10 +15,7 @@ pnpm test                         # All tests (80% coverage required)
 pnpm test -- path/to/file.test.ts # Single file
 pnpm test -- -t "pattern"         # By name
 
-# Release (after updating CHANGELOG.md)
-pnpm release:patch                # Bug fixes (1.0.0 → 1.0.1)
-pnpm release:minor                # New features (1.0.0 → 1.1.0)
-pnpm release:major                # Breaking changes (1.0.0 → 2.0.0)
+# Release (see Release Checklist section below)
 ```
 
 ## Code Quality Requirements
@@ -199,24 +196,23 @@ Move all entries from `[Unreleased]` to the new version section:
 - Bug fix description (moved from Unreleased)
 ```
 
-### 4. Run Release Command
+### 4. Bump Version (Manual)
 
 Use semantic versioning (MAJOR.MINOR.PATCH):
 
-| Type      | When to Use                       | Command              |
-| --------- | --------------------------------- | -------------------- |
-| **PATCH** | Bug fixes, minor updates          | `pnpm release:patch` |
-| **MINOR** | New features, backward-compatible | `pnpm release:minor` |
-| **MAJOR** | Breaking changes                  | `pnpm release:major` |
+| Type      | When to Use                       |
+| --------- | --------------------------------- |
+| **PATCH** | Bug fixes, minor updates          |
+| **MINOR** | New features, backward-compatible |
+| **MAJOR** | Breaking changes                  |
 
-The release command automatically:
+**Steps:**
 
-- ✅ Bumps version in `package.json`
-- ✅ Syncs version to `app.config.ts`
-- ✅ Stages `app.config.ts` and `CHANGELOG.md`
-- ✅ Creates commit: `vX.Y.Z`
-- ✅ Creates git tag: `vX.Y.Z`
-- ✅ Pushes to origin with tags
+1. Update `version` in `package.json` (e.g., `"1.2.1"` → `"1.2.2"`)
+2. Update `version` in `app.config.ts` to match
+3. Stage and commit: `git add -A && git commit -m "vX.Y.Z"`
+4. Create tag: `git tag vX.Y.Z`
+5. Push with tags: `git push origin HEAD --tags`
 
 ## Visual Verification (UI Changes)
 

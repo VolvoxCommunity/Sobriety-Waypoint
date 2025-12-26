@@ -30,12 +30,7 @@
     "test:e2e:all": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "prepare": "husky",
-    "release:patch": "npm version patch",
-    "release:minor": "npm version minor",
-    "release:major": "npm version major",
-    "version": "node -e \"const fs=require('fs');const f='app.config.ts';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace(/version: '[0-9]+\\.[0-9]+\\.[0-9]+'/,\\\"version: '$npm_package_version'\\\"))\" && if git diff --quiet -- CHANGELOG.md; then echo 'CHANGELOG.md has not been updated. Please update it before running npm version.'; exit 1; fi && git add app.config.ts CHANGELOG.md",
-    "postversion": "git push origin HEAD --tags"
+    "prepare": "husky"
   },
   "dependencies": {
     "@bottom-tabs/react-navigation": "^1.1.0",

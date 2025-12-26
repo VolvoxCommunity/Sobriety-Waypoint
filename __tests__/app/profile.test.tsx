@@ -324,7 +324,7 @@ jest.mock('@/components/GlassBottomSheet', () => {
   const React = require('react');
   const MockGlassBottomSheet = React.forwardRef(
     (
-      { children, onDismiss }: { children: React.ReactNode; onDismiss?: () => void },
+      { children, onDismiss: _onDismiss }: { children: React.ReactNode; onDismiss?: () => void },
       ref: React.Ref<{ present: () => void; dismiss: () => void }>
     ) => {
       React.useImperativeHandle(ref, () => ({
@@ -2336,7 +2336,7 @@ describe('ProfileScreen', () => {
       });
 
       it('connects to sponsor successfully when invite code is valid', async () => {
-        const { Alert } = jest.requireMock('react-native');
+        const { Alert: _Alert } = jest.requireMock('react-native');
         render(<ProfileScreen />);
 
         await waitFor(() => {
@@ -2836,3 +2836,13 @@ describe('ProfileScreen', () => {
     });
   });
 });
+
+// =============================================================================
+// Platform-Specific Tests
+// =============================================================================
+// Note: Platform-specific code (web/iOS/Android date pickers and share dialogs)
+// requires module resets to test different Platform.OS values, which adds
+// significant complexity. The platform-conditional branches (lines 195-213,
+// 683-769) are tested implicitly through the iOS path in other tests.
+// Coverage improvement for these branches would require a separate test file
+// with module isolation.
