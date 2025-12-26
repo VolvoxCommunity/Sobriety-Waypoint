@@ -39,12 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add React.memo to TaskCard, MyTasksView, and ManageTasksView components to prevent unnecessary re-renders during list interactions
 - Update MoneySavedCard to support configured and unconfigured variants via discriminated union types
 - Update Money Saved card to require menu interaction for editing (removed card tap-to-edit behavior)
-- Rename Supabase environment variables from `EXPO_PUBLIC_SUPABASE_*` to `SUPABASE_*` and `SUPABASE_ANON_KEY` to `SUPABASE_PUBLISHABLE_KEY` (exposed via app.config.ts extra)
+- Rename Supabase environment variable from `EXPO_PUBLIC_SUPABASE_ANON_KEY` to `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - Move What's New dismiss button to fixed footer for better UX when scrolling through many features
 
 ### Fixed
 
-- Fix "What's New" settings row doing nothing when no release is available - now shows info toast
 - Fix Money Saved card not updating on home tab after editing savings amount or frequency
 - Fix `_scrollRef` null error when dismissing LogSlipUpSheet by replacing BottomSheetTextInput with standard TextInput
 - Fix potential race condition in EditSavingsSheet where profile refresh could show stale data by awaiting onSave callback before sheet dismissal
