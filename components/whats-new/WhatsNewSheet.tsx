@@ -62,8 +62,8 @@ interface WhatsNewSheetProps {
 // Constants
 // =============================================================================
 
-/** Snap points for the bottom sheet (70% and 90% of screen height) */
-const SNAP_POINTS = ['70%', '90%'];
+/** Snap points for the bottom sheet (90% of screen height by default) */
+const SNAP_POINTS = ['90%'];
 
 // =============================================================================
 // Component

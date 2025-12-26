@@ -11,8 +11,9 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
-import type { WhatsNewFeature } from '@/lib/whats-new';
+import type { WhatsNewFeature, WhatsNewFeatureType } from '@/lib/whats-new';
 
 // =============================================================================
 // Types
@@ -33,6 +34,33 @@ interface WhatsNewFeatureCardProps {
 const IMAGE_HEIGHT = 180;
 const SKELETON_BACKGROUND = 'rgba(128, 128, 128, 0.1)';
 
+/** Configuration for each feature type's appearance */
+const TYPE_CONFIG: Record<
+  WhatsNewFeatureType,
+  {
+    label: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    color: string;
+    backgroundColor: string;
+    borderColor: string;
+  }
+> = {
+  feature: {
+    label: 'NEW',
+    icon: 'sparkles',
+    color: '#059669',
+    backgroundColor: 'rgba(5, 150, 105, 0.15)',
+    borderColor: '#059669',
+  },
+  fix: {
+    label: 'IMPROVED',
+    icon: 'construct',
+    color: '#7c3aed',
+    backgroundColor: 'rgba(124, 58, 237, 0.15)',
+    borderColor: '#7c3aed',
+  },
+};
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -52,6 +80,7 @@ const SKELETON_BACKGROUND = 'rgba(128, 128, 128, 0.1)';
  *     description: 'Track your progress with our new dashboard',
  *     imageUrl: 'https://example.com/image.png',
  *     displayOrder: 0,
+ *     type: 'feature',
  *   }}
  * />
  * ```
@@ -60,9 +89,10 @@ export default function WhatsNewFeatureCard({ feature }: WhatsNewFeatureCardProp
   const { theme } = useTheme();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const typeConfig = TYPE_CONFIG[feature.type];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderLeftColor: typeConfig.borderColor }]}>
       {feature.imageUrl && (
         <View testID="feature-card-image-container" style={styles.imageContainer}>
           {isImageLoading && (
@@ -80,6 +110,15 @@ export default function WhatsNewFeatureCard({ feature }: WhatsNewFeatureCardProp
         </View>
       )}
       <View style={styles.content}>
+        <View style={styles.titleRow}>
+          <View
+            testID="feature-type-badge"
+            style={[styles.badge, { backgroundColor: typeConfig.backgroundColor }]}
+          >
+            <Ionicons name={typeConfig.icon} size={12} color={typeConfig.color} />
+            <Text style={[styles.badgeText, { color: typeConfig.color }]}>{typeConfig.label}</Text>
+          </View>
+        </View>
         <Text style={styles.title}>{feature.title}</Text>
         <Text style={styles.description}>{feature.description}</Text>
       </View>
@@ -100,6 +139,7 @@ const createStyles = (theme: ThemeColors) =>
       marginBottom: 16,
       borderWidth: 1,
       borderColor: theme.border,
+      borderLeftWidth: 4,
     },
     imageContainer: {
       height: IMAGE_HEIGHT,
@@ -124,6 +164,25 @@ const createStyles = (theme: ThemeColors) =>
     },
     content: {
       padding: 16,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      gap: 4,
+    },
+    badgeText: {
+      fontSize: 11,
+      fontFamily: theme.fontRegular,
+      fontWeight: '600',
+      letterSpacing: 0.5,
     },
     title: {
       fontSize: 18,

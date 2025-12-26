@@ -600,6 +600,24 @@ jest.mock('expo-image', () => {
   };
 });
 
+// Mock @expo/vector-icons
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    Ionicons: ({ name, size, color }) =>
+      React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
+    MaterialIcons: ({ name, size, color }) =>
+      React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
+    FontAwesome: ({ name, size, color }) =>
+      React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
+    AntDesign: ({ name, size, color }) =>
+      React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
+    Feather: ({ name, size, color }) =>
+      React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
+  };
+});
+
 // Mock react-native-keyboard-controller
 jest.mock('react-native-keyboard-controller', () => {
   const React = require('react');

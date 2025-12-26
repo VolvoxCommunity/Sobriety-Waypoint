@@ -70,6 +70,7 @@ describe('WhatsNewSheet', () => {
         description: 'Track your savings',
         imageUrl: null,
         displayOrder: 0,
+        type: 'feature',
       },
     ],
   };
@@ -99,9 +100,30 @@ describe('WhatsNewSheet', () => {
       const releaseWithMultipleFeatures: WhatsNewRelease = {
         ...mockRelease,
         features: [
-          { id: '1', title: 'Feature 1', description: 'Desc 1', imageUrl: null, displayOrder: 0 },
-          { id: '2', title: 'Feature 2', description: 'Desc 2', imageUrl: null, displayOrder: 1 },
-          { id: '3', title: 'Feature 3', description: 'Desc 3', imageUrl: null, displayOrder: 2 },
+          {
+            id: '1',
+            title: 'Feature 1',
+            description: 'Desc 1',
+            imageUrl: null,
+            displayOrder: 0,
+            type: 'feature',
+          },
+          {
+            id: '2',
+            title: 'Feature 2',
+            description: 'Desc 2',
+            imageUrl: null,
+            displayOrder: 1,
+            type: 'fix',
+          },
+          {
+            id: '3',
+            title: 'Feature 3',
+            description: 'Desc 3',
+            imageUrl: null,
+            displayOrder: 2,
+            type: 'feature',
+          },
         ],
       };
 

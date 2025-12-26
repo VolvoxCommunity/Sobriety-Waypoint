@@ -55,6 +55,7 @@ describe('WhatsNewFeatureCard', () => {
     description: "Track how much you've saved since sobriety",
     imageUrl: 'https://example.com/image.png',
     displayOrder: 0,
+    type: 'feature' as const,
   };
 
   describe('rendering', () => {
@@ -103,6 +104,23 @@ describe('WhatsNewFeatureCard', () => {
       render(<WhatsNewFeatureCard feature={customFeature} />);
 
       expect(screen.getByText(longDescription)).toBeTruthy();
+    });
+  });
+
+  describe('type badge', () => {
+    it('displays NEW badge for feature type', () => {
+      render(<WhatsNewFeatureCard feature={mockFeature} />);
+
+      expect(screen.getByTestId('feature-type-badge')).toBeTruthy();
+      expect(screen.getByText('NEW')).toBeTruthy();
+    });
+
+    it('displays IMPROVED badge for fix type', () => {
+      const fixFeature = { ...mockFeature, type: 'fix' as const };
+      render(<WhatsNewFeatureCard feature={fixFeature} />);
+
+      expect(screen.getByTestId('feature-type-badge')).toBeTruthy();
+      expect(screen.getByText('IMPROVED')).toBeTruthy();
     });
   });
 });

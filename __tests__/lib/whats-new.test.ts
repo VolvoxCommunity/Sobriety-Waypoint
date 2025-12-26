@@ -77,6 +77,7 @@ const mockFeatures = [
     description: 'Now supports dark mode for easier viewing at night.',
     image_path: 'dark-mode.png',
     display_order: 1,
+    type: 'feature',
   },
   {
     id: 'feature-2',
@@ -84,6 +85,7 @@ const mockFeatures = [
     description: 'Track your progress with our new calendar view.',
     image_path: null,
     display_order: 2,
+    type: 'fix',
   },
 ];
 
@@ -221,6 +223,7 @@ describe('useWhatsNew', () => {
         description: 'Now supports dark mode for easier viewing at night.',
         imageUrl: expect.stringContaining('dark-mode.png'),
         displayOrder: 1,
+        type: 'feature',
       });
 
       // Feature without image_path should have null imageUrl
@@ -230,6 +233,7 @@ describe('useWhatsNew', () => {
         description: 'Track your progress with our new calendar view.',
         imageUrl: null,
         displayOrder: 2,
+        type: 'fix',
       });
     });
 

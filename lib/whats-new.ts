@@ -13,6 +13,11 @@ import { logger, LogCategory } from '@/lib/logger';
 // =============================================================================
 
 /**
+ * Type of feature in What's New.
+ */
+export type WhatsNewFeatureType = 'feature' | 'fix';
+
+/**
  * A feature highlight within a What's New release.
  */
 export interface WhatsNewFeature {
@@ -21,6 +26,7 @@ export interface WhatsNewFeature {
   description: string;
   imageUrl: string | null;
   displayOrder: number;
+  type: WhatsNewFeatureType;
 }
 
 /**
@@ -117,7 +123,7 @@ export function useWhatsNew(): UseWhatsNewResult {
       // Fetch features for this release
       const { data: featuresData, error: featuresError } = await supabase
         .from('whats_new_features')
-        .select('id, title, description, image_path, display_order')
+        .select('id, title, description, image_path, display_order, type')
         .eq('release_id', releaseData.id)
         .order('display_order', { ascending: true });
 
@@ -132,6 +138,7 @@ export function useWhatsNew(): UseWhatsNewResult {
         description: f.description,
         imageUrl: f.image_path ? `${SUPABASE_STORAGE_URL}/${f.image_path}` : null,
         displayOrder: f.display_order,
+        type: (f.type as WhatsNewFeatureType) || 'feature',
       }));
 
       setActiveRelease({
