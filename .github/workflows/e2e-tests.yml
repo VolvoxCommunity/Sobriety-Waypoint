@@ -13,7 +13,7 @@ concurrency:
 
 # Minimal permissions for security (required secrets)
 # - EXPO_PUBLIC_SUPABASE_URL: Supabase project URL
-# - EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: Supabase publishable key
+# - EXPO_PUBLIC_SUPABASE_ANON_KEY: Supabase anon/publishable key
 # - E2E_SUPABASE_SERVICE_KEY: Supabase service role key (for test data management)
 # - E2E_TEST_PASSWORD: Password for E2E test user accounts
 permissions:
@@ -68,9 +68,9 @@ jobs:
       - name: Build web app
         run: pnpm build:web
         env:
-          # Map from old GitHub secret names to new env var names expected by app
-          SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          # App expects EXPO_PUBLIC_* prefixed env vars (see lib/supabase.ts)
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Start web server
         run: npx serve dist -l 8081 &
@@ -81,7 +81,7 @@ jobs:
       - name: Run E2E tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
-          # Map from old GitHub secret names to new env var names expected by tests
+          # E2E tests (supabase-helpers.ts) expect SUPABASE_URL without EXPO_PUBLIC prefix
           SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           E2E_SUPABASE_SERVICE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_KEY }}
