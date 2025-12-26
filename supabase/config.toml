@@ -53,6 +53,12 @@ file_size_limit = "50MiB"
 [storage.s3_protocol]
 enabled = true
 
+# What's New feature images bucket
+[storage.buckets.whats-new-images]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
+
 [auth]
 enabled = true
 site_url = "sobers://google-auth"
