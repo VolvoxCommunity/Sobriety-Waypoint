@@ -2,7 +2,8 @@
 // Imports
 // =============================================================================
 import React from 'react';
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { renderWithProviders } from '@/__tests__/test-utils';
 import EditSavingsSheet, { EditSavingsSheetRef } from '@/components/sheets/EditSavingsSheet';
 import { Profile } from '@/types/database';
 
@@ -37,18 +38,19 @@ jest.mock('@/components/GlassBottomSheet', () => {
   };
 });
 
-// Mock BottomSheetScrollView
+// Mock @gorhom/bottom-sheet
 jest.mock('@gorhom/bottom-sheet', () => {
   const React = require('react');
-  const { ScrollView } = require('react-native');
+  const { View, ScrollView } = require('react-native');
   return {
     BottomSheetScrollView: ({ children, ...props }: any) => (
       <ScrollView {...props}>{children}</ScrollView>
     ),
+    BottomSheetModalProvider: ({ children }: any) => <View>{children}</View>,
   };
 });
 
-// Mock supabase - create a proper chainable mock
+// Mock supabase - create a proper chainable mock with auth for AuthProvider
 const mockEq = jest.fn();
 const mockSupabaseUpdate = jest.fn(() => ({
   eq: mockEq,
@@ -60,6 +62,13 @@ const mockSupabaseFrom = jest.fn(() => ({
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     from: (table: string) => mockSupabaseFrom(table),
+    auth: {
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })),
+      getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+      signOut: jest.fn(() => Promise.resolve({ error: null })),
+    },
   },
 }));
 
@@ -96,42 +105,6 @@ jest.mock('@/lib/logger', () => ({
 // =============================================================================
 // Test Data
 // =============================================================================
-const mockTheme = {
-  text: '#000000',
-  textSecondary: '#666666',
-  textTertiary: '#999999',
-  textOnPrimary: '#FFFFFF',
-  background: '#FFFFFF',
-  surface: '#F5F5F5',
-  card: '#FFFFFF',
-  border: '#E0E0E0',
-  borderLight: '#F0F0F0',
-  primary: '#007AFF',
-  primaryLight: '#E5F1FF',
-  danger: '#FF3B30',
-  dangerLight: '#FFE5E5',
-  dangerBorder: '#FFCCCC',
-  success: '#34C759',
-  warning: '#FF9500',
-  white: '#FFFFFF',
-  black: '#000000',
-  error: '#FF3B30',
-  fontRegular: 'System',
-  fontMedium: 'System',
-  fontSemiBold: 'System',
-  fontBold: 'System',
-  glassTint: 'rgba(255,255,255,0.1)',
-  glassFallback: 'rgba(255,255,255,0.75)',
-  glassBorder: 'rgba(255,255,255,0.3)',
-  shadow: '#000000',
-};
-
-// Mock useTheme
-jest.mock('@/contexts/ThemeContext', () => ({
-  useTheme: () => ({ theme: mockTheme }),
-  ThemeColors: {},
-}));
-
 const mockProfile: Profile = {
   id: 'user-123',
   email: 'test@example.com',
@@ -167,7 +140,7 @@ describe('EditSavingsSheet', () => {
     it('renders the sheet with correct title', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByText } = render(
+      const { getByText } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -177,7 +150,7 @@ describe('EditSavingsSheet', () => {
     it('renders amount input with testID', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -187,7 +160,7 @@ describe('EditSavingsSheet', () => {
     it('renders all frequency buttons with testIDs', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -200,7 +173,7 @@ describe('EditSavingsSheet', () => {
     it('renders save button with testID', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -210,7 +183,7 @@ describe('EditSavingsSheet', () => {
     it('renders clear button with testID', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -225,7 +198,7 @@ describe('EditSavingsSheet', () => {
     it('updates amount input value when user types', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -238,7 +211,7 @@ describe('EditSavingsSheet', () => {
     it('changes frequency selection when button is pressed', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -257,7 +230,7 @@ describe('EditSavingsSheet', () => {
     it('shows error when amount is empty', async () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId, getByText } = render(
+      const { getByTestId, getByText } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -275,7 +248,7 @@ describe('EditSavingsSheet', () => {
     it('shows error when amount is not a number', async () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId, getByText } = render(
+      const { getByTestId, getByText } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -293,7 +266,7 @@ describe('EditSavingsSheet', () => {
     it('shows error when amount is negative', async () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId, getByText } = render(
+      const { getByTestId, getByText } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -316,7 +289,7 @@ describe('EditSavingsSheet', () => {
     it('calls supabase update with correct values when save is pressed', async () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -341,7 +314,7 @@ describe('EditSavingsSheet', () => {
       // This test is simplified to match the plan's simpler integration test pattern
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn().mockResolvedValue(undefined);
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -366,7 +339,7 @@ describe('EditSavingsSheet', () => {
       // The actual toast display depends on async resolution that's difficult to test in isolation
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByText } = render(
+      const { getByText } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -382,7 +355,7 @@ describe('EditSavingsSheet', () => {
     it('shows confirmation dialog when clear button is pressed', async () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -405,7 +378,7 @@ describe('EditSavingsSheet', () => {
 
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn().mockResolvedValue(undefined);
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -425,7 +398,7 @@ describe('EditSavingsSheet', () => {
 
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -448,7 +421,7 @@ describe('EditSavingsSheet', () => {
       // The actual toast depends on async resolution
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByText } = render(
+      const { getByText } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -466,7 +439,7 @@ describe('EditSavingsSheet', () => {
       const mockOnSave = jest.fn();
       const ref = React.createRef<EditSavingsSheetRef>();
 
-      render(
+      renderWithProviders(
         <EditSavingsSheet
           ref={ref}
           profile={mockProfile}
@@ -484,7 +457,7 @@ describe('EditSavingsSheet', () => {
       const mockOnSave = jest.fn();
       const ref = React.createRef<EditSavingsSheetRef>();
 
-      render(
+      renderWithProviders(
         <EditSavingsSheet
           ref={ref}
           profile={mockProfile}
@@ -502,7 +475,7 @@ describe('EditSavingsSheet', () => {
       const mockOnSave = jest.fn();
       const ref = React.createRef<EditSavingsSheetRef>();
 
-      const { getByTestId, rerender } = render(
+      const { getByTestId, rerender } = renderWithProviders(
         <EditSavingsSheet
           ref={ref}
           profile={mockProfile}
@@ -546,27 +519,31 @@ describe('EditSavingsSheet', () => {
     };
 
     it('should show setup title when spend data is not set', () => {
-      render(<EditSavingsSheet {...setupModeProps} />);
+      renderWithProviders(<EditSavingsSheet {...setupModeProps} />);
       expect(screen.getByText('Set Up Savings Tracking')).toBeTruthy();
     });
 
     it('should not show Clear Data button in setup mode', () => {
-      render(<EditSavingsSheet {...setupModeProps} />);
+      renderWithProviders(<EditSavingsSheet {...setupModeProps} />);
       expect(screen.queryByText('Clear Tracking Data')).toBeNull();
     });
 
     it('should show Get Started button in setup mode', () => {
-      render(<EditSavingsSheet {...setupModeProps} />);
+      renderWithProviders(<EditSavingsSheet {...setupModeProps} />);
       expect(screen.getByText('Get Started')).toBeTruthy();
     });
 
     it('should show Edit title when spend data is set', () => {
-      render(<EditSavingsSheet profile={mockProfile} onClose={jest.fn()} onSave={jest.fn()} />);
+      renderWithProviders(
+        <EditSavingsSheet profile={mockProfile} onClose={jest.fn()} onSave={jest.fn()} />
+      );
       expect(screen.getByText('Edit Savings Tracking')).toBeTruthy();
     });
 
     it('should show Save Changes button when spend data is set', () => {
-      render(<EditSavingsSheet profile={mockProfile} onClose={jest.fn()} onSave={jest.fn()} />);
+      renderWithProviders(
+        <EditSavingsSheet profile={mockProfile} onClose={jest.fn()} onSave={jest.fn()} />
+      );
       expect(screen.getByText('Save Changes')).toBeTruthy();
     });
   });
@@ -578,7 +555,7 @@ describe('EditSavingsSheet', () => {
     it('pre-fills amount from profile', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -589,7 +566,7 @@ describe('EditSavingsSheet', () => {
     it('pre-fills frequency from profile', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet profile={mockProfile} onClose={mockOnClose} onSave={mockOnSave} />
       );
 
@@ -600,7 +577,7 @@ describe('EditSavingsSheet', () => {
     it('handles profile with null spending values', () => {
       const mockOnClose = jest.fn();
       const mockOnSave = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithProviders(
         <EditSavingsSheet
           profile={mockProfileWithoutSpending}
           onClose={mockOnClose}

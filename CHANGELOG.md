@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Refactor EditSavingsSheet tests to use renderWithProviders from test-utils
+
 ### Fixed
 
 - Fix MoneySavedCard rendering non-functional unconfigured card when profile is null
