@@ -752,6 +752,21 @@ jest.mock('expo-application', () => ({
   applicationName: 'Sobers',
 }));
 
+// Mock @amplitude/analytics-react-native
+jest.mock('@amplitude/analytics-react-native', () => ({
+  init: jest.fn().mockResolvedValue(undefined),
+  track: jest.fn(),
+  identify: jest.fn(),
+  setUserId: jest.fn(),
+  reset: jest.fn().mockResolvedValue(undefined),
+  Identify: jest.fn().mockImplementation(() => ({
+    set: jest.fn().mockReturnThis(),
+  })),
+  Types: {
+    LogLevel: { Debug: 0, None: 4 },
+  },
+}));
+
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
   const React = require('react');
