@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add Amplitude Analytics integration for product analytics with native and web platform support
+- Add 35+ analytics events with Title Case naming (e.g., "Screen Viewed", "Task Completed") for comprehensive user engagement tracking
+- Add 9 user properties for cohort analysis: days_sober_bucket, steps_completed_bucket, has_sponsor, has_sponsees, theme_preference, notifications_enabled, app_version, platform, device_type
+
 ### Changed
 
+- Replace Firebase Analytics with Amplitude SDK for improved cross-platform analytics support
+- Update analytics module architecture with platform-specific implementations (native/web) using Metro bundler resolution
 - Lower branch coverage threshold from 85% to 83% to account for untestable code paths (DevToolsSection, platform-specific conditionals)
+
+### Removed
+
+- Remove Firebase Analytics dependencies (@react-native-firebase/analytics, @react-native-firebase/app)
+- Remove Firebase configuration files and plugins (firebase.json, withFirebaseConfig.js, withModularHeaders.js)
 
 ### Fixed
 
