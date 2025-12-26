@@ -180,8 +180,12 @@ export function useWhatsNew(): UseWhatsNewResult {
   }, [fetchActiveRelease]);
 
   // Determine if we should show based on version comparison
+  // Only show when: not loading, has active release, user has a profile, and version differs
   const shouldShowWhatsNew =
-    !isLoading && activeRelease !== null && profile?.last_seen_version !== activeRelease.version;
+    !isLoading &&
+    activeRelease !== null &&
+    profile !== null &&
+    profile.last_seen_version !== activeRelease.version;
 
   return {
     shouldShowWhatsNew,

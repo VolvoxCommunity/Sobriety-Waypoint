@@ -29,18 +29,26 @@ alter table public.profiles
 -- Create indexes for performance
 create index if not exists idx_whats_new_releases_active on public.whats_new_releases(is_active) where is_active = true;
 create index if not exists idx_whats_new_features_release on public.whats_new_features(release_id);
+create index if not exists idx_whats_new_features_order on public.whats_new_features(release_id, display_order);
 
--- RLS Policies: Public read access for releases and features
+-- RLS Policies: Public read access for active releases and their features only
 alter table public.whats_new_releases enable row level security;
 alter table public.whats_new_features enable row level security;
 
+-- Only allow reading releases that are marked as active
 create policy "Anyone can read active releases"
   on public.whats_new_releases for select
-  using (true);
+  using (is_active = true);
 
-create policy "Anyone can read features"
+-- Only allow reading features that belong to active releases
+create policy "Anyone can read features of active releases"
   on public.whats_new_features for select
-  using (true);
+  using (exists (
+    select 1
+    from public.whats_new_releases r
+    where r.id = public.whats_new_features.release_id
+      and r.is_active = true
+  ));
 
 -- Trigger to update updated_at timestamp
 create or replace function update_whats_new_releases_updated_at()
