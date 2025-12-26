@@ -1,15 +1,27 @@
-# Sobers
+<p align="center">
+  <img src="assets/images/banner.png" alt="Sobers" width="100%" />
+</p>
 
-[![CI](https://github.com/VolvoxCommunity/sobers/actions/workflows/ci.yml/badge.svg)](https://github.com/VolvoxCommunity/sobers/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/VolvoxCommunity/sobers/graph/badge.svg?token=U4ILD582YD)](https://codecov.io/gh/VolvoxCommunity/sobers)
-
-A cross-platform recovery companion app connecting sponsors and sponsees through task management, milestone tracking, and progress visualization. _Think Jira for your sobriety._
+<h1 align="center">Sobers</h1>
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" width="200" alt="Dashboard" />
-  <img src="docs/screenshots/tasks.png" width="200" alt="Tasks" />
-  <img src="docs/screenshots/journey.png" width="200" alt="Journey" />
-  <img src="docs/screenshots/profile.png" width="200" alt="Profile" />
+  <a href="https://github.com/VolvoxCommunity/sobers/actions/workflows/ci.yml"><img src="https://github.com/VolvoxCommunity/sobers/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://codecov.io/gh/VolvoxCommunity/sobers"><img src="https://codecov.io/gh/VolvoxCommunity/sobers/graph/badge.svg?token=U4ILD582YD" alt="codecov" /></a>
+</p>
+
+<p align="center">
+  <i>A cross-platform recovery companion app connecting sponsors and sponsees through task management, milestone tracking, and progress visualization.</i>
+</p>
+
+<p align="center">
+  <b>Think Jira for your sobriety.</b>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" width="180" alt="Dashboard" />
+  <img src="docs/screenshots/steps.png" width="180" alt="Steps" />
+  <img src="docs/screenshots/journey.png" width="180" alt="Journey" />
+  <img src="docs/screenshots/profile.png" width="180" alt="Profile" />
 </p>
 
 ## Features
