@@ -47,7 +47,10 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   // Get safe area insets for scroll padding
   const insets = useSafeAreaInsets();
-  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom : 0;
+  // Native tab bar heights: iOS UITabBar = 49pt, Android BottomNavigationView = 56dp
+  const NATIVE_TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
+  // Total bottom padding = tab bar height + safe area inset (home indicator on iOS)
+  const bottomPadding = NATIVE_TAB_BAR_HEIGHT + insets.bottom;
   const [relationships, setRelationships] = useState<SponsorSponseeRelationship[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -255,7 +258,7 @@ export default function HomeScreen() {
     <ScrollView
       testID="home-scroll-view"
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: tabBarHeight }}
+      contentContainerStyle={{ paddingBottom: bottomPadding }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
       }
