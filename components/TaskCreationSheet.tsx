@@ -15,11 +15,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { supabase } from '@/lib/supabase';
 import { TaskTemplate, Profile } from '@/types/database';
 import { ThemeColors } from '@/contexts/ThemeContext';
@@ -311,7 +310,8 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
         ref={sheetRef}
         snapPoints={['60%', '90%']}
         onDismiss={handleDismiss}
-        keyboardBehavior="extend"
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
       >
         <View style={styles.header}>
           <Text style={styles.title} accessibilityRole="header">
@@ -506,7 +506,7 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Task Title *</Text>
-            <TextInput
+            <BottomSheetTextInput
               style={styles.input}
               value={customTitle}
               onChangeText={setCustomTitle}
@@ -518,7 +518,7 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Task Description *</Text>
-            <TextInput
+            <BottomSheetTextInput
               style={[styles.input, styles.textArea]}
               value={customDescription}
               onChangeText={setCustomDescription}

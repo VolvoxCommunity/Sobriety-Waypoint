@@ -117,18 +117,16 @@ jest.mock('@/components/GlassBottomSheet', () => {
   };
 });
 
-// Mock BottomSheetScrollView
-jest.mock('@gorhom/bottom-sheet', () => ({
-  BottomSheetScrollView: ({ children, ...props }: { children: React.ReactNode }) => {
-    const React = require('react');
-    const { ScrollView } = require('react-native');
-    return React.createElement(
-      ScrollView,
-      { ...props, testID: 'bottom-sheet-scroll-view' },
-      children
-    );
-  },
-}));
+// Mock BottomSheet components
+jest.mock('@gorhom/bottom-sheet', () => {
+  const React = require('react');
+  const { ScrollView, TextInput } = require('react-native');
+  return {
+    BottomSheetScrollView: ({ children, ...props }: { children: React.ReactNode }) =>
+      React.createElement(ScrollView, { ...props, testID: 'bottom-sheet-scroll-view' }, children),
+    BottomSheetTextInput: (props: Record<string, unknown>) => React.createElement(TextInput, props),
+  };
+});
 
 // =============================================================================
 // Test Data
