@@ -84,8 +84,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix "What's New" settings row doing nothing when no release is available - now shows info toast
-
 - Fix Vercel deployment by using standard Expo Metro config (Sentry Metro serializer incompatible with Metro 0.83+)
 - Fix toast messages being cut off by replacing BaseToast with custom component that properly wraps text
 - Fix Reset Onboarding dev tool by clearing fields correctly and using explicit navigation
