@@ -311,9 +311,10 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Money Saved Card - show if not hidden */}
-      {!profile?.hide_savings_card &&
-        (profile?.spend_amount != null && profile?.spend_frequency != null ? (
+      {/* Money Saved Card - show if profile exists and not hidden */}
+      {profile &&
+        !profile.hide_savings_card &&
+        (profile.spend_amount != null && profile.spend_frequency != null ? (
           <MoneySavedCard
             amount={profile.spend_amount}
             frequency={profile.spend_frequency}
