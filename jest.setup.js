@@ -53,7 +53,7 @@ jest.mock('react-native', () => {
         callback && callback();
       },
     }),
-    spring: (value, config) => ({
+    spring: (_value, _config) => ({
       start: (callback) => {
         callback && callback();
       },
@@ -232,7 +232,7 @@ jest.mock('expo-router', () => {
     }),
     useSegments: () => [],
     usePathname: () => '/',
-    Link: ({ children, ...props }) => children,
+    Link: ({ children, ..._props }) => children,
     Slot: ({ children }) => children,
     Stack: ({ children }) => children,
     Tabs: ({ children }) => children,
@@ -327,7 +327,7 @@ jest.mock('@react-native-community/datetimepicker', () => {
   const React = require('react');
   return {
     __esModule: true,
-    default: ({ value, onChange, mode, display, ...props }) =>
+    default: ({ value, onChange: _onChange, mode, display, ...props }) =>
       React.createElement('DateTimePicker', {
         value: value?.toISOString(),
         mode,
@@ -611,15 +611,15 @@ jest.mock('@expo/vector-icons', () => {
   const React = require('react');
   const { Text } = require('react-native');
   return {
-    Ionicons: ({ name, size, color }) =>
+    Ionicons: ({ name, size: _size, color: _color }) =>
       React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
-    MaterialIcons: ({ name, size, color }) =>
+    MaterialIcons: ({ name, size: _size, color: _color }) =>
       React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
-    FontAwesome: ({ name, size, color }) =>
+    FontAwesome: ({ name, size: _size, color: _color }) =>
       React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
-    AntDesign: ({ name, size, color }) =>
+    AntDesign: ({ name, size: _size, color: _color }) =>
       React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
-    Feather: ({ name, size, color }) =>
+    Feather: ({ name, size: _size, color: _color }) =>
       React.createElement(Text, { testID: `icon-${name}` }, `[${name}]`),
   };
 });
