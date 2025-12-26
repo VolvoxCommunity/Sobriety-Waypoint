@@ -25,14 +25,6 @@ const mockShouldInitializeAnalytics = jest.fn(() => true);
 const mockIsDebugMode = jest.fn(() => false);
 const mockLoggerWarn = jest.fn();
 
-// Mock react-native Platform
-jest.mock('react-native', () => ({
-  Platform: {
-    OS: 'ios',
-    select: jest.fn((options: { web?: unknown; default?: unknown }) => options.default),
-  },
-}));
-
 // Mock the platform implementation module
 jest.mock('@/lib/analytics/platform', () => ({
   initializePlatformAnalytics: (...args: unknown[]) => mockInitializePlatformAnalytics(...args),
@@ -74,14 +66,14 @@ describe('Unified Analytics Module', () => {
   });
 
   describe('initializeAnalytics', () => {
-    it('skips initialization when Firebase not configured', async () => {
+    it('skips initialization when Amplitude not configured', async () => {
       mockShouldInitializeAnalytics.mockReturnValue(false);
       mockIsDebugMode.mockReturnValue(true);
 
       await initializeAnalytics();
 
       expect(mockLoggerWarn).toHaveBeenCalledWith(
-        'Firebase not configured - analytics disabled',
+        'Amplitude not configured - analytics disabled',
         expect.any(Object)
       );
       expect(mockInitializePlatformAnalytics).not.toHaveBeenCalled();
@@ -93,9 +85,6 @@ describe('Unified Analytics Module', () => {
       expect(mockInitializePlatformAnalytics).toHaveBeenCalledWith(
         expect.objectContaining({
           apiKey: expect.any(String),
-          projectId: expect.any(String),
-          appId: expect.any(String),
-          measurementId: expect.any(String),
         })
       );
     });
@@ -183,30 +172,13 @@ describe('Unified Analytics Module', () => {
       expect(mockInitializePlatformAnalytics).toHaveBeenCalledTimes(1);
     });
 
-    it('warns about missing Firebase config on web platform', async () => {
-      // Mock Platform.OS as 'web'
-      const { Platform } = jest.requireMock('react-native');
-      const originalOS = Platform.OS;
-      Platform.OS = 'web';
+    it('warns about missing Amplitude API key', async () => {
+      await initializeAnalytics();
 
-      try {
-        await initializeAnalytics();
-
-        // Should warn about missing config (env vars are empty in test)
-        expect(mockLoggerWarn).toHaveBeenCalledWith(
-          'Firebase config incomplete - some required values are missing',
-          expect.objectContaining({
-            category: 'ANALYTICS',
-            hasApiKey: expect.any(Boolean),
-            hasProjectId: expect.any(Boolean),
-            hasAppId: expect.any(Boolean),
-            hasMeasurementId: expect.any(Boolean),
-          })
-        );
-      } finally {
-        // Restore Platform.OS
-        Platform.OS = originalOS;
-      }
+      // Should warn about missing config (env vars are empty in test)
+      expect(mockLoggerWarn).toHaveBeenCalledWith('Amplitude API key not configured', {
+        category: 'ANALYTICS',
+      });
     });
   });
 

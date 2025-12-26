@@ -767,6 +767,21 @@ jest.mock('@amplitude/analytics-react-native', () => ({
   },
 }));
 
+// Mock @amplitude/analytics-browser
+jest.mock('@amplitude/analytics-browser', () => ({
+  init: jest.fn(),
+  track: jest.fn(),
+  identify: jest.fn(),
+  setUserId: jest.fn(),
+  reset: jest.fn(),
+  Identify: jest.fn().mockImplementation(() => ({
+    set: jest.fn().mockReturnThis(),
+  })),
+  Types: {
+    LogLevel: { Debug: 0, None: 4 },
+  },
+}));
+
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
   const React = require('react');

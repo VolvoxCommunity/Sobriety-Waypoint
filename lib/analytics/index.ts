@@ -1,5 +1,5 @@
 /**
- * Unified Firebase Analytics module for Sobers.
+ * Unified Amplitude Analytics module for Sobers.
  *
  * This is the ONLY module that app code should import for analytics.
  * Metro automatically selects the correct platform implementation:
@@ -22,8 +22,6 @@
  * setUserProperties({ days_sober_bucket: '31-90' });
  * ```
  */
-
-import { Platform } from 'react-native';
 
 import type { EventParams, UserProperties, AnalyticsConfig } from '@/types/analytics';
 import { sanitizeParams, shouldInitializeAnalytics, isDebugMode } from '@/lib/analytics-utils';
@@ -71,11 +69,10 @@ async function doInitialize(config: AnalyticsConfig): Promise<void> {
 }
 
 /**
- * Initialize Firebase Analytics for the app.
+ * Initialize Amplitude Analytics for the app.
  *
  * Call this once at app startup, before any other analytics calls.
- * On native platforms, Firebase is configured via config files.
- * On web, it uses environment variables.
+ * Uses the EXPO_PUBLIC_AMPLITUDE_API_KEY environment variable.
  *
  * This function uses a Promise-based pattern to prevent race conditions:
  * - Concurrent calls during initialization will await the same Promise
@@ -114,7 +111,7 @@ export async function initializeAnalytics(): Promise<void> {
   // Check if analytics should be initialized
   if (!shouldInitializeAnalytics()) {
     if (isDebugMode()) {
-      logger.warn('Firebase not configured - analytics disabled', {
+      logger.warn('Amplitude not configured - analytics disabled', {
         category: LogCategory.ANALYTICS,
       });
     }
@@ -122,23 +119,15 @@ export async function initializeAnalytics(): Promise<void> {
     return;
   }
 
-  // On native, Firebase reads config from GoogleService-Info.plist / google-services.json
-  // On web, we need explicit configuration via environment variables
+  // Amplitude uses a single API key for all platforms
   const config: AnalyticsConfig = {
-    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || '',
-    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || '',
-    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || '',
-    measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
+    apiKey: process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY || '',
   };
 
-  // Only warn about missing config on web - native uses config files, not env vars
-  if (Platform.OS === 'web' && (!config.apiKey || !config.projectId || !config.appId)) {
-    logger.warn('Firebase config incomplete - some required values are missing', {
+  // Warn about missing config
+  if (!config.apiKey) {
+    logger.warn('Amplitude API key not configured', {
       category: LogCategory.ANALYTICS,
-      hasApiKey: !!config.apiKey,
-      hasProjectId: !!config.projectId,
-      hasAppId: !!config.appId,
-      hasMeasurementId: !!config.measurementId,
     });
   }
 
