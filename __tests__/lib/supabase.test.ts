@@ -48,7 +48,7 @@ describe('lib/supabase', () => {
       const { createClient } = require('@supabase/supabase-js');
       const { supabase } = require('@/lib/supabase');
 
-      const _ = supabase.auth;
+      void supabase.auth; // Trigger init
 
       expect(createClient).toHaveBeenCalledWith(
         'https://example.com',
@@ -65,16 +65,24 @@ describe('lib/supabase', () => {
   });
 
   describe('SupabaseStorageAdapter', () => {
-    let storageAdapter: any;
+    interface StorageAdapter {
+      getItem(key: string): Promise<string | null>;
+      setItem(key: string, value: string): Promise<void>;
+      removeItem(key: string): Promise<void>;
+    }
 
-    const getStorageAdapter = () => {
+    let storageAdapter: StorageAdapter;
+
+    const getStorageAdapter = (): StorageAdapter => {
       process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://example.com';
       process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'publishable-key';
 
       const { createClient } = require('@supabase/supabase-js');
       const { supabase } = require('@/lib/supabase');
-      const _ = supabase.auth; // Trigger init
-      const call = createClient.mock.calls.find((call: any[]) => call[0] === 'https://example.com');
+      void supabase.auth; // Trigger init
+      const call = createClient.mock.calls.find(
+        (call: unknown[]) => call[0] === 'https://example.com'
+      );
       return call[2].auth.storage;
     };
 
