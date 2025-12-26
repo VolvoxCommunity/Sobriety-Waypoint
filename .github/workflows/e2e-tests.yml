@@ -68,7 +68,6 @@ jobs:
       - name: Build web app
         run: pnpm build:web
         env:
-          # App expects EXPO_PUBLIC_* prefixed env vars (see lib/supabase.ts)
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
 
@@ -81,7 +80,6 @@ jobs:
       - name: Run E2E tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
-          # E2E tests (supabase-helpers.ts) expect SUPABASE_URL without EXPO_PUBLIC prefix
           SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           E2E_SUPABASE_SERVICE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_KEY }}
