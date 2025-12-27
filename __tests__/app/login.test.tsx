@@ -239,6 +239,27 @@ describe('LoginScreen', () => {
     });
   });
 
+  describe('password visibility toggle', () => {
+    it('toggles password visibility when eye icon is pressed', () => {
+      renderWithTheme(<LoginScreen />);
+
+      const passwordInput = screen.getByPlaceholderText('••••••••');
+      const toggleButton = screen.getByLabelText('Show password');
+
+      // Initially password should be hidden (secureTextEntry = true)
+      expect(passwordInput.props.secureTextEntry).toBe(true);
+
+      // Press to show password
+      fireEvent.press(toggleButton);
+      expect(passwordInput.props.secureTextEntry).toBe(false);
+
+      // Press to hide password again
+      const hideButton = screen.getByLabelText('Hide password');
+      fireEvent.press(hideButton);
+      expect(passwordInput.props.secureTextEntry).toBe(true);
+    });
+  });
+
   describe('validation errors', () => {
     it('shows toast when email is empty', async () => {
       renderWithTheme(<LoginScreen />);

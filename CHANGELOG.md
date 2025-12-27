@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add password visibility toggle to Login and Signup screens for improved usability
+
 ### Changed
 
 - Lower branch coverage threshold from 85% to 83% to account for untestable code paths (DevToolsSection, platform-specific conditionals)

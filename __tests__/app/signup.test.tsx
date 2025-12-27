@@ -487,6 +487,49 @@ describe('SignupScreen', () => {
     });
   });
 
+  describe('Password Visibility Toggle', () => {
+    it('toggles password visibility when eye icon is pressed', () => {
+      render(<SignupScreen />);
+
+      const passwordInputs = screen.getAllByPlaceholderText('••••••••');
+      const showPasswordButtons = screen.getAllByLabelText('Show password');
+
+      // Initially password should be hidden (secureTextEntry = true)
+      expect(passwordInputs[0].props.secureTextEntry).toBe(true);
+
+      // Press to show password
+      fireEvent.press(showPasswordButtons[0]);
+      expect(passwordInputs[0].props.secureTextEntry).toBe(false);
+
+      // Press to hide password again
+      const hidePasswordButton = screen.getByLabelText('Hide password');
+      fireEvent.press(hidePasswordButton);
+      expect(passwordInputs[0].props.secureTextEntry).toBe(true);
+    });
+
+    it('toggles confirm password visibility independently', () => {
+      render(<SignupScreen />);
+
+      const passwordInputs = screen.getAllByPlaceholderText('••••••••');
+      const showConfirmPasswordButton = screen.getByLabelText('Show confirm password');
+
+      // Initially confirm password should be hidden
+      expect(passwordInputs[1].props.secureTextEntry).toBe(true);
+
+      // Press to show confirm password
+      fireEvent.press(showConfirmPasswordButton);
+      expect(passwordInputs[1].props.secureTextEntry).toBe(false);
+
+      // Password field should still be hidden
+      expect(passwordInputs[0].props.secureTextEntry).toBe(true);
+
+      // Press to hide confirm password again
+      const hideConfirmPasswordButton = screen.getByLabelText('Hide confirm password');
+      fireEvent.press(hideConfirmPasswordButton);
+      expect(passwordInputs[1].props.secureTextEntry).toBe(true);
+    });
+  });
+
   describe('Web Platform', () => {
     let originalPlatform: typeof Platform.OS;
 
