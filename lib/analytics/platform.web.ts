@@ -60,7 +60,15 @@ export function trackEventPlatform(eventName: string, params?: EventParams): voi
 
   if (!isInitialized) return;
 
-  amplitude.track(eventName, params);
+  try {
+    amplitude.track(eventName, params);
+  } catch (error) {
+    logger.error(
+      'Failed to track event',
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS, eventName }
+    );
+  }
 }
 
 /**
