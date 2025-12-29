@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add TaskCard accessibility tests for status icon labels and due date announcements
 - Add analytics platform tests for uninitialized state and edge cases
 - Add Sentry Spotlight for local development error debugging (`pnpm spotlight`)
+- Add complete AnalyticsEvents constant assertions covering all 35 event types to catch renamed/removed constants
 
 ### Changed
 

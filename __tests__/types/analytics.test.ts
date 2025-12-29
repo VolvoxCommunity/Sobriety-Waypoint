@@ -19,12 +19,17 @@ describe('types/analytics', () => {
 
       // Onboarding events
       expect(AnalyticsEvents.ONBOARDING_STARTED).toBe('Onboarding Started');
+      expect(AnalyticsEvents.ONBOARDING_STEP_COMPLETED).toBe('Onboarding Step Completed');
+      expect(AnalyticsEvents.ONBOARDING_SOBRIETY_DATE_SET).toBe('Onboarding Sobriety Date Set');
       expect(AnalyticsEvents.ONBOARDING_COMPLETED).toBe('Onboarding Completed');
       expect(AnalyticsEvents.ONBOARDING_SCREEN_VIEWED).toBe('Onboarding Screen Viewed');
       expect(AnalyticsEvents.ONBOARDING_FIELD_COMPLETED).toBe('Onboarding Field Completed');
       expect(AnalyticsEvents.ONBOARDING_ABANDONED).toBe('Onboarding Abandoned');
 
-      // Task events
+      // Core Features events
+      expect(AnalyticsEvents.SCREEN_VIEWED).toBe('Screen Viewed');
+      expect(AnalyticsEvents.TASK_VIEWED).toBe('Task Viewed');
+      expect(AnalyticsEvents.TASK_STARTED).toBe('Task Started');
       expect(AnalyticsEvents.TASK_COMPLETED).toBe('Task Completed');
       expect(AnalyticsEvents.TASK_CREATED).toBe('Task Created');
       expect(AnalyticsEvents.TASK_SKIPPED).toBe('Task Skipped');
@@ -38,15 +43,22 @@ describe('types/analytics', () => {
 
       // Milestone events
       expect(AnalyticsEvents.MILESTONE_REACHED).toBe('Milestone Reached');
+      expect(AnalyticsEvents.MILESTONE_SHARED).toBe('Milestone Shared');
       expect(AnalyticsEvents.MILESTONE_CELEBRATED).toBe('Milestone Celebrated');
 
       // Social events
+      expect(AnalyticsEvents.SPONSOR_CONNECTED).toBe('Sponsor Connected');
+      expect(AnalyticsEvents.SPONSOR_INVITE_SENT).toBe('Sponsor Invite Sent');
+      expect(AnalyticsEvents.SPONSOR_INVITE_ACCEPTED).toBe('Sponsor Invite Accepted');
       expect(AnalyticsEvents.SPONSEE_ADDED).toBe('Sponsee Added');
+      expect(AnalyticsEvents.MESSAGE_SENT).toBe('Message Sent');
       expect(AnalyticsEvents.MESSAGE_READ).toBe('Message Read');
 
       // Engagement events
+      expect(AnalyticsEvents.APP_OPENED).toBe('App Opened');
       expect(AnalyticsEvents.APP_BACKGROUNDED).toBe('App Backgrounded');
       expect(AnalyticsEvents.APP_SESSION_STARTED).toBe('App Session Started');
+      expect(AnalyticsEvents.DAILY_CHECK_IN).toBe('Daily Check In');
 
       // Settings events
       expect(AnalyticsEvents.SETTINGS_CHANGED).toBe('Settings Changed');
