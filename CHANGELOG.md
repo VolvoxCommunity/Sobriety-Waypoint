@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Amplitude Analytics integration for product analytics with native and web platform support
 - Add 35+ analytics events with Title Case naming (e.g., "Screen Viewed", "Task Completed") for comprehensive user engagement tracking
 - Add 9 user properties for cohort analysis: days_sober_bucket, steps_completed_bucket, has_sponsor, has_sponsees, theme_preference, notifications_enabled, app_version, platform, device_type
+- Add password visibility toggle to Login and Signup screens with accessible labels
+- Add testIDs for password toggle buttons to improve test selectability
+- Add tests for password visibility toggle functionality in login and signup screens
 - Add DevToolsSection tests for SettingsContent covering development mode features
 - Add filter by Completed status tests for manage-tasks screen
 - Add initializeAuth error handling tests for AuthContext
