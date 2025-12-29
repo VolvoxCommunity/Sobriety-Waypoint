@@ -47,7 +47,9 @@ describe('lib/analytics/platform.native', () => {
 
     it('should rethrow initialization errors to allow retry', async () => {
       const mockError = new Error('Network error');
-      (amplitude.init as jest.Mock).mockRejectedValueOnce(mockError);
+      (amplitude.init as jest.Mock).mockReturnValueOnce({
+        promise: Promise.reject(mockError),
+      });
 
       await expect(initializePlatformAnalytics({ apiKey: 'test-key' })).rejects.toThrow(
         'Network error'

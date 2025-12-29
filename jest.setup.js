@@ -754,7 +754,7 @@ jest.mock('expo-application', () => ({
 
 // Mock @amplitude/analytics-react-native
 jest.mock('@amplitude/analytics-react-native', () => ({
-  init: jest.fn().mockResolvedValue(undefined),
+  init: jest.fn().mockReturnValue({ promise: Promise.resolve() }),
   track: jest.fn(),
   identify: jest.fn(),
   setUserId: jest.fn(),
@@ -769,7 +769,7 @@ jest.mock('@amplitude/analytics-react-native', () => ({
 
 // Mock @amplitude/analytics-browser
 jest.mock('@amplitude/analytics-browser', () => ({
-  init: jest.fn(),
+  init: jest.fn().mockReturnValue({ promise: Promise.resolve() }),
   track: jest.fn(),
   identify: jest.fn(),
   setUserId: jest.fn(),
