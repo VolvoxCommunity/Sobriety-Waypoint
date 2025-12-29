@@ -89,7 +89,7 @@ export function calculateDaysSoberBucket(days: number): DaysSoberBucket {
  * Calculates the appropriate bucket for steps completed.
  */
 export function calculateStepsCompletedBucket(count: number): StepsCompletedBucket {
-  if (count === 0) return '0';
+  if (count <= 0) return '0';
   if (count <= 3) return '1-3';
   if (count <= 6) return '4-6';
   if (count <= 9) return '7-9';

@@ -66,6 +66,8 @@ describe('lib/analytics-utils', () => {
 
   describe('calculateStepsCompletedBucket', () => {
     it.each([
+      [-5, '0'],
+      [-1, '0'],
       [0, '0'],
       [1, '1-3'],
       [3, '1-3'],
