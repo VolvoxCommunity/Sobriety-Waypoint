@@ -57,6 +57,8 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 // Mock lucide-react-native
 jest.mock('lucide-react-native', () => ({
   Heart: () => null,
+  Eye: () => null,
+  EyeOff: () => null,
 }));
 
 // Mock AppleSignInButton (iOS only component)
@@ -234,6 +236,25 @@ describe('LoginScreen', () => {
       fireEvent.changeText(passwordInput, 'secretpass');
 
       expect(passwordInput.props.value).toBe('secretpass');
+    });
+
+    it('toggles password visibility', () => {
+      renderWithTheme(<LoginScreen />);
+
+      const passwordInput = screen.getByPlaceholderText('••••••••');
+      const toggleButton = screen.getByLabelText('Show password');
+
+      // Initial state: password hidden
+      expect(passwordInput.props.secureTextEntry).toBe(true);
+
+      // Toggle to show
+      fireEvent.press(toggleButton);
+      expect(passwordInput.props.secureTextEntry).toBe(false);
+      expect(screen.getByLabelText('Hide password')).toBeTruthy();
+
+      // Toggle back to hide
+      fireEvent.press(screen.getByLabelText('Hide password'));
+      expect(passwordInput.props.secureTextEntry).toBe(true);
     });
   });
 

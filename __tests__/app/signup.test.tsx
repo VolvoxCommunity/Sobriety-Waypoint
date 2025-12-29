@@ -70,6 +70,8 @@ jest.mock('@/contexts/ThemeContext', () => ({
 jest.mock('lucide-react-native', () => ({
   Heart: () => null,
   ArrowLeft: () => null,
+  Eye: () => null,
+  EyeOff: () => null,
 }));
 
 // Mock SocialLogos
@@ -480,6 +482,27 @@ describe('SignupScreen', () => {
 
       expect(passwordInputs[0].props.value).toBe('secretpass');
       expect(passwordInputs[1].props.value).toBe('secretpass');
+    });
+
+    it('toggles password visibility for both fields', () => {
+      render(<SignupScreen />);
+
+      const passwordInputs = screen.getAllByPlaceholderText('••••••••');
+      const toggleButtons = screen.getAllByLabelText('Show password');
+
+      // Check initial state
+      expect(passwordInputs[0].props.secureTextEntry).toBe(true);
+      expect(passwordInputs[1].props.secureTextEntry).toBe(true);
+
+      // Toggle main password
+      fireEvent.press(toggleButtons[0]);
+      expect(passwordInputs[0].props.secureTextEntry).toBe(false);
+      expect(passwordInputs[1].props.secureTextEntry).toBe(true);
+
+      // Toggle confirm password
+      fireEvent.press(toggleButtons[1]);
+      expect(passwordInputs[0].props.secureTextEntry).toBe(false);
+      expect(passwordInputs[1].props.secureTextEntry).toBe(false);
     });
   });
 

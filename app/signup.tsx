@@ -11,7 +11,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, type ThemeColors } from '@/contexts/ThemeContext';
-import { Heart, ArrowLeft, Check, X } from 'lucide-react-native';
+import { Heart, ArrowLeft, Check, X, Eye, EyeOff } from 'lucide-react-native';
 import { validatePassword, checkPasswordRequirements } from '@/lib/validation';
 import { GoogleLogo } from '@/components/auth/SocialLogos';
 import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
@@ -91,6 +91,8 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
@@ -193,22 +195,37 @@ export default function SignupScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              testID="signup-password-input"
-              ref={passwordRef}
-              style={styles.input}
-              placeholder="••••••••"
-              accessibilityLabel="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-              blurOnSubmit={false}
-              autoComplete="password-new"
-              textContentType="newPassword"
-            />
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                testID="signup-password-input"
+                ref={passwordRef}
+                style={[styles.input, styles.passwordInput]}
+                placeholder="••••••••"
+                accessibilityLabel="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                editable={!loading}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                blurOnSubmit={false}
+                autoComplete="password-new"
+                textContentType="newPassword"
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color={theme.textSecondary} />
+                ) : (
+                  <Eye size={20} color={theme.textSecondary} />
+                )}
+              </TouchableOpacity>
+            </View>
             {password.length > 0 && (
               <View style={styles.requirementsContainer} testID="password-requirements">
                 <PasswordRequirement
@@ -247,21 +264,36 @@ export default function SignupScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              testID="signup-confirm-password-input"
-              ref={confirmPasswordRef}
-              style={styles.input}
-              placeholder="••••••••"
-              accessibilityLabel="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!loading}
-              returnKeyType="done"
-              onSubmitEditing={handleSignup}
-              autoComplete="password-new"
-              textContentType="newPassword"
-            />
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                testID="signup-confirm-password-input"
+                ref={confirmPasswordRef}
+                style={[styles.input, styles.passwordInput]}
+                placeholder="••••••••"
+                accessibilityLabel="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                editable={!loading}
+                returnKeyType="done"
+                onSubmitEditing={handleSignup}
+                autoComplete="password-new"
+                textContentType="newPassword"
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={20} color={theme.textSecondary} />
+                ) : (
+                  <Eye size={20} color={theme.textSecondary} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity
@@ -392,6 +424,18 @@ const createStyles = (theme: ThemeColors) =>
       fontSize: 16,
       fontFamily: theme.fontRegular,
       color: theme.text,
+    },
+    passwordWrapper: {
+      position: 'relative',
+    },
+    passwordInput: {
+      paddingRight: 48,
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 16,
+      top: 16,
+      zIndex: 1,
     },
     button: {
       backgroundColor: theme.primary,
