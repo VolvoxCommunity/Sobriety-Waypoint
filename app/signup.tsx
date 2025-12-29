@@ -288,6 +288,7 @@ export default function SignupScreen() {
                 accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
                 accessibilityRole="button"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={loading}
               >
                 {showConfirmPassword ? (
                   <EyeOff size={20} color={theme.textSecondary} />
