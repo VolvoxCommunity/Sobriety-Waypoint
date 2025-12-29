@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add password visibility toggle to Login and Signup screens with accessible touch targets
 - Add DevToolsSection tests for SettingsContent covering development mode features
 - Add App Updates UI tests for SettingsContent covering all update status states
 - Add filter by Completed status tests for manage-tasks screen
