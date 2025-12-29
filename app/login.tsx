@@ -139,6 +139,7 @@ export default function LoginScreen() {
                 accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                 accessibilityRole="button"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={loading}
               >
                 {showPassword ? (
                   <EyeOff size={20} color={theme.textSecondary} />
