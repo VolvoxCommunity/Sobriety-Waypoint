@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Build Info conditional rendering tests for SettingsContent
 - Add handleSaveName edge case tests for SettingsContent
 - Add handleToggleSavingsCard tests for SettingsContent
+- Add TaskCard accessibility tests for status icon labels and due date announcements
 
 ### Changed
 
@@ -36,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix E2E savings tests failing due to incorrect card click (menu button required)
 - Improve test coverage: add tests for alert module public API, SettingsContent build info, and savings card toggle
 - Fix keyboard pushing content up excessively in EditSavingsSheet by using single snap point
+- Fix TaskCard syntax error causing build failure (broken JSX from accessibility enhancement)
 
 ## [1.2.1] - 2025-12-25
 
