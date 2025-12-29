@@ -60,9 +60,9 @@ let initializationPromise: Promise<void> | null = null;
 let initializationState: 'pending' | 'completed' | 'skipped' | 'failed' | null = null;
 
 /**
- * Internal initialization logic. Called by initializeAnalytics wrapper.
+ * Initialize platform-specific analytics using the provided configuration.
  *
- * @param config - Analytics configuration
+ * @param config - Analytics configuration used to initialize platform analytics (must include `apiKey`)
  */
 async function doInitialize(config: AnalyticsConfig): Promise<void> {
   await initializePlatformAnalytics(config);
@@ -71,20 +71,9 @@ async function doInitialize(config: AnalyticsConfig): Promise<void> {
 /**
  * Initialize Amplitude Analytics for the app.
  *
- * Call this once at app startup, before any other analytics calls.
- * Uses the EXPO_PUBLIC_AMPLITUDE_API_KEY environment variable.
+ * Starts analytics initialization using EXPO_PUBLIC_AMPLITUDE_API_KEY. Concurrent callers will share the same initialization process; initialization is skipped if configuration indicates analytics should not run. Initialization failures are logged and do not throw, allowing retries on subsequent calls.
  *
- * This function uses a Promise-based pattern to prevent race conditions:
- * - Concurrent calls during initialization will await the same Promise
- * - Once completed, subsequent calls return immediately
- * - On failure, retry is allowed (state is reset)
- *
- * @example
- * ```ts
- * // In app/_layout.tsx
- * import { initializeAnalytics } from '@/lib/analytics';
- * initializeAnalytics();
- * ```
+ * @returns Nothing; resolves when initialization completes
  */
 export async function initializeAnalytics(): Promise<void> {
   // Already completed or skipped - return immediately
