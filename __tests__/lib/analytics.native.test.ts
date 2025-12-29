@@ -78,6 +78,12 @@ describe('lib/analytics/platform.native', () => {
 
       expect(amplitude.setUserId).toHaveBeenCalledWith(undefined);
     });
+
+    it('should not set user ID before initialization', () => {
+      setUserIdPlatform('user-123');
+
+      expect(amplitude.setUserId).not.toHaveBeenCalled();
+    });
   });
 
   describe('setUserPropertiesPlatform', () => {
@@ -85,6 +91,20 @@ describe('lib/analytics/platform.native', () => {
       await initializePlatformAnalytics({ apiKey: 'test-key' });
 
       setUserPropertiesPlatform({ has_sponsor: true, theme_preference: 'dark' });
+
+      expect(amplitude.identify).toHaveBeenCalled();
+    });
+
+    it('should not set user properties before initialization', () => {
+      setUserPropertiesPlatform({ has_sponsor: true });
+
+      expect(amplitude.identify).not.toHaveBeenCalled();
+    });
+
+    it('should skip undefined property values', async () => {
+      await initializePlatformAnalytics({ apiKey: 'test-key' });
+
+      setUserPropertiesPlatform({ has_sponsor: true, theme_preference: undefined });
 
       expect(amplitude.identify).toHaveBeenCalled();
     });
@@ -101,6 +121,17 @@ describe('lib/analytics/platform.native', () => {
         screen_class: 'TabScreen',
       });
     });
+
+    it('should use screen name as default screen class', async () => {
+      await initializePlatformAnalytics({ apiKey: 'test-key' });
+
+      trackScreenViewPlatform('Settings');
+
+      expect(amplitude.track).toHaveBeenCalledWith('Screen Viewed', {
+        screen_name: 'Settings',
+        screen_class: 'Settings',
+      });
+    });
   });
 
   describe('resetAnalyticsPlatform', () => {
@@ -110,6 +141,12 @@ describe('lib/analytics/platform.native', () => {
       await resetAnalyticsPlatform();
 
       expect(amplitude.reset).toHaveBeenCalled();
+    });
+
+    it('should not reset before initialization', async () => {
+      await resetAnalyticsPlatform();
+
+      expect(amplitude.reset).not.toHaveBeenCalled();
     });
   });
 });
