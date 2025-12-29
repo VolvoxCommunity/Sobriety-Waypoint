@@ -174,14 +174,6 @@ describe('Unified Analytics Module', () => {
       expect(mockInitializePlatformAnalytics).toHaveBeenCalledTimes(1);
     });
 
-    it('warns about missing Amplitude API key', async () => {
-      await initializeAnalytics();
-
-      // Should warn about missing config (env vars are empty in test)
-      expect(mockLoggerWarn).toHaveBeenCalledWith('Amplitude API key not configured', {
-        category: 'ANALYTICS',
-      });
-    });
   });
 
   describe('trackEvent', () => {

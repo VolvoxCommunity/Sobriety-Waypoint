@@ -10,10 +10,10 @@
  *
  * @example
  * ```ts
- * import { trackEvent, setUserId, setUserProperties } from '@/lib/analytics';
+ * import { trackEvent, setUserId, setUserProperties, AnalyticsEvents } from '@/lib/analytics';
  *
- * // Track an event
- * trackEvent('task_completed', { task_id: '123' });
+ * // Track an event using constants
+ * trackEvent(AnalyticsEvents.TASK_COMPLETED, { task_id: '123' });
  *
  * // Set user ID after login
  * setUserId(user.id);
@@ -120,16 +120,10 @@ export async function initializeAnalytics(): Promise<void> {
   }
 
   // Amplitude uses a single API key for all platforms
+  // Trim whitespace to match shouldInitializeAnalytics validation
   const config: AnalyticsConfig = {
-    apiKey: process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY || '',
+    apiKey: process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY?.trim() || '',
   };
-
-  // Warn about missing config
-  if (!config.apiKey) {
-    logger.warn('Amplitude API key not configured', {
-      category: LogCategory.ANALYTICS,
-    });
-  }
 
   // Start new initialization
   initializationState = 'pending';
