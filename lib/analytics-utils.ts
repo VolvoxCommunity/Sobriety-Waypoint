@@ -33,8 +33,14 @@ const PII_FIELDS = [
 const MAX_DEPTH = 10;
 
 /**
- * Recursively removes PII fields from event parameters at any depth.
- */
+ * Remove personally identifiable information (PII) keys from a value recursively.
+ *
+ * Recursively traverses arrays and plain objects and returns a copy with any keys listed in `PII_FIELDS` removed at all depths. Tracks visited objects to break reference cycles (in which case `undefined` is returned for that branch) and stops recursion when `depth` exceeds `MAX_DEPTH`, returning the value unchanged.
+ *
+ * @param value - The value to sanitize; may be a primitive, array, or object.
+ * @param visited - Internal WeakSet used to track objects already traversed to avoid cycles.
+ * @param depth - Current recursion depth; when greater than `MAX_DEPTH` the original `value` is returned.
+ * @returns The sanitized value with PII keys removed, `undefined` for a cyclic branch, or the original value if recursion depth is exceeded.
 function sanitizeValue(
   value: unknown,
   visited: WeakSet<object> = new WeakSet(),
@@ -65,7 +71,10 @@ function sanitizeValue(
 }
 
 /**
- * Removes PII fields from event parameters before sending to analytics.
+ * Strip PII fields from event parameters.
+ *
+ * @param params - Event parameters to sanitize; may be undefined.
+ * @returns The parameters with PII keys removed; returns an empty object if `params` is falsy or sanitization fails.
  */
 export function sanitizeParams(params: EventParams | undefined): EventParams {
   if (!params) return {};
@@ -74,7 +83,10 @@ export function sanitizeParams(params: EventParams | undefined): EventParams {
 }
 
 /**
- * Calculates the appropriate bucket for days sober.
+ * Determine the bucket label for a given number of sober days.
+ *
+ * @param days - The number of days sober used to select a bucket.
+ * @returns One of: `'0-7'`, `'8-30'`, `'31-90'`, `'91-180'`, `'181-365'`, or `'365+'`. Each numeric range is inclusive of its lower and upper bounds; `'365+'` represents values greater than 365.
  */
 export function calculateDaysSoberBucket(days: number): DaysSoberBucket {
   if (days <= 7) return '0-7';
@@ -86,7 +98,10 @@ export function calculateDaysSoberBucket(days: number): DaysSoberBucket {
 }
 
 /**
- * Calculates the appropriate bucket for steps completed.
+ * Map a steps-completed count to its predefined bucket label.
+ *
+ * @param count - The number of steps completed in a multi-step flow
+ * @returns `'0'` if `count` <= 0, `'1-3'` if `count` is between 1 and 3, `'4-6'` if between 4 and 6, `'7-9'` if between 7 and 9, otherwise `'10-12'`
  */
 export function calculateStepsCompletedBucket(count: number): StepsCompletedBucket {
   if (count <= 0) return '0';
@@ -97,8 +112,9 @@ export function calculateStepsCompletedBucket(count: number): StepsCompletedBuck
 }
 
 /**
- * Checks if Amplitude Analytics should be initialized.
- * Returns true if the API key is configured.
+ * Determine whether Amplitude Analytics should be initialized based on the configured API key.
+ *
+ * @returns `true` if the environment variable `EXPO_PUBLIC_AMPLITUDE_API_KEY` exists and is not empty after trimming, `false` otherwise.
  */
 export function shouldInitializeAnalytics(): boolean {
   const apiKey = process.env.EXPO_PUBLIC_AMPLITUDE_API_KEY?.trim();
@@ -106,14 +122,18 @@ export function shouldInitializeAnalytics(): boolean {
 }
 
 /**
- * Checks if the app is running in debug mode.
+ * Determines whether analytics should run in debug mode.
+ *
+ * @returns `true` if `__DEV__` is truthy or `EXPO_PUBLIC_ANALYTICS_DEBUG` equals `'true'`, `false` otherwise.
  */
 export function isDebugMode(): boolean {
   return __DEV__ || process.env.EXPO_PUBLIC_ANALYTICS_DEBUG === 'true';
 }
 
 /**
- * Gets the current environment for analytics tagging.
+ * Determine the analytics environment tag.
+ *
+ * @returns `'development'` when `__DEV__` is truthy; otherwise the value of `EXPO_PUBLIC_APP_ENV` if set, or `'production'`.
  */
 export function getAnalyticsEnvironment(): string {
   if (__DEV__) return 'development';

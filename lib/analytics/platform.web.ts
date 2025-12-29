@@ -21,7 +21,12 @@ import { logger, LogCategory } from '@/lib/logger';
 let isInitialized = false;
 
 /**
- * Initializes Amplitude Analytics for web platform.
+ * Initialize Amplitude for the web platform using the provided analytics configuration.
+ *
+ * This is a no-op if analytics are already initialized. On success it marks the module as initialized.
+ *
+ * @param config - Analytics configuration; `config.apiKey` is used to initialize Amplitude.
+ * @throws Error if Amplitude initialization fails.
  */
 export async function initializePlatformAnalytics(config: AnalyticsConfig): Promise<void> {
   if (isInitialized) {
@@ -51,7 +56,10 @@ export async function initializePlatformAnalytics(config: AnalyticsConfig): Prom
 }
 
 /**
- * Tracks an analytics event.
+ * Sends an analytics event to Amplitude when the analytics system has been initialized.
+ *
+ * @param eventName - The event name to record
+ * @param params - Optional event parameters/properties to attach to the event
  */
 export function trackEventPlatform(eventName: string, params?: EventParams): void {
   if (isDebugMode()) {
@@ -72,7 +80,13 @@ export function trackEventPlatform(eventName: string, params?: EventParams): voi
 }
 
 /**
- * Sets the user ID for analytics.
+ * Set the current analytics user identifier.
+ *
+ * If `userId` is `null` the analytics user identifier is cleared. If the analytics
+ * subsystem has not been initialized this function is a no-op; errors during the
+ * underlying SDK call are caught and logged.
+ *
+ * @param userId - The user identifier to set, or `null` to clear the identifier
  */
 export function setUserIdPlatform(userId: string | null): void {
   if (isDebugMode()) {
@@ -93,7 +107,9 @@ export function setUserIdPlatform(userId: string | null): void {
 }
 
 /**
- * Sets user properties for analytics.
+ * Update the current user's analytics properties, applying only keys with defined values.
+ *
+ * @param properties - Mapping of user property names to values; properties with value `undefined` are ignored.
  */
 export function setUserPropertiesPlatform(properties: UserProperties): void {
   if (isDebugMode()) {
@@ -132,7 +148,9 @@ export function trackScreenViewPlatform(screenName: string, screenClass?: string
 }
 
 /**
- * Resets analytics state.
+ * Reset analytics client state for the web platform.
+ *
+ * This is a no-op when analytics has not been initialized. Errors that occur during reset are logged and not rethrown.
  */
 export async function resetAnalyticsPlatform(): Promise<void> {
   if (isDebugMode()) {
@@ -153,8 +171,10 @@ export async function resetAnalyticsPlatform(): Promise<void> {
 }
 
 /**
- * Reset for testing.
+ * Reset module initialization state for tests.
+ *
  * @internal
+ * @throws Error if called outside a test environment (NODE_ENV !== 'test')
  */
 export function __resetForTesting(): void {
   if (process.env.NODE_ENV !== 'test') {
