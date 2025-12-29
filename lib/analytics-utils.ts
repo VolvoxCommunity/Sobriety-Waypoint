@@ -72,10 +72,10 @@ function sanitizeValue(
 }
 
 /**
- * Strip PII fields from event parameters.
+ * Removes personally identifiable information (PII) keys from event parameters.
  *
  * @param params - Event parameters to sanitize; may be undefined.
- * @returns The parameters with PII keys removed; returns an empty object if `params` is falsy or sanitization fails.
+ * @returns Event parameters with PII keys removed. Returns an empty object if `params` is falsy or if sanitization yields a falsy result.
  */
 export function sanitizeParams(params: EventParams | undefined): EventParams {
   if (!params) return {};
