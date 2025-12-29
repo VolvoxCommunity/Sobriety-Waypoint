@@ -81,7 +81,15 @@ export function setUserIdPlatform(userId: string | null): void {
 
   if (!isInitialized) return;
 
-  amplitude.setUserId(userId ?? undefined);
+  try {
+    amplitude.setUserId(userId ?? undefined);
+  } catch (error) {
+    logger.error(
+      'Failed to set user ID',
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS }
+    );
+  }
 }
 
 /**
@@ -133,7 +141,15 @@ export async function resetAnalyticsPlatform(): Promise<void> {
 
   if (!isInitialized) return;
 
-  amplitude.reset();
+  try {
+    amplitude.reset();
+  } catch (error) {
+    logger.error(
+      'Failed to reset analytics',
+      error instanceof Error ? error : new Error(String(error)),
+      { category: LogCategory.ANALYTICS }
+    );
+  }
 }
 
 /**
