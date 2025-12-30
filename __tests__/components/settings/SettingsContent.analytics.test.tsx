@@ -398,7 +398,7 @@ describe('SettingsContent Analytics Tracking', () => {
       );
 
       const analyticsDebugToggle = screen.getByTestId('toggle-analytics-debug');
-      
+
       // First toggle enables it
       fireEvent.press(analyticsDebugToggle);
       jest.clearAllMocks();
@@ -412,7 +412,7 @@ describe('SettingsContent Analytics Tracking', () => {
   });
 
   describe('Analytics Not Fired for Non-Preference Changes', () => {
-    it('does not track analytics for What\'s New button press', () => {
+    it("does not track analytics for What's New button press", () => {
       render(
         <SettingsContent
           profile={mockProfile}
@@ -428,10 +428,7 @@ describe('SettingsContent Analytics Tracking', () => {
       fireEvent.press(whatsNewButton);
 
       // Should only show toast, not track event
-      expect(mockTrackEvent).not.toHaveBeenCalledWith(
-        'Settings Changed',
-        expect.any(Object)
-      );
+      expect(mockTrackEvent).not.toHaveBeenCalledWith('Settings Changed', expect.any(Object));
     });
 
     it('does not track analytics for sign out button press', () => {
@@ -449,10 +446,7 @@ describe('SettingsContent Analytics Tracking', () => {
       const signOutButton = screen.getByText('Sign Out');
       fireEvent.press(signOutButton);
 
-      expect(mockTrackEvent).not.toHaveBeenCalledWith(
-        'Settings Changed',
-        expect.any(Object)
-      );
+      expect(mockTrackEvent).not.toHaveBeenCalledWith('Settings Changed', expect.any(Object));
     });
   });
 });

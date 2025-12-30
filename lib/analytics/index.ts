@@ -60,9 +60,9 @@ let initializationPromise: Promise<void> | null = null;
 let initializationState: 'pending' | 'completed' | 'skipped' | 'failed' | null = null;
 
 /**
- * Initialize platform-specific analytics using the provided configuration.
+ * Initializes the platform-specific analytics implementation with the provided configuration.
  *
- * @param config - Analytics configuration used to initialize platform analytics (must include `apiKey`)
+ * @param config - Analytics configuration; must include `apiKey` used to initialize analytics
  */
 async function doInitialize(config: AnalyticsConfig): Promise<void> {
   await initializePlatformAnalytics(config);
@@ -71,9 +71,9 @@ async function doInitialize(config: AnalyticsConfig): Promise<void> {
 /**
  * Initialize Amplitude Analytics for the app.
  *
- * Starts analytics initialization using EXPO_PUBLIC_AMPLITUDE_API_KEY. Concurrent callers will share the same initialization process; initialization is skipped if configuration indicates analytics should not run. Initialization failures are logged and do not throw, allowing retries on subsequent calls.
+ * Starts initialization using EXPO_PUBLIC_AMPLITUDE_API_KEY. Concurrent callers share the same initialization attempt; initialization is skipped when configuration indicates analytics should not run. Initialization failures are logged and do not throw, allowing retries on subsequent calls.
  *
- * @returns Nothing; resolves when initialization completes
+ * @returns Nothing.
  */
 export async function initializeAnalytics(): Promise<void> {
   // Already completed or skipped - return immediately

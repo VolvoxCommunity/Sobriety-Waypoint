@@ -136,9 +136,10 @@ export function setUserPropertiesPlatform(properties: UserProperties): void {
 }
 
 /**
- * Tracks a screen view event.
+ * Record a screen view event with an associated screen name and optional screen class.
+ *
  * @param screenName - The name of the screen being viewed
- * @param screenClass - Optional screen class. Defaults to screenName if not provided.
+ * @param screenClass - Optional screen class; when omitted, `screenName` is used
  */
 export function trackScreenViewPlatform(screenName: string, screenClass?: string): void {
   trackEventPlatform(AnalyticsEvents.SCREEN_VIEWED, {
@@ -148,9 +149,9 @@ export function trackScreenViewPlatform(screenName: string, screenClass?: string
 }
 
 /**
- * Reset analytics client state for the web platform.
+ * Reset the Amplitude analytics client state for the web platform.
  *
- * This is a no-op when analytics has not been initialized. Errors that occur during reset are logged and not rethrown.
+ * If analytics has not been initialized this function does nothing. Errors thrown by the underlying client are caught and logged and are not rethrown.
  */
 export async function resetAnalyticsPlatform(): Promise<void> {
   if (isDebugMode()) {
