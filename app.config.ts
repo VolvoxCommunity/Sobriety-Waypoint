@@ -44,7 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     policy: 'sdkVersion',
   },
   updates: {
-    url: 'https://u.expo.dev/8d64bbe4-27d4-41ac-9421-9c2758e4765a',
+    url: 'https://u.expo.dev/d17ee0bf-d2d6-4a29-9348-8dc79fffb815',
     enabled: true,
     checkAutomatically: 'ON_LOAD',
     fallbackToCacheTimeout: 0,
@@ -60,6 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
+    appleTeamId: 'WCBSSPMVPV',
   },
   // ===========================================================================
   // Android Configuration
