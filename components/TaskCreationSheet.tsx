@@ -403,7 +403,11 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </View>
 
           {activeDropdown === 'step' && (
-            <View style={styles.dropdownMenuOverlay}>
+            <View
+              style={styles.dropdownMenuOverlay}
+              onStartShouldSetResponder={() => true}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               <BottomSheetScrollView style={styles.dropdownMenuScrollable}>
                 <TouchableOpacity
                   style={styles.dropdownItem}
@@ -479,7 +483,11 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </View>
 
           {activeDropdown === 'template' && selectedStepNumber && (
-            <View style={styles.dropdownMenuOverlay}>
+            <View
+              style={styles.dropdownMenuOverlay}
+              onStartShouldSetResponder={() => true}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               <BottomSheetScrollView style={styles.dropdownMenuScrollable}>
                 {templates.length === 0 ? (
                   <View style={styles.dropdownItem}>
