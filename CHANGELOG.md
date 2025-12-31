@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Move journey start date editing from profile screen to settings for cleaner profile UI
 - Always expand the latest version section by default in What's New modal (previously only expanded if unseen)
 - Redesign What's New modal header to match other modals: sparkles icon, centered title, X close button, bottom border, subtitle in scroll content
 - Redesign WhatsNewVersionSection with improved visual hierarchy: colored version badges, metadata row with Ionicons for date and feature/fix counts

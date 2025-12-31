@@ -1,8 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react-native';
 import ProfileScreen from '@/app/(app)/(tabs)/profile';
 import { Platform } from 'react-native';
-import Toast from 'react-native-toast-message';
 
 // Mocks
 jest.mock('@/lib/supabase', () => ({
@@ -53,7 +52,13 @@ jest.mock('@/contexts/ThemeContext', () => ({
 }));
 
 jest.mock('@/hooks/useDaysSober', () => ({
-  useDaysSober: jest.fn(() => ({ daysSober: 100, journeyStartDate: new Date(), loading: false })),
+  useDaysSober: jest.fn(() => ({
+    daysSober: 100,
+    journeyStartDate: '2024-01-01',
+    currentStreakStartDate: '2024-01-01',
+    hasSlipUps: false,
+    loading: false,
+  })),
 }));
 
 jest.mock('lucide-react-native', () => ({
@@ -61,24 +66,8 @@ jest.mock('lucide-react-native', () => ({
   Share2: () => null,
   QrCode: () => null,
   UserMinus: () => null,
-  Edit2: () => null,
   CheckCircle: () => null,
   Settings: () => null,
-}));
-
-jest.mock('@react-native-community/datetimepicker', () => {
-  const React = require('react');
-  return {
-    __esModule: true,
-    default: (props: any) =>
-      React.createElement('input', { ...props, 'data-testid': 'date-picker' }),
-  };
-});
-
-jest.mock('@/lib/date', () => ({
-  formatDateWithTimezone: (d: Date) => d.toISOString().split('T')[0],
-  parseDateAsLocal: (s: string) => new Date(s),
-  getUserTimezone: () => 'UTC',
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -144,7 +133,6 @@ describe('ProfileScreen Web', () => {
       alert: jest.fn(),
       confirm: jest.fn(() => true),
     } as any;
-    (Toast.show as jest.Mock).mockClear();
 
     const { supabase } = jest.requireMock('@/lib/supabase');
     supabase.from.mockImplementation(() => createBuilder());
@@ -156,79 +144,33 @@ describe('ProfileScreen Web', () => {
     jest.clearAllMocks();
   });
 
-  it('uses window.confirm and shows toast for update sobriety date success', async () => {
-    const { supabase } = jest.requireMock('@/lib/supabase');
-    supabase.from.mockImplementation((table: string) => {
-      if (table === 'profiles') {
-        return createBuilder({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
-          }),
-        });
-      }
-      return createBuilder();
-    });
-
+  it('renders profile screen on web platform', async () => {
     render(<ProfileScreen />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Edit sobriety date')).toBeTruthy();
+      expect(screen.getByTestId('profile-display-name')).toBeTruthy();
     });
 
-    fireEvent.press(screen.getByLabelText('Edit sobriety date'));
-
-    await waitFor(() => {
-      // Check for modal
-      expect(screen.getByText('Edit Sobriety Date')).toBeTruthy();
-    });
-
-    // Find Update button in the modal
-    const updateButton = screen.getByText('Update');
-    fireEvent.press(updateButton);
-
-    expect(window.confirm).toHaveBeenCalled();
-
-    await waitFor(() => {
-      expect(Toast.show).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'success', text1: 'Sobriety date updated successfully' })
-      );
-    });
+    expect(screen.getByText('John D.')).toBeTruthy();
+    expect(screen.getByText('test@example.com')).toBeTruthy();
   });
 
-  it('shows error toast for update sobriety date failure', async () => {
-    const { supabase } = jest.requireMock('@/lib/supabase');
-    supabase.from.mockImplementation((table: string) => {
-      if (table === 'profiles') {
-        return createBuilder({
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: new Error('Update Failed') }),
-          }),
-        });
-      }
-      return createBuilder();
-    });
-
+  it('displays sobriety stats on web', async () => {
     render(<ProfileScreen />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Edit sobriety date')).toBeTruthy();
+      expect(screen.getByTestId('profile-sobriety-stats')).toBeTruthy();
     });
 
-    fireEvent.press(screen.getByLabelText('Edit sobriety date'));
+    expect(screen.getByText('100 Days')).toBeTruthy();
+    expect(screen.getByText(/Journey started:/)).toBeTruthy();
+  });
+
+  it('shows record a setback button on web', async () => {
+    render(<ProfileScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText('Edit Sobriety Date')).toBeTruthy();
-    });
-
-    const updateButton = screen.getByText('Update');
-    fireEvent.press(updateButton);
-
-    expect(window.confirm).toHaveBeenCalled();
-
-    await waitFor(() => {
-      expect(Toast.show).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'error', text1: 'Update Failed' })
-      );
+      expect(screen.getByText('Record a Setback')).toBeTruthy();
     });
   });
 });

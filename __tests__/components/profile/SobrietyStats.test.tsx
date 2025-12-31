@@ -5,7 +5,7 @@
  * - Days sober rendering
  * - Journey and streak dates
  * - Loading states
- * - Edit and log slip-up actions
+ * - Log slip-up action
  * - Accessibility attributes
  */
 
@@ -31,7 +31,6 @@ const mockTheme = {
 // Mock lucide-react-native icons
 jest.mock('lucide-react-native', () => ({
   Heart: 'Heart',
-  Edit2: 'Edit2',
 }));
 
 // Mock date utilities
@@ -48,7 +47,6 @@ jest.mock('@/lib/date', () => ({
 // =============================================================================
 
 describe('SobrietyStats', () => {
-  const mockOnEditSobrietyDate = jest.fn();
   const mockOnLogSlipUp = jest.fn();
 
   beforeEach(() => {
@@ -65,7 +63,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -82,7 +79,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={true}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -99,7 +95,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -116,7 +111,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -135,7 +129,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -152,7 +145,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -170,7 +162,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -189,7 +180,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={true}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -206,7 +196,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -223,52 +212,11 @@ describe('SobrietyStats', () => {
           hasSlipUps={true}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
 
       expect(screen.queryByText(/Current streak since/)).toBeNull();
-    });
-  });
-
-  describe('Edit Sobriety Date Action', () => {
-    it('renders edit button', () => {
-      render(
-        <SobrietyStats
-          daysSober={180}
-          journeyStartDate="2024-01-01"
-          currentStreakStartDate="2024-01-01"
-          hasSlipUps={false}
-          loading={false}
-          theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
-          onLogSlipUp={mockOnLogSlipUp}
-        />
-      );
-
-      const editButton = screen.getByLabelText('Edit sobriety date');
-      expect(editButton).toBeTruthy();
-    });
-
-    it('calls onEditSobrietyDate when edit button is pressed', () => {
-      render(
-        <SobrietyStats
-          daysSober={180}
-          journeyStartDate="2024-01-01"
-          currentStreakStartDate="2024-01-01"
-          hasSlipUps={false}
-          loading={false}
-          theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
-          onLogSlipUp={mockOnLogSlipUp}
-        />
-      );
-
-      const editButton = screen.getByLabelText('Edit sobriety date');
-      fireEvent.press(editButton);
-
-      expect(mockOnEditSobrietyDate).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -282,7 +230,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -299,7 +246,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -320,7 +266,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -338,7 +283,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -356,7 +300,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={true}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -374,7 +317,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -392,7 +334,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -411,7 +352,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -432,7 +372,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );
@@ -449,7 +388,6 @@ describe('SobrietyStats', () => {
           hasSlipUps={false}
           loading={false}
           theme={mockTheme}
-          onEditSobrietyDate={mockOnEditSobrietyDate}
           onLogSlipUp={mockOnLogSlipUp}
         />
       );

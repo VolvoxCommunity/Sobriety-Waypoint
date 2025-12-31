@@ -7,7 +7,6 @@ import {
   Share,
   Platform,
   ActivityIndicator,
-  Modal,
   ScrollView,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
@@ -18,10 +17,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { useDaysSober } from '@/hooks/useDaysSober';
 import { Settings } from 'lucide-react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import type { SponsorSponseeRelationship } from '@/types/database';
 import { logger, LogCategory } from '@/lib/logger';
-import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import LogSlipUpSheet, { LogSlipUpSheetRef } from '@/components/sheets/LogSlipUpSheet';
 import EnterInviteCodeSheet, {
   EnterInviteCodeSheetRef,
@@ -36,7 +33,7 @@ import InviteCodeSection from '@/components/profile/InviteCodeSection';
 
 /**
  * Render the authenticated user's profile, sobriety stats, and sponsor/sponsee management interface,
- * including controls to edit sobriety date, log slip-ups, manage invite codes, and disconnect relationships.
+ * including controls to log slip-ups, manage invite codes, and disconnect relationships.
  *
  * @returns A React element representing the profile screen
  */
@@ -57,18 +54,9 @@ export default function ProfileScreen() {
     []
   );
   const [loadingRelationships, setLoadingRelationships] = useState(true);
-  const [showSobrietyDatePicker, setShowSobrietyDatePicker] = useState(false);
-  const [selectedSobrietyDate, setSelectedSobrietyDate] = useState<Date>(new Date());
   const [sponseeTaskStats, setSponseeTaskStats] = useState<{
     [key: string]: { total: number; completed: number };
   }>({});
-
-  // User's timezone (stored in profile) with device timezone as fallback
-  const userTimezone = getUserTimezone(profile);
-
-  // Stable maximum date for DateTimePicker to prevent iOS crash when value > maximumDate.
-  // iOS throws 'Start date cannot be later in time than end date!' if value > maximumDate.
-  const maximumDate = useMemo(() => new Date(), []);
 
   const fetchRelationships = useCallback(async () => {
     if (!profile) return;
@@ -459,83 +447,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEditSobrietyDate = () => {
-    if (profile?.sobriety_date) {
-      // Parse using the user's stored timezone to maintain consistency
-      // with how dates are saved (line 939 uses userTimezone)
-      const parsedDate = parseDateAsLocal(profile.sobriety_date, userTimezone);
-      // Clamp to maximumDate to prevent iOS DateTimePicker crash
-      setSelectedSobrietyDate(parsedDate > maximumDate ? maximumDate : parsedDate);
-    }
-    setShowSobrietyDatePicker(true);
-  };
-
-  const updateSobrietyDate = useCallback(
-    async (newDate: Date) => {
-      if (!profile) return;
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const selectedDate = new Date(newDate);
-      selectedDate.setHours(0, 0, 0, 0);
-
-      if (selectedDate > today) {
-        showToast.error('Sobriety date cannot be in the future');
-        return;
-      }
-
-      const confirmMessage = `Update your sobriety date to ${newDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}?`;
-
-      const confirmed = await showConfirm(
-        'Confirm Date Change',
-        confirmMessage,
-        'Update',
-        'Cancel'
-      );
-
-      if (!confirmed) return;
-
-      try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            sobriety_date: formatDateWithTimezone(newDate, userTimezone),
-          })
-          .eq('id', profile.id);
-
-        if (error) throw error;
-
-        await refreshProfile();
-
-        showToast.success('Sobriety date updated successfully');
-      } catch (error: unknown) {
-        logger.error('Sobriety date update failed', error as Error, {
-          category: LogCategory.DATABASE,
-        });
-        const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
-        showToast.error(message);
-      }
-    },
-    [profile, userTimezone, refreshProfile]
-  );
-
-  /**
-   * Shared handler for confirming a sobriety date selection.
-   * Closes the date picker and triggers the update.
-   * Used by both iOS (Update button) and Android (native OK) date pickers.
-   *
-   * @param date - The selected date to update, or undefined to cancel
-   */
-  const handleSobrietyDateConfirm = useCallback(
-    (date: Date | undefined) => {
-      setShowSobrietyDatePicker(false);
-      if (date) {
-        updateSobrietyDate(date);
-      }
-    },
-    [updateSobrietyDate]
-  );
-
   const handleLogSlipUp = () => {
     logSlipUpSheetRef.current?.present();
   };
@@ -592,7 +503,6 @@ export default function ProfileScreen() {
           hasSlipUps={hasSlipUps}
           loading={loadingDaysSober}
           theme={theme}
-          onEditSobrietyDate={handleEditSobrietyDate}
           onLogSlipUp={handleLogSlipUp}
         />
 
@@ -671,107 +581,6 @@ export default function ProfileScreen() {
           </InviteCodeSection>
         )}
 
-        {Platform.OS === 'web' && showSobrietyDatePicker && (
-          <Modal visible={showSobrietyDatePicker} transparent animationType="fade">
-            <View style={styles.modalOverlay}>
-              <View style={styles.datePickerModal}>
-                <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
-                <input
-                  type="date"
-                  value={formatDateWithTimezone(selectedSobrietyDate, userTimezone)}
-                  max={formatDateWithTimezone(new Date(), userTimezone)}
-                  onChange={(e) =>
-                    setSelectedSobrietyDate(parseDateAsLocal(e.target.value, userTimezone))
-                  }
-                  style={{
-                    padding: 12,
-                    fontSize: 16,
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    marginTop: 16,
-                    marginBottom: 16,
-                    width: '100%',
-                  }}
-                />
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={styles.modalCancelButton}
-                    onPress={() => setShowSobrietyDatePicker(false)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Cancel date selection"
-                  >
-                    <Text style={styles.modalCancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalConfirmButton}
-                    onPress={() => {
-                      updateSobrietyDate(selectedSobrietyDate);
-                      setShowSobrietyDatePicker(false);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Update sobriety date"
-                  >
-                    <Text style={styles.modalConfirmText}>Update</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-        )}
-
-        {/* iOS: Custom modal with spinner picker requires explicit "Update" button
-            because the spinner UI allows continuous scrolling without clear confirmation.
-            This matches iOS platform conventions for date selection. */}
-        {Platform.OS === 'ios' && showSobrietyDatePicker && (
-          <Modal visible={showSobrietyDatePicker} transparent animationType="slide">
-            <View style={styles.modalOverlay}>
-              <View style={styles.datePickerModal}>
-                <Text style={styles.modalTitle}>Edit Sobriety Date</Text>
-                <DateTimePicker
-                  value={selectedSobrietyDate}
-                  mode="date"
-                  display="spinner"
-                  onChange={(event, date) => {
-                    if (date) setSelectedSobrietyDate(date);
-                  }}
-                  maximumDate={maximumDate}
-                />
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={styles.modalCancelButton}
-                    onPress={() => handleSobrietyDateConfirm(undefined)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Cancel date selection"
-                  >
-                    <Text style={styles.modalCancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalConfirmButton}
-                    onPress={() => handleSobrietyDateConfirm(selectedSobrietyDate)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Update sobriety date"
-                  >
-                    <Text style={styles.modalConfirmText}>Update</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-        )}
-
-        {/* Android: Native dialog has built-in OK/Cancel buttons. Pressing OK confirms
-            the selection immediately, which matches Android platform conventions.
-            The dialog auto-closes on any action, so we sync state accordingly. */}
-        {Platform.OS === 'android' && showSobrietyDatePicker && (
-          <DateTimePicker
-            value={selectedSobrietyDate}
-            mode="date"
-            display="default"
-            onChange={(event, date) => handleSobrietyDateConfirm(date)}
-            maximumDate={maximumDate}
-          />
-        )}
-
         {/* Log Slip Up Sheet */}
         {profile && (
           <LogSlipUpSheet
@@ -843,60 +652,5 @@ const createStyles = (
     loadingContainer: {
       padding: 20,
       alignItems: 'center',
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    datePickerModal: {
-      backgroundColor: theme.surface,
-      borderRadius: 16,
-      padding: 24,
-      width: '100%',
-      maxWidth: 400,
-      alignItems: 'center',
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontFamily: theme.fontRegular,
-      fontWeight: '700',
-      color: theme.text,
-      marginBottom: 8,
-      textAlign: 'center',
-    },
-    modalButtons: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    modalCancelButton: {
-      flex: 1,
-      padding: 12,
-      borderRadius: 8,
-      backgroundColor: theme.card,
-      borderWidth: 1,
-      borderColor: theme.border,
-      alignItems: 'center',
-    },
-    modalCancelText: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.text,
-    },
-    modalConfirmButton: {
-      flex: 1,
-      padding: 12,
-      borderRadius: 8,
-      backgroundColor: theme.primary,
-      alignItems: 'center',
-    },
-    modalConfirmText: {
-      fontSize: 16,
-      fontFamily: theme.fontRegular,
-      fontWeight: '600',
-      color: theme.white,
     },
   });

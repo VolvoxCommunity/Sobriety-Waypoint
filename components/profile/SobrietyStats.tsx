@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Heart, Edit2 } from 'lucide-react-native';
+import { Heart } from 'lucide-react-native';
 import type { useTheme } from '@/contexts/ThemeContext';
 import { parseDateAsLocal } from '@/lib/date';
 
@@ -24,8 +24,6 @@ interface SobrietyStatsProps {
   loading: boolean;
   /** Theme object from ThemeContext */
   theme: ReturnType<typeof useTheme>['theme'];
-  /** Callback when edit sobriety date button is pressed */
-  onEditSobrietyDate: () => void;
   /** Callback when log slip-up button is pressed */
   onLogSlipUp: () => void;
 }
@@ -35,14 +33,13 @@ interface SobrietyStatsProps {
 // =============================================================================
 
 /**
- * Render a card showing sobriety metrics (days sober, journey start, current streak) with edit and slip-up actions.
+ * Render a card showing sobriety metrics (days sober, journey start, current streak) with slip-up action.
  *
  * @param daysSober - Total days the user has been sober
  * @param journeyStartDate - ISO date string of when the journey started, or `null` if unknown
  * @param currentStreakStartDate - ISO date string marking the start of the current streak, or `null`
  * @param hasSlipUps - Whether the user has recorded any slip-ups (controls current streak visibility)
  * @param loading - If `true`, replaces the days counter with a loading placeholder
- * @param onEditSobrietyDate - Callback invoked when the edit sobriety date control is pressed
  * @param onLogSlipUp - Callback invoked when the "Record a Setback" button is pressed
  * @returns The SobrietyStats UI component
  */
@@ -53,7 +50,6 @@ export default function SobrietyStats({
   hasSlipUps,
   loading,
   theme,
-  onEditSobrietyDate,
   onLogSlipUp,
 }: SobrietyStatsProps): React.JSX.Element {
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -77,28 +73,16 @@ export default function SobrietyStats({
         {loading ? '...' : `${daysSober} ${daysSober === 1 ? 'Day' : 'Days'}`}
       </Text>
 
-      <View style={styles.dateContainer}>
-        {journeyStartDate && (
-          <Text style={styles.journeyStartDate}>
-            Journey started:{' '}
-            {parseDateAsLocal(journeyStartDate).toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })}
-          </Text>
-        )}
-        <TouchableOpacity
-          testID="profile-edit-date-button"
-          style={styles.editButton}
-          onPress={onEditSobrietyDate}
-          accessibilityRole="button"
-          accessibilityLabel="Edit sobriety date"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Edit2 size={16} color={theme.primary} />
-        </TouchableOpacity>
-      </View>
+      {journeyStartDate && (
+        <Text style={styles.journeyStartDate}>
+          Journey started:{' '}
+          {parseDateAsLocal(journeyStartDate).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+        </Text>
+      )}
 
       {hasSlipUps && currentStreakStartDate && (
         <Text
@@ -166,17 +150,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       fontWeight: '700',
       color: theme.primary,
     },
-    dateContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 8,
-      gap: 8,
-    },
     journeyStartDate: {
       fontSize: 14,
       fontFamily: theme.fontRegular,
       color: theme.textSecondary,
+      marginTop: 8,
     },
     currentStreakDate: {
       fontSize: 14,
@@ -184,11 +162,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       color: theme.text,
       fontWeight: '500',
       marginTop: 8,
-    },
-    editButton: {
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: theme.primaryLight,
     },
     slipUpButton: {
       flexDirection: 'row',

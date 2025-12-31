@@ -14,7 +14,9 @@ import {
   Modal,
   TextInput,
   Pressable,
+  TouchableOpacity,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,10 +49,12 @@ import {
   Zap,
   Layout,
   Sparkles,
+  Calendar,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { logger, LogCategory } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
+import { formatDateWithTimezone, parseDateAsLocal, getUserTimezone } from '@/lib/date';
 import { captureSentryException } from '@/lib/sentry';
 import { trackEvent, AnalyticsEvents } from '@/lib/analytics';
 import { validateDisplayName } from '@/lib/validation';
@@ -444,7 +448,9 @@ function DevToolsSection({ theme, styles, profile, refreshProfile }: DevToolsSec
  *
  * Contains all settings sections:
  * - Account (display name editing)
+ * - Journey (sobriety start date editing)
  * - Appearance (theme selection)
+ * - Dashboard (savings card visibility)
  * - About (external links)
  * - Sign Out
  * - Danger Zone (account deletion)
@@ -483,7 +489,15 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
   const [nameValidationError, setNameValidationError] = useState<string | null>(null);
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingDashboard, setIsSavingDashboard] = useState(false);
+  const [showSobrietyDatePicker, setShowSobrietyDatePicker] = useState(false);
+  const [selectedSobrietyDate, setSelectedSobrietyDate] = useState<Date>(new Date());
   const buildInfo = getBuildInfo();
+
+  // User's timezone (stored in profile) with device timezone as fallback
+  const userTimezone = getUserTimezone(profile);
+
+  // Stable maximum date for DateTimePicker to prevent iOS crash when value > maximumDate.
+  const maximumDate = useMemo(() => new Date(), []);
 
   // ---------------------------------------------------------------------------
   // Callbacks
@@ -713,6 +727,86 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
     }
   }, [profile?.id, profile?.hide_savings_card, isSavingDashboard, refreshProfile]);
 
+  /**
+   * Opens the sobriety date picker with the current sobriety date pre-selected.
+   */
+  const handleEditSobrietyDate = useCallback(() => {
+    if (profile?.sobriety_date) {
+      // Parse using the user's stored timezone to maintain consistency
+      const parsedDate = parseDateAsLocal(profile.sobriety_date, userTimezone);
+      // Clamp to maximumDate to prevent iOS DateTimePicker crash
+      setSelectedSobrietyDate(parsedDate > maximumDate ? maximumDate : parsedDate);
+    }
+    setShowSobrietyDatePicker(true);
+  }, [profile?.sobriety_date, userTimezone, maximumDate]);
+
+  /**
+   * Updates the sobriety date in the database after confirmation.
+   */
+  const updateSobrietyDate = useCallback(
+    async (newDate: Date) => {
+      if (!profile) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(newDate);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate > today) {
+        showToast.error('Sobriety date cannot be in the future');
+        return;
+      }
+
+      const confirmMessage = `Update your sobriety date to ${newDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}?`;
+
+      const confirmed = await showConfirm(
+        'Confirm Date Change',
+        confirmMessage,
+        'Update',
+        'Cancel'
+      );
+
+      if (!confirmed) return;
+
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            sobriety_date: formatDateWithTimezone(newDate, userTimezone),
+          })
+          .eq('id', profile.id);
+
+        if (error) throw error;
+
+        await refreshProfile();
+
+        showToast.success('Sobriety date updated successfully');
+      } catch (error: unknown) {
+        logger.error('Sobriety date update failed', error as Error, {
+          category: LogCategory.DATABASE,
+        });
+        const message = error instanceof Error ? error.message : 'Failed to update sobriety date.';
+        showToast.error(message);
+      }
+    },
+    [profile, userTimezone, refreshProfile]
+  );
+
+  /**
+   * Shared handler for confirming a sobriety date selection.
+   * Closes the date picker and triggers the update.
+   * Used by both iOS (Update button) and Android (native OK) date pickers.
+   */
+  const handleSobrietyDateConfirm = useCallback(
+    (date: Date | undefined) => {
+      setShowSobrietyDatePicker(false);
+      if (date) {
+        updateSobrietyDate(date);
+      }
+    },
+    [updateSobrietyDate]
+  );
+
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // ---------------------------------------------------------------------------
@@ -743,6 +837,44 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
               <View>
                 <Text style={styles.menuItemText}>Display Name</Text>
                 <Text style={styles.menuItemSubtext}>{profile?.display_name ?? 'Loading...'}</Text>
+              </View>
+            </View>
+            <ChevronLeft
+              size={20}
+              color={theme.textTertiary}
+              style={{ transform: [{ rotate: '180deg' }] }}
+            />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Journey Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Journey</Text>
+        <View style={styles.card}>
+          <Pressable
+            style={styles.menuItem}
+            testID="settings-journey-date-row"
+            onPress={handleEditSobrietyDate}
+            accessibilityRole="button"
+            accessibilityLabel="Edit your journey start date"
+          >
+            <View style={styles.menuItemLeft}>
+              <Calendar size={20} color={theme.textSecondary} />
+              <View>
+                <Text style={styles.menuItemText}>Journey Start Date</Text>
+                <Text style={styles.menuItemSubtext}>
+                  {profile?.sobriety_date
+                    ? parseDateAsLocal(profile.sobriety_date, userTimezone).toLocaleDateString(
+                        'en-US',
+                        {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        }
+                      )
+                    : 'Not set'}
+                </Text>
               </View>
             </View>
             <ChevronLeft
@@ -1273,6 +1405,107 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
         </Pressable>
       </Modal>
 
+      {/* Sobriety Date Picker - Web */}
+      {Platform.OS === 'web' && showSobrietyDatePicker && (
+        <Modal visible={showSobrietyDatePicker} transparent animationType="fade">
+          <Pressable style={styles.modalOverlay} onPress={() => setShowSobrietyDatePicker(false)}>
+            <Pressable style={styles.datePickerModal} onPress={noop}>
+              <Text style={styles.modalTitle}>Edit Journey Start Date</Text>
+              <input
+                type="date"
+                value={formatDateWithTimezone(selectedSobrietyDate, userTimezone)}
+                max={formatDateWithTimezone(new Date(), userTimezone)}
+                onChange={(e) =>
+                  setSelectedSobrietyDate(parseDateAsLocal(e.target.value, userTimezone))
+                }
+                style={{
+                  padding: 12,
+                  fontSize: 16,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  marginTop: 16,
+                  marginBottom: 16,
+                  width: '100%',
+                }}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setShowSobrietyDatePicker(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel date selection"
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalSaveButton}
+                  onPress={() => {
+                    updateSobrietyDate(selectedSobrietyDate);
+                    setShowSobrietyDatePicker(false);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Update sobriety date"
+                >
+                  <Text style={styles.modalSaveText}>Update</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Sobriety Date Picker - iOS */}
+      {Platform.OS === 'ios' && showSobrietyDatePicker && (
+        <Modal visible={showSobrietyDatePicker} transparent animationType="slide">
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => handleSobrietyDateConfirm(undefined)}
+          >
+            <Pressable style={styles.datePickerModal} onPress={noop}>
+              <Text style={styles.modalTitle}>Edit Journey Start Date</Text>
+              <DateTimePicker
+                value={selectedSobrietyDate}
+                mode="date"
+                display="spinner"
+                onChange={(event, date) => {
+                  if (date) setSelectedSobrietyDate(date);
+                }}
+                maximumDate={maximumDate}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => handleSobrietyDateConfirm(undefined)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel date selection"
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalSaveButton}
+                  onPress={() => handleSobrietyDateConfirm(selectedSobrietyDate)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Update sobriety date"
+                >
+                  <Text style={styles.modalSaveText}>Update</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Sobriety Date Picker - Android */}
+      {Platform.OS === 'android' && showSobrietyDatePicker && (
+        <DateTimePicker
+          value={selectedSobrietyDate}
+          mode="date"
+          display="default"
+          onChange={(event, date) => handleSobrietyDateConfirm(date)}
+          maximumDate={maximumDate}
+        />
+      )}
+
       {/* What's New Sheet
        * Note: onDismiss is intentionally empty here because viewing What's New from
        * Settings is a manual action. We don't mark the release as "seen" so that the
@@ -1598,6 +1831,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
       padding: 24,
       width: '100%',
       maxWidth: 400,
+    },
+    datePickerModal: {
+      backgroundColor: theme.surface,
+      borderRadius: 16,
+      padding: 24,
+      width: '100%',
+      maxWidth: 400,
+      alignItems: 'center',
     },
     modalTitle: {
       fontSize: 20,

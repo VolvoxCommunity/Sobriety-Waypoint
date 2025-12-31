@@ -47,6 +47,22 @@ jest.mock('lucide-react-native', () => ({
   ChevronLeft: () => null,
   ChevronDown: () => null,
   ChevronUp: () => null,
+  Calendar: () => null,
+}));
+
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = require('react');
+  return {
+    __esModule: true,
+    default: (props: any) =>
+      React.createElement('input', { ...props, 'data-testid': 'date-picker' }),
+  };
+});
+
+jest.mock('@/lib/date', () => ({
+  formatDateWithTimezone: (d: Date) => d.toISOString().split('T')[0],
+  parseDateAsLocal: (s: string) => new Date(s),
+  getUserTimezone: () => 'UTC',
 }));
 
 // Mock useWhatsNew hook
