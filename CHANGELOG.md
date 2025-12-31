@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add "Include 12-Step Content" toggle in onboarding Preferences card (enabled by default)
 - Add "Include 12-Step Content" toggle in Settings to show or hide the Steps tab
+- Add conditional Steps tab visibility based on user preference (hidden when 12-step content disabled)
+- Add redirect from Steps screen to home when 12-step content is disabled
+- Add database migration for `show_twelve_step_content` column on profiles table
 - Add full release history view in What's New modal with collapsible version sections
 - Add WhatsNewVersionSection component with expand/collapse, NEW badge, and feature sorting by type
 - Add dynamic subtitle in What's New modal header showing update count and user viewing state
@@ -61,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove SavingsTrackingCard component (functionality moved inline to onboarding Preferences card)
 - Remove Firebase Analytics dependencies (@react-native-firebase/analytics, @react-native-firebase/app)
 - Remove Firebase configuration files and plugins (firebase.json, withFirebaseConfig.js, withModularHeaders.js)
 - Remove check for updates feature and expo-updates dependency from the app
