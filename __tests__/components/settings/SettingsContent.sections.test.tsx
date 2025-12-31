@@ -47,6 +47,7 @@ jest.mock('lucide-react-native', () => ({
   Zap: () => null,
   Bell: () => null,
   Calendar: () => null,
+  BookOpen: () => null,
 }));
 
 jest.mock('@react-native-community/datetimepicker', () => {
@@ -294,16 +295,48 @@ describe('SettingsContent - Section Structure', () => {
       expect(screen.getByText('Appearance')).toBeTruthy();
     });
 
-    it('renders Dashboard section', () => {
-      render(<SettingsContent onDismiss={mockOnDismiss} />);
-
-      expect(screen.getByText('Dashboard')).toBeTruthy();
-    });
-
     it('renders About section', () => {
       render(<SettingsContent onDismiss={mockOnDismiss} />);
 
       expect(screen.getByText('About')).toBeTruthy();
+    });
+  });
+
+  describe('Features Section (renamed from Dashboard)', () => {
+    it('renders Features section with 12-step content toggle', () => {
+      render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+      // Should have "Features" section title (renamed from "Dashboard")
+      expect(screen.getByText('Features')).toBeTruthy();
+
+      // Should NOT have "Dashboard" section title anymore
+      expect(screen.queryByText('Dashboard')).toBeNull();
+
+      // Should have 12-step content toggle
+      expect(screen.getByText('Include 12-Step Content')).toBeTruthy();
+      expect(screen.getByText('Show the 12 Steps tab')).toBeTruthy();
+      expect(screen.getByTestId('settings-twelve-step-toggle')).toBeTruthy();
+    });
+
+    it('displays 12-step toggle as ON when show_twelve_step_content is true or undefined', () => {
+      render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+      // Default profile has show_twelve_step_content undefined, treated as true
+      const toggle = screen.getByTestId('settings-twelve-step-toggle');
+      expect(toggle).toBeTruthy();
+
+      // Toggle should show ON (profile.show_twelve_step_content !== false)
+      // Use within to scope the query to the specific toggle element
+      const { getByText } = require('@testing-library/react-native').within(toggle);
+      expect(getByText('ON')).toBeTruthy();
+    });
+
+    it('still shows savings card toggle in Features section', () => {
+      render(<SettingsContent onDismiss={mockOnDismiss} />);
+
+      // Savings card toggle should still exist in the renamed Features section
+      expect(screen.getByTestId('settings-show-savings-toggle')).toBeTruthy();
+      expect(screen.getByText('Show savings card')).toBeTruthy();
     });
   });
 });

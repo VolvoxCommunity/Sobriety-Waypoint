@@ -50,6 +50,7 @@ import {
   Layout,
   Sparkles,
   Calendar,
+  BookOpen,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { logger, LogCategory } from '@/lib/logger';
@@ -449,7 +450,7 @@ function DevToolsSection({ theme, styles, profile, refreshProfile }: DevToolsSec
  * Contains all settings sections:
  * - Your Journey (display name and sobriety start date editing)
  * - Appearance (theme selection)
- * - Dashboard (savings card visibility)
+ * - Features (12-step content toggle, savings card visibility)
  * - About (external links)
  * - Sign Out
  * - Danger Zone (account deletion)
@@ -488,6 +489,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
   const [nameValidationError, setNameValidationError] = useState<string | null>(null);
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingDashboard, setIsSavingDashboard] = useState(false);
+  const [isSavingTwelveStep, setIsSavingTwelveStep] = useState(false);
   const [showSobrietyDatePicker, setShowSobrietyDatePicker] = useState(false);
   const [selectedSobrietyDate, setSelectedSobrietyDate] = useState<Date>(new Date());
   const buildInfo = getBuildInfo();
@@ -725,6 +727,44 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
       setIsSavingDashboard(false);
     }
   }, [profile?.id, profile?.hide_savings_card, isSavingDashboard, refreshProfile]);
+
+  /**
+   * Handles toggling the 12-step content visibility.
+   * Updates profile in Supabase and refreshes profile state.
+   */
+  const handleToggleTwelveStepContent = useCallback(async () => {
+    if (!profile?.id || isSavingTwelveStep) return;
+
+    setIsSavingTwelveStep(true);
+    try {
+      const currentValue = profile.show_twelve_step_content !== false;
+      const newValue = !currentValue;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ show_twelve_step_content: newValue })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+
+      // Track settings change
+      trackEvent(AnalyticsEvents.SETTINGS_CHANGED, {
+        setting: 'show_twelve_step_content',
+        value: newValue,
+      });
+
+      showToast.success(newValue ? '12-step content enabled' : '12-step content hidden');
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to update setting');
+      logger.error('Failed to toggle 12-step content visibility', err, {
+        category: LogCategory.DATABASE,
+      });
+      showToast.error('Failed to update. Please try again.');
+    } finally {
+      setIsSavingTwelveStep(false);
+    }
+  }, [profile?.id, profile?.show_twelve_step_content, isSavingTwelveStep, refreshProfile]);
 
   /**
    * Opens the sobriety date picker with the current sobriety date pre-selected.
@@ -971,10 +1011,42 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
         </View>
       </View>
 
-      {/* Dashboard Section */}
+      {/* Features Section (renamed from Dashboard) */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Dashboard</Text>
+        <Text style={styles.sectionTitle}>Features</Text>
         <View style={styles.card}>
+          <Pressable
+            testID="settings-twelve-step-toggle"
+            style={styles.menuItem}
+            onPress={handleToggleTwelveStepContent}
+            disabled={isSavingTwelveStep}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: profile?.show_twelve_step_content !== false }}
+            accessibilityLabel="Include 12-step content"
+          >
+            <View style={styles.menuItemLeft}>
+              <BookOpen size={20} color={theme.textSecondary} />
+              <View>
+                <Text style={styles.menuItemText}>Include 12-Step Content</Text>
+                <Text style={styles.menuItemSubtext}>Show the 12 Steps tab</Text>
+              </View>
+            </View>
+            {isSavingTwelveStep ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <View
+                style={[
+                  styles.toggle,
+                  profile?.show_twelve_step_content !== false && styles.toggleActive,
+                ]}
+              >
+                <Text style={styles.toggleText}>
+                  {profile?.show_twelve_step_content !== false ? 'ON' : 'OFF'}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+          <View style={styles.separator} />
           <Pressable
             testID="settings-show-savings-toggle"
             style={styles.menuItem}
