@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Display "Assign tasks to get started" instead of "0/0 tasks completed" for sponsees with no assigned tasks
+- Display clickable "Assign a task" link for sponsees with no assigned tasks, navigating to the tasks page
 - Move Settings to a nested stack inside the profile tab with standard push navigation and back button (keeps tab bar visible)
 - Replace Firebase Analytics with Amplitude SDK for improved cross-platform analytics support
 - Update analytics module architecture with platform-specific implementations (native/web) using Metro bundler resolution

@@ -628,6 +628,7 @@ export default function ProfileScreen() {
                 onDisconnect={() =>
                   disconnectRelationship(rel.id, true, rel.sponsee?.display_name || 'Unknown')
                 }
+                onAssignTask={() => router.push('/tasks')}
               />
             ))}
           </InviteCodeSection>
