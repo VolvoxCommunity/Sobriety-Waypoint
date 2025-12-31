@@ -317,6 +317,44 @@ describe('RelationshipCard', () => {
 
       expect(screen.getByText('5/5 tasks completed')).toBeTruthy();
     });
+
+    it('displays "Assign tasks to get started" when no tasks are assigned', () => {
+      const taskStats = { total: 0, completed: 0 };
+
+      render(
+        <RelationshipCard
+          userId="user-123"
+          profile={mockProfile}
+          connectedAt="2024-01-01T00:00:00Z"
+          relationshipType="sponsee"
+          theme={mockTheme}
+          onDisconnect={mockOnDisconnect}
+          taskStats={taskStats}
+        />
+      );
+
+      expect(screen.getByText('Assign tasks to get started')).toBeTruthy();
+      expect(screen.queryByText('0/0 tasks completed')).toBeNull();
+    });
+
+    it('has correct accessibility label when no tasks are assigned', () => {
+      const taskStats = { total: 0, completed: 0 };
+
+      render(
+        <RelationshipCard
+          userId="user-123"
+          profile={mockProfile}
+          connectedAt="2024-01-01T00:00:00Z"
+          relationshipType="sponsee"
+          theme={mockTheme}
+          onDisconnect={mockOnDisconnect}
+          taskStats={taskStats}
+        />
+      );
+
+      const taskStatsInfo = screen.getByLabelText('Assign tasks to get started');
+      expect(taskStatsInfo).toBeTruthy();
+    });
   });
 
   describe('Disconnect Functionality', () => {

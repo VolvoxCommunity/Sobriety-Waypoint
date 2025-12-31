@@ -113,11 +113,17 @@ export default function RelationshipCard({
           {taskStats && relationshipType === 'sponsee' && (
             <View
               style={styles.taskStatsInfo}
-              accessibilityLabel={`${taskStats.completed} out of ${taskStats.total} tasks completed`}
+              accessibilityLabel={
+                taskStats.total === 0
+                  ? 'Assign tasks to get started'
+                  : `${taskStats.completed} out of ${taskStats.total} tasks completed`
+              }
             >
               <CheckCircle size={14} color={theme.success} />
               <Text style={styles.taskStatsText}>
-                {taskStats.completed}/{taskStats.total} tasks completed
+                {taskStats.total === 0
+                  ? 'Assign tasks to get started'
+                  : `${taskStats.completed}/${taskStats.total} tasks completed`}
               </Text>
             </View>
           )}
