@@ -360,7 +360,11 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </View>
 
           {activeDropdown === 'sponsee' && (
-            <View style={styles.dropdownMenuOverlay}>
+            <View
+              style={styles.dropdownMenuOverlay}
+              onStartShouldSetResponder={() => true}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               <BottomSheetScrollView style={styles.dropdownMenuScrollable}>
                 {sponsees.map((sponsee) => (
                   <TouchableOpacity
