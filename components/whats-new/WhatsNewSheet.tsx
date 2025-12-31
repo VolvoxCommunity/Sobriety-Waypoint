@@ -9,13 +9,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, {
-  forwardRef,
-  useRef,
-  useImperativeHandle,
-  useMemo,
-  useCallback,
-} from 'react';
+import React, { forwardRef, useRef, useImperativeHandle, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import {
   BottomSheetScrollView,
