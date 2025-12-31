@@ -68,8 +68,8 @@ test.describe('Savings Tracking', () => {
         await editSheet.fillAmount('75');
         await editSheet.save();
 
-        // Wait for sheet to close and dashboard to update
-        await page.waitForTimeout(1000);
+        // Wait for the money saved card to reappear after sheet closes
+        await expect(homePage.moneySavedCard).toBeVisible({ timeout: 10000 });
 
         // Verify update reflected in card
         const totalText = await homePage.getMoneySavedTotal();
@@ -83,9 +83,8 @@ test.describe('Savings Tracking', () => {
         await editSheet.selectFrequency('monthly');
         await editSheet.save();
 
-        await page.waitForTimeout(1000);
-        // Verify the card still exists after save
-        await expect(homePage.moneySavedCard).toBeVisible();
+        // Wait for the money saved card to reappear after sheet closes
+        await expect(homePage.moneySavedCard).toBeVisible({ timeout: 10000 });
       }
     });
   });

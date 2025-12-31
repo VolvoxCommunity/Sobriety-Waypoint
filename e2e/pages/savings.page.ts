@@ -47,10 +47,12 @@ export class EditSavingsSheet extends BasePage {
   }
 
   /**
-   * Save the current changes.
+   * Save the current changes and wait for the sheet to close.
    */
   async save(): Promise<void> {
     await this.saveButton.click();
+    // Wait for the sheet to close by waiting for the amount input to disappear
+    await this.amountInput.waitFor({ state: 'hidden', timeout: 10000 });
   }
 
   /**

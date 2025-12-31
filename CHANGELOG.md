@@ -69,6 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix TaskCard syntax error causing build failure (broken JSX from accessibility enhancement)
 - Fix analytics initialization errors being swallowed, preventing retry on failure
 - Fix calculateStepsCompletedBucket returning incorrect bucket for negative values
+- Fix E2E settings close test failing after settings refactor (now uses browser back navigation)
+- Fix flaky E2E savings tracking tests by adding proper wait conditions after save
 
 ## [1.2.1] - 2025-12-25
 

@@ -83,10 +83,12 @@ export class HomePage extends BasePage {
 
   /**
    * Get the total money saved amount displayed on the card.
+   * Waits for the element to be visible before retrieving text.
    *
    * @returns The formatted currency string (e.g., "$1,234.56")
    */
   async getMoneySavedTotal(): Promise<string> {
+    await this.moneySavedTotal.waitFor({ state: 'visible', timeout: 10000 });
     return (await this.moneySavedTotal.textContent()) ?? '';
   }
 

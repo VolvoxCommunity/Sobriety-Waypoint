@@ -32,9 +32,11 @@ test.describe('Settings Preferences', () => {
     await expect(page.getByText('Sign Out')).toBeVisible();
   });
 
-  test('should close settings sheet', async ({ page }) => {
-    await page.getByTestId('settings-back-button').click();
-    // Sheet should close, theme toggle should not be visible
+  test('should close settings page', async ({ page }) => {
+    // Settings is a full-page route with native navigation header
+    // Use browser back navigation to return to profile
+    await page.goBack();
+    // Settings page should close, theme toggle should not be visible
     await expect(page.getByTestId('settings-theme-toggle')).not.toBeVisible({ timeout: 5000 });
   });
 
