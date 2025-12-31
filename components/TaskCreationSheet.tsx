@@ -15,6 +15,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Platform,
 } from 'react-native';
@@ -328,11 +329,14 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </TouchableOpacity>
         </View>
 
-        <BottomSheetScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          onTouchStart={closeAllDropdowns}
-        >
+        <BottomSheetScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {activeDropdown && (
+            <Pressable
+              style={styles.dropdownBackdrop}
+              onPress={closeAllDropdowns}
+              accessibilityLabel="Close dropdown"
+            />
+          )}
           {error ? (
             <View style={styles.errorContainer} accessibilityLiveRegion="polite">
               <Text style={styles.errorText}>{error}</Text>
@@ -360,11 +364,7 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </View>
 
           {activeDropdown === 'sponsee' && (
-            <View
-              style={styles.dropdownMenuOverlay}
-              onStartShouldSetResponder={() => true}
-              onTouchEnd={(e) => e.stopPropagation()}
-            >
+            <View style={styles.dropdownMenuOverlay}>
               <BottomSheetScrollView style={styles.dropdownMenuScrollable}>
                 {sponsees.map((sponsee) => (
                   <TouchableOpacity
@@ -403,11 +403,7 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </View>
 
           {activeDropdown === 'step' && (
-            <View
-              style={styles.dropdownMenuOverlay}
-              onStartShouldSetResponder={() => true}
-              onTouchEnd={(e) => e.stopPropagation()}
-            >
+            <View style={styles.dropdownMenuOverlay}>
               <BottomSheetScrollView style={styles.dropdownMenuScrollable}>
                 <TouchableOpacity
                   style={styles.dropdownItem}
@@ -483,11 +479,7 @@ const TaskCreationSheet = forwardRef<TaskCreationSheetRef, TaskCreationSheetProp
           </View>
 
           {activeDropdown === 'template' && selectedStepNumber && (
-            <View
-              style={styles.dropdownMenuOverlay}
-              onStartShouldSetResponder={() => true}
-              onTouchEnd={(e) => e.stopPropagation()}
-            >
+            <View style={styles.dropdownMenuOverlay}>
               <BottomSheetScrollView style={styles.dropdownMenuScrollable}>
                 {templates.length === 0 ? (
                   <View style={styles.dropdownItem}>
@@ -709,6 +701,14 @@ const createStyles = (theme: ThemeColors) =>
     placeholderText: {
       color: theme.textTertiary,
     },
+    dropdownBackdrop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1,
+    },
     dropdownMenuOverlay: {
       backgroundColor: theme.card,
       borderWidth: 1,
@@ -720,6 +720,7 @@ const createStyles = (theme: ThemeColors) =>
       shadowOpacity: 0.15,
       shadowRadius: 12,
       elevation: 15,
+      zIndex: 2,
     },
     dropdownMenuScrollable: {
       maxHeight: 250,
