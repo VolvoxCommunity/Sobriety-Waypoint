@@ -21,7 +21,7 @@ ALTER TABLE profiles
 ADD COLUMN show_twelve_step_content BOOLEAN DEFAULT true;
 ```
 
-**Field behavior:**
+#### Field behavior
 
 - `true` → Show Steps tab (default for new users)
 - `false` → Hide Steps tab
@@ -31,13 +31,13 @@ ADD COLUMN show_twelve_step_content BOOLEAN DEFAULT true;
 
 ### Onboarding Restructure
 
-**Before (3 cards):**
+#### Before (3 cards)
 
 1. About You (display name)
 2. Your Journey (sobriety date)
 3. Savings Tracking (optional)
 
-**After (2 cards):**
+#### After (2 cards)
 
 1. **YOUR JOURNEY** (merged card):
    - Display name input
@@ -52,7 +52,7 @@ ADD COLUMN show_twelve_step_content BOOLEAN DEFAULT true;
 
 ### Settings Restructure
 
-**Before:**
+#### Before
 
 - Account (display name)
 - Journey (sobriety date)
@@ -60,7 +60,7 @@ ADD COLUMN show_twelve_step_content BOOLEAN DEFAULT true;
 - Dashboard (savings visibility)
 - About, Sign Out, etc.
 
-**After:**
+#### After
 
 - **Your Journey** (merged: display name + sobriety date)
 - **Features** (renamed from Dashboard):
@@ -77,7 +77,7 @@ When `show_twelve_step_content` is `false`:
 - User sees 3 tabs instead of 4
 - Route still exists but not accessible via tabs
 
-**Edge cases:**
+#### Edge cases
 
 - Direct navigation to `/steps` while disabled → redirect to home
 - Setting change takes effect immediately (no restart)
