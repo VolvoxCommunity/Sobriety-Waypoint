@@ -1022,7 +1022,7 @@ export function SettingsContent({ onDismiss }: SettingsContentProps) {
             disabled={isSavingTwelveStep}
             accessibilityRole="switch"
             accessibilityState={{ checked: profile?.show_twelve_step_content !== false }}
-            accessibilityLabel="Include 12-step content"
+            accessibilityLabel="Include 12-Step Content"
           >
             <View style={styles.menuItemLeft}>
               <BookOpen size={20} color={theme.textSecondary} />
