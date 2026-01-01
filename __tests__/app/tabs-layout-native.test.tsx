@@ -362,6 +362,15 @@ describe('TabsLayout', () => {
   });
 
   describe('conditional Steps tab visibility', () => {
+    /**
+     * Helper to get tabBarItemHidden value from a screen's data-options attribute
+     */
+    function getTabBarItemHidden(testId: string): boolean {
+      const element = screen.getByTestId(testId);
+      const options = JSON.parse(element.props['data-options'] || '{}');
+      return options.tabBarItemHidden === true;
+    }
+
     beforeEach(() => {
       setPlatform('ios');
     });
@@ -373,7 +382,9 @@ describe('TabsLayout', () => {
 
       render(<TabsLayout />);
 
+      // Screen should be rendered but visible in tab bar
       expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(false);
     });
 
     it('hides Steps tab when show_twelve_step_content is false', () => {
@@ -383,7 +394,10 @@ describe('TabsLayout', () => {
 
       render(<TabsLayout />);
 
-      expect(screen.queryByTestId('tab-screen-steps')).toBeNull();
+      // Screen should still be rendered but hidden from tab bar
+      // This avoids UIViewControllerHierarchyInconsistency errors on iOS
+      expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(true);
     });
 
     it('shows Steps tab when show_twelve_step_content is undefined (existing users)', () => {
@@ -394,6 +408,7 @@ describe('TabsLayout', () => {
       render(<TabsLayout />);
 
       expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(false);
     });
 
     it('shows Steps tab when show_twelve_step_content is null (existing users)', () => {
@@ -404,6 +419,7 @@ describe('TabsLayout', () => {
       render(<TabsLayout />);
 
       expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(false);
     });
 
     it('shows Steps tab when profile is null', () => {
@@ -414,9 +430,10 @@ describe('TabsLayout', () => {
       render(<TabsLayout />);
 
       expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(false);
     });
 
-    it('hides Steps tab on web when show_twelve_step_content is false', () => {
+    it('hides Steps tab from web navigation when show_twelve_step_content is false', () => {
       setPlatform('web');
       (useAuth as jest.Mock).mockReturnValue({
         profile: { ...mockProfile, show_twelve_step_content: false },
@@ -424,7 +441,13 @@ describe('TabsLayout', () => {
 
       render(<TabsLayout />);
 
-      expect(screen.queryByTestId('expo-tab-screen-steps')).toBeNull();
+      // WebTopNav should not include steps in its items
+      const webNav = screen.getByTestId('web-top-nav');
+      const items = JSON.parse(webNav.props['data-items'] || '[]');
+      expect(items.find((item: { route: string }) => item.route === '/steps')).toBeUndefined();
+
+      // But expo-router Tabs should still render all screens for routing
+      expect(screen.getByTestId('expo-tab-screen-steps')).toBeTruthy();
     });
 
     it('shows Steps tab on web when show_twelve_step_content is true', () => {
@@ -435,6 +458,11 @@ describe('TabsLayout', () => {
 
       render(<TabsLayout />);
 
+      // WebTopNav should include steps
+      const webNav = screen.getByTestId('web-top-nav');
+      const items = JSON.parse(webNav.props['data-items'] || '[]');
+      expect(items.find((item: { route: string }) => item.route === '/steps')).toBeDefined();
+
       expect(screen.getByTestId('expo-tab-screen-steps')).toBeTruthy();
     });
 
@@ -444,7 +472,7 @@ describe('TabsLayout', () => {
       });
 
       const { rerender } = render(<TabsLayout />);
-      expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(false);
 
       // Change preference
       (useAuth as jest.Mock).mockReturnValue({
@@ -452,7 +480,7 @@ describe('TabsLayout', () => {
       });
 
       rerender(<TabsLayout />);
-      expect(screen.queryByTestId('tab-screen-steps')).toBeNull();
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(true);
     });
 
     it('shows other tabs regardless of Steps visibility', () => {
@@ -462,11 +490,19 @@ describe('TabsLayout', () => {
 
       render(<TabsLayout />);
 
-      // All other tabs should still be visible
+      // All tabs should still be rendered
       expect(screen.getByTestId('tab-screen-index')).toBeTruthy();
+      expect(screen.getByTestId('tab-screen-steps')).toBeTruthy();
       expect(screen.getByTestId('tab-screen-journey')).toBeTruthy();
       expect(screen.getByTestId('tab-screen-tasks')).toBeTruthy();
       expect(screen.getByTestId('tab-screen-profile')).toBeTruthy();
+
+      // Only Steps should be hidden from tab bar
+      expect(getTabBarItemHidden('tab-screen-index')).toBe(false);
+      expect(getTabBarItemHidden('tab-screen-steps')).toBe(true);
+      expect(getTabBarItemHidden('tab-screen-journey')).toBe(false);
+      expect(getTabBarItemHidden('tab-screen-tasks')).toBe(false);
+      expect(getTabBarItemHidden('tab-screen-profile')).toBe(false);
     });
   });
 });

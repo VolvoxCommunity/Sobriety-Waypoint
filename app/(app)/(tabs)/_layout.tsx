@@ -1,7 +1,7 @@
 // =============================================================================
 // Imports
 // =============================================================================
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Home, BookOpen, TrendingUp, CheckSquare, User } from 'lucide-react-native';
@@ -92,16 +92,18 @@ export default function TabLayout(): React.ReactElement {
   const { theme, isDark } = useTheme();
   const { profile } = useAuth();
 
-  // Filter tab routes based on user preferences
+  // Determine if Steps tab should be visible
   // Show Steps tab unless explicitly set to false (treats null/undefined as true for backwards compatibility)
-  const visibleTabRoutes = useMemo(() => {
-    const showSteps = profile?.show_twelve_step_content !== false;
-    return showSteps ? tabRoutes : tabRoutes.filter((route) => route.name !== 'steps');
-  }, [profile?.show_twelve_step_content]);
+  const showStepsTab = profile?.show_twelve_step_content !== false;
 
   // Web: Use top navigation instead of bottom tabs
   if (Platform.OS === 'web') {
-    const webNavItems = visibleTabRoutes.map((route) => ({
+    // Filter routes for web navigation display
+    const visibleWebRoutes = showStepsTab
+      ? tabRoutes
+      : tabRoutes.filter((route) => route.name !== 'steps');
+
+    const webNavItems = visibleWebRoutes.map((route) => ({
       route: route.name === 'index' ? '/' : `/${route.name}`,
       label: route.title,
       icon: route.icon,
@@ -116,7 +118,7 @@ export default function TabLayout(): React.ReactElement {
             tabBarStyle: { display: 'none' },
           }}
         >
-          {visibleTabRoutes.map((route) => (
+          {tabRoutes.map((route) => (
             <Tabs.Screen key={route.name} name={route.name} />
           ))}
           {/* Hidden route - accessible via navigation but not shown in nav */}
@@ -130,6 +132,8 @@ export default function TabLayout(): React.ReactElement {
   // Uses react-native-bottom-tabs for truly native tab bars:
   // - iOS: UITabBarController with SF Symbols and native blur
   // - Android: BottomNavigationView with Material Design
+  // Note: We always render all screens to avoid UIViewControllerHierarchyInconsistency errors
+  // and use tabBarItemHidden to hide tabs instead of removing them from the component tree
   return (
     <NativeTabs
       labeled={true}
@@ -139,7 +143,7 @@ export default function TabLayout(): React.ReactElement {
         backgroundColor: isDark ? theme.surface : theme.card,
       }}
     >
-      {visibleTabRoutes.map((route) => (
+      {tabRoutes.map((route) => (
         <NativeTabs.Screen
           key={route.name}
           name={route.name}
@@ -150,6 +154,8 @@ export default function TabLayout(): React.ReactElement {
               Platform.OS === 'ios'
                 ? { sfSymbol: route.sfSymbol }
                 : androidIcons[route.androidIconKey],
+            // Hide Steps tab when 12-step content is disabled
+            tabBarItemHidden: route.name === 'steps' && !showStepsTab,
           }}
         />
       ))}
