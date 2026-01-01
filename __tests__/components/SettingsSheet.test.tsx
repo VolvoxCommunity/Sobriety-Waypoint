@@ -208,6 +208,7 @@ jest.mock('lucide-react-native', () => ({
   BarChart2: () => null,
   RotateCcw: () => null,
   Zap: () => null,
+  BookOpen: () => null,
 }));
 
 jest.mock('@react-native-community/datetimepicker', () => {
@@ -345,7 +346,7 @@ describe('SettingsSheet', () => {
     it('should render settings sections', () => {
       render(<SettingsSheet />);
 
-      expect(screen.getByText('Account')).toBeTruthy();
+      expect(screen.getByText('Your Journey')).toBeTruthy();
       expect(screen.getByText('Appearance')).toBeTruthy();
       expect(screen.getByText('About')).toBeTruthy();
     });

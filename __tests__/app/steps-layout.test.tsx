@@ -13,6 +13,9 @@ import { View } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import StepsLayout from '@/app/(app)/(tabs)/steps/_layout';
 
+// Import useAuth after mock
+import { useAuth } from '@/contexts/AuthContext';
+
 // =============================================================================
 // Mocks
 // =============================================================================
@@ -51,9 +54,30 @@ MockScreen.displayName = 'MockScreen';
 // Attach Screen to Stack
 MockStack.Screen = MockScreen;
 
+// Mock router for redirect testing
+const mockReplace = jest.fn();
+
 // Mock expo-router Stack with Screen subcomponent
 jest.mock('expo-router', () => ({
   Stack: MockStack,
+  useRouter: () => ({
+    replace: mockReplace,
+  }),
+}));
+
+// Mock profile for useAuth
+const mockProfile = {
+  id: 'test-user-id',
+  display_name: 'Test User',
+  sobriety_date: '2024-01-01',
+  show_twelve_step_content: true,
+};
+
+// Mock useAuth hook
+jest.mock('@/contexts/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    profile: mockProfile,
+  })),
 }));
 
 // Mock ThemeContext
@@ -77,6 +101,11 @@ describe('StepsLayout', () => {
     jest.clearAllMocks();
     capturedScreenOptions = null;
     capturedScreens.length = 0;
+    mockReplace.mockClear();
+    // Default to showing 12-step content
+    (useAuth as jest.Mock).mockReturnValue({
+      profile: { ...mockProfile, show_twelve_step_content: true },
+    });
   });
 
   describe('rendering', () => {
@@ -144,6 +173,69 @@ describe('StepsLayout', () => {
 
       rerender(<StepsLayout />);
 
+      expect(screen.getByTestId('stack-navigator')).toBeTruthy();
+    });
+  });
+
+  describe('redirect when 12-step content disabled', () => {
+    it('redirects to home when show_twelve_step_content is false', () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        profile: { ...mockProfile, show_twelve_step_content: false },
+      });
+
+      render(<StepsLayout />);
+
+      expect(mockReplace).toHaveBeenCalledWith('/(app)/(tabs)');
+    });
+
+    it('does not redirect when show_twelve_step_content is true', () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        profile: { ...mockProfile, show_twelve_step_content: true },
+      });
+
+      render(<StepsLayout />);
+
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect when show_twelve_step_content is undefined (existing users)', () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        profile: { ...mockProfile, show_twelve_step_content: undefined },
+      });
+
+      render(<StepsLayout />);
+
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect when show_twelve_step_content is null (existing users)', () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        profile: { ...mockProfile, show_twelve_step_content: null },
+      });
+
+      render(<StepsLayout />);
+
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect when profile is null', () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        profile: null,
+      });
+
+      render(<StepsLayout />);
+
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('renders stack navigator even when redirecting', () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        profile: { ...mockProfile, show_twelve_step_content: false },
+      });
+
+      render(<StepsLayout />);
+
+      // The stack navigator should still render (redirect happens via useEffect)
       expect(screen.getByTestId('stack-navigator')).toBeTruthy();
     });
   });

@@ -120,6 +120,7 @@ jest.mock('lucide-react-native', () => ({
   BarChart2: () => null,
   RotateCcw: () => null,
   Zap: () => null,
+  BookOpen: () => null,
 }));
 
 jest.mock('@react-native-community/datetimepicker', () => {
@@ -825,14 +826,15 @@ describe('SettingsScreen', () => {
     });
   });
 
-  describe('Account Section', () => {
-    it('renders Account section with current display name', async () => {
+  describe('Your Journey Section', () => {
+    it('renders Your Journey section with display name and journey start date', async () => {
       const { getByText } = render(<SettingsScreen />);
 
       await waitFor(() => {
-        expect(getByText('Account')).toBeTruthy();
+        expect(getByText('Your Journey')).toBeTruthy();
         expect(getByText('Display Name')).toBeTruthy();
         expect(getByText('Test D.')).toBeTruthy(); // mockProfile has display_name: 'Test D.'
+        expect(getByText('Journey Start Date')).toBeTruthy();
       });
     });
 
@@ -1171,7 +1173,7 @@ describe('SettingsScreen', () => {
     const { getByText, getByTestId, queryByText } = render(<SettingsScreen />);
 
     await waitFor(() => {
-      expect(getByText('Account')).toBeTruthy();
+      expect(getByText('Your Journey')).toBeTruthy();
     });
 
     // Try to open the modal - should be blocked by guard

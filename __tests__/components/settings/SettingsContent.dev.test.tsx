@@ -50,6 +50,7 @@ jest.mock('lucide-react-native', () => ({
   Zap: () => null,
   Bell: () => null,
   Calendar: () => null,
+  BookOpen: () => null,
 }));
 
 jest.mock('@react-native-community/datetimepicker', () => {
