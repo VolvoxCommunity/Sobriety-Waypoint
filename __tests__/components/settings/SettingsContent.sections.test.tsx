@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, within } from '@testing-library/react-native';
 import { SettingsContent } from '@/components/settings/SettingsContent';
 
 // =============================================================================
@@ -327,8 +327,7 @@ describe('SettingsContent - Section Structure', () => {
 
       // Toggle should show ON (profile.show_twelve_step_content !== false)
       // Use within to scope the query to the specific toggle element
-      const { getByText } = require('@testing-library/react-native').within(toggle);
-      expect(getByText('ON')).toBeTruthy();
+      expect(within(toggle).getByText('ON')).toBeTruthy();
     });
 
     it('still shows savings card toggle in Features section', () => {
