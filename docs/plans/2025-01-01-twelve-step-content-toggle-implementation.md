@@ -16,7 +16,7 @@
 
 - Create: `supabase/migrations/20250101000000_add_show_twelve_step_content.sql`
 
-**Step 1: Create the migration file**
+#### Step 1: Create the migration file
 
 ```sql
 -- Add show_twelve_step_content column to profiles table
@@ -28,11 +28,11 @@ ADD COLUMN show_twelve_step_content BOOLEAN DEFAULT true;
 COMMENT ON COLUMN profiles.show_twelve_step_content IS 'Whether to show the 12 Steps tab in navigation. Default true for backwards compatibility.';
 ```
 
-**Step 2: Verify migration syntax**
+#### Step 2: Verify migration syntax
 
 Run: `pnpm exec supabase db diff --local` (if local dev) or review SQL syntax manually.
 
-**Step 3: Commit**
+#### Step 3: Commit
 
 ```bash
 git add supabase/migrations/20250101000000_add_show_twelve_step_content.sql
@@ -47,7 +47,7 @@ git commit -m "feat(supabase): add show_twelve_step_content column to profiles"
 
 - Modify: `types/database.ts:25-93` (Profile interface)
 
-**Step 1: Add the new field to Profile interface**
+#### Step 1: Add the new field to Profile interface
 
 Add after `last_seen_version` field (around line 84):
 
@@ -60,12 +60,12 @@ Add after `last_seen_version` field (around line 84):
   show_twelve_step_content?: boolean;
 ```
 
-**Step 2: Verify types compile**
+#### Step 2: Verify types compile
 
 Run: `pnpm typecheck`
 Expected: No errors
 
-**Step 3: Commit**
+#### Step 3: Commit
 
 ```bash
 git add types/database.ts
@@ -81,7 +81,7 @@ git commit -m "feat(types): add show_twelve_step_content to Profile interface"
 - Modify: `components/settings/SettingsContent.tsx`
 - Test: `__tests__/components/settings/SettingsContent.test.tsx`
 
-**Step 1: Write failing test for merged "Your Journey" section**
+#### Step 1: Write failing test for merged "Your Journey" section
 
 Add to test file:
 
@@ -99,12 +99,12 @@ describe('Your Journey Section', () => {
 });
 ```
 
-**Step 2: Run test to verify it fails**
+#### Step 2: Run test to verify it fails
 
 Run: `pnpm test -- __tests__/components/settings/SettingsContent.test.tsx -t "Your Journey Section"`
 Expected: FAIL - "Account" section still exists
 
-**Step 3: Merge Account and Journey sections in SettingsContent.tsx**
+#### Step 3: Merge Account and Journey sections in SettingsContent.tsx
 
 Replace the separate Account and Journey sections (around lines 818-887) with a single merged section:
 
@@ -174,12 +174,12 @@ Replace the separate Account and Journey sections (around lines 818-887) with a 
 </View>;
 ```
 
-**Step 4: Run test to verify it passes**
+#### Step 4: Run test to verify it passes
 
 Run: `pnpm test -- __tests__/components/settings/SettingsContent.test.tsx -t "Your Journey Section"`
 Expected: PASS
 
-**Step 5: Commit**
+#### Step 5: Commit
 
 ```bash
 git add components/settings/SettingsContent.tsx __tests__/components/settings/SettingsContent.test.tsx
@@ -195,7 +195,7 @@ git commit -m "refactor(settings): merge Account and Journey into Your Journey s
 - Modify: `components/settings/SettingsContent.tsx`
 - Test: `__tests__/components/settings/SettingsContent.test.tsx`
 
-**Step 1: Write failing test for Features section with 12-step toggle**
+#### Step 1: Write failing test for Features section with 12-step toggle
 
 ```typescript
 describe('Features Section', () => {
@@ -227,12 +227,12 @@ describe('Features Section', () => {
 });
 ```
 
-**Step 2: Run test to verify it fails**
+#### Step 2: Run test to verify it fails
 
 Run: `pnpm test -- __tests__/components/settings/SettingsContent.test.tsx -t "Features Section"`
 Expected: FAIL - "Features" section doesn't exist
 
-**Step 3: Add state and handler for 12-step toggle**
+#### Step 3: Add state and handler for 12-step toggle
 
 Add to state section (around line 491):
 
@@ -283,7 +283,7 @@ const handleToggleTwelveStepContent = useCallback(async () => {
 }, [profile?.id, profile?.show_twelve_step_content, isSavingTwelveStep, refreshProfile]);
 ```
 
-**Step 4: Rename Dashboard section to Features and add toggle**
+#### Step 4: Rename Dashboard section to Features and add toggle
 
 Replace the Dashboard section (around line 981-1010) with:
 
@@ -356,7 +356,7 @@ Replace the Dashboard section (around line 981-1010) with:
 </View>;
 ```
 
-**Step 5: Add BookOpen import**
+#### Step 5: Add BookOpen import
 
 Add to lucide imports at top of file:
 
@@ -367,17 +367,17 @@ import {
 } from 'lucide-react-native';
 ```
 
-**Step 6: Run test to verify it passes**
+#### Step 6: Run test to verify it passes
 
 Run: `pnpm test -- __tests__/components/settings/SettingsContent.test.tsx -t "Features Section"`
 Expected: PASS
 
-**Step 7: Run full test suite for settings**
+#### Step 7: Run full test suite for settings
 
 Run: `pnpm test -- __tests__/components/settings/`
 Expected: All tests pass
 
-**Step 8: Commit**
+#### Step 8: Commit
 
 ```bash
 git add components/settings/SettingsContent.tsx __tests__/components/settings/SettingsContent.test.tsx
@@ -393,7 +393,7 @@ git commit -m "feat(settings): rename Dashboard to Features, add 12-step content
 - Modify: `app/onboarding.tsx`
 - Test: `__tests__/app/onboarding.test.tsx`
 
-**Step 1: Write failing test for merged structure**
+#### Step 1: Write failing test for merged structure
 
 ```typescript
 describe('Onboarding Structure', () => {
@@ -426,12 +426,12 @@ describe('Onboarding Structure', () => {
 });
 ```
 
-**Step 2: Run test to verify it fails**
+#### Step 2: Run test to verify it fails
 
 Run: `pnpm test -- __tests__/app/onboarding.test.tsx -t "Onboarding Structure"`
 Expected: FAIL - separate cards still exist
 
-**Step 3: Add 12-step state**
+#### Step 3: Add 12-step state
 
 Add to state section (around line 107):
 
@@ -440,7 +440,7 @@ Add to state section (around line 107):
 const [showTwelveStepContent, setShowTwelveStepContent] = useState(true);
 ```
 
-**Step 4: Include in profile upsert**
+#### Step 4: Include in profile upsert
 
 Update profileData in handleComplete (around line 292):
 
@@ -463,7 +463,7 @@ const profileData = {
 };
 ```
 
-**Step 5: Restructure UI - merge cards and add Preferences**
+#### Step 5: Restructure UI - merge cards and add Preferences
 
 Replace the current 3 cards (lines 410-538) with:
 
@@ -696,7 +696,7 @@ Replace the current 3 cards (lines 410-538) with:
 </View>;
 ```
 
-**Step 6: Add imports and constants**
+#### Step 6: Add imports and constants
 
 Add to imports:
 
@@ -717,7 +717,7 @@ const FREQUENCIES: { value: SpendingFrequency; label: string }[] = [
 ];
 ```
 
-**Step 7: Add new styles**
+#### Step 7: Add new styles
 
 Add to createStyles:
 
@@ -812,17 +812,17 @@ frequencyTextSelected: {
 },
 ```
 
-**Step 8: Run test to verify it passes**
+#### Step 8: Run test to verify it passes
 
 Run: `pnpm test -- __tests__/app/onboarding.test.tsx -t "Onboarding Structure"`
 Expected: PASS
 
-**Step 9: Run full onboarding test suite**
+#### Step 9: Run full onboarding test suite
 
 Run: `pnpm test -- __tests__/app/onboarding.test.tsx`
 Expected: All tests pass (update other tests as needed for new structure)
 
-**Step 10: Commit**
+#### Step 10: Commit
 
 ```bash
 git add app/onboarding.tsx __tests__/app/onboarding.test.tsx
@@ -838,28 +838,28 @@ git commit -m "feat(onboarding): restructure to 2 cards, add 12-step content tog
 - Delete: `components/onboarding/SavingsTrackingCard.tsx`
 - Modify: `components/onboarding/index.ts` (if exists)
 
-**Step 1: Check if component is used elsewhere**
+#### Step 1: Check if component is used elsewhere
 
 Run: `grep -r "SavingsTrackingCard" --include="*.tsx" --include="*.ts" .`
 
 If only used in onboarding.tsx (now inline), proceed to delete.
 
-**Step 2: Delete the component**
+#### Step 2: Delete the component
 
 ```bash
 rm components/onboarding/SavingsTrackingCard.tsx
 ```
 
-**Step 3: Update index.ts if it exports SavingsTrackingCard**
+#### Step 3: Update index.ts if it exports SavingsTrackingCard
 
 Remove the export line if present.
 
-**Step 4: Run tests to verify nothing breaks**
+#### Step 4: Run tests to verify nothing breaks
 
 Run: `pnpm test`
 Expected: All tests pass
 
-**Step 5: Commit**
+#### Step 5: Commit
 
 ```bash
 git add -A
@@ -875,7 +875,7 @@ git commit -m "refactor(onboarding): remove SavingsTrackingCard, now inline in o
 - Modify: `app/(app)/(tabs)/_layout.tsx`
 - Test: `__tests__/app/(tabs)/_layout.test.tsx`
 
-**Step 1: Write failing test for conditional tab rendering**
+#### Step 1: Write failing test for conditional tab rendering
 
 Create or update test file:
 
@@ -927,12 +927,12 @@ describe('TabLayout', () => {
 });
 ```
 
-**Step 2: Run test to verify it fails**
+#### Step 2: Run test to verify it fails
 
 Run: `pnpm test -- __tests__/app/\\(tabs\\)/_layout.test.tsx`
 Expected: FAIL - Steps always shows
 
-**Step 3: Add AuthContext import and filter tabs**
+#### Step 3: Add AuthContext import and filter tabs
 
 Add import:
 
@@ -1028,12 +1028,12 @@ export default function TabLayout(): React.ReactElement {
 }
 ```
 
-**Step 4: Run test to verify it passes**
+#### Step 4: Run test to verify it passes
 
 Run: `pnpm test -- __tests__/app/\\(tabs\\)/_layout.test.tsx`
 Expected: PASS
 
-**Step 5: Commit**
+#### Step 5: Commit
 
 ```bash
 git add app/\\(app\\)/\\(tabs\\)/_layout.tsx __tests__/app/\\(tabs\\)/_layout.test.tsx
@@ -1049,7 +1049,7 @@ git commit -m "feat(tabs): conditionally render Steps tab based on user preferen
 - Modify: `app/(app)/(tabs)/steps/index.tsx`
 - Test: `__tests__/app/(tabs)/steps/index.test.tsx`
 
-**Step 1: Write failing test for redirect**
+#### Step 1: Write failing test for redirect
 
 ```typescript
 describe('Steps Screen Redirect', () => {
@@ -1067,7 +1067,7 @@ describe('Steps Screen Redirect', () => {
 });
 ```
 
-**Step 2: Add redirect logic to Steps screen**
+#### Step 2: Add redirect logic to Steps screen
 
 Add to component:
 
@@ -1091,12 +1091,12 @@ export default function StepsScreen() {
 }
 ```
 
-**Step 3: Run test to verify it passes**
+#### Step 3: Run test to verify it passes
 
 Run: `pnpm test -- __tests__/app/\\(tabs\\)/steps/index.test.tsx -t "redirect"`
 Expected: PASS
 
-**Step 4: Commit**
+#### Step 4: Commit
 
 ```bash
 git add app/\\(app\\)/\\(tabs\\)/steps/index.tsx __tests__/app/\\(tabs\\)/steps/index.test.tsx
@@ -1111,7 +1111,7 @@ git commit -m "feat(steps): redirect to home when 12-step content disabled"
 
 - Modify: `CHANGELOG.md`
 
-**Step 1: Add entries to Unreleased section**
+#### Step 1: Add entries to Unreleased section
 
 ```markdown
 ## [Unreleased]
@@ -1134,7 +1134,7 @@ git commit -m "feat(steps): redirect to home when 12-step content disabled"
 - Remove separate SavingsTrackingCard component (now inline in onboarding)
 ```
 
-**Step 2: Commit**
+#### Step 2: Commit
 
 ```bash
 git add CHANGELOG.md
@@ -1145,7 +1145,7 @@ git commit -m "docs(changelog): add 12-step content toggle feature entries"
 
 ## Task 10: Final Verification
 
-**Step 1: Run full quality suite**
+#### Step 1: Run full quality suite
 
 ```bash
 pnpm format && pnpm lint && pnpm typecheck && pnpm build:web && pnpm test
@@ -1153,7 +1153,7 @@ pnpm format && pnpm lint && pnpm typecheck && pnpm build:web && pnpm test
 
 Expected: All pass with no errors
 
-**Step 2: Visual verification**
+#### Step 2: Visual verification
 
 ```bash
 pnpm web
@@ -1167,7 +1167,7 @@ Then use Chrome DevTools MCP to:
 - Go to Settings, verify "Your Journey" and "Features" sections
 - Toggle 12-step content in Settings, verify Steps tab appears/disappears
 
-**Step 3: Push to remote**
+#### Step 3: Push to remote
 
 ```bash
 git push origin feat/twelve-step-toggle
