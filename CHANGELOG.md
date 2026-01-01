@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add "Include 12-Step Content" toggle in Settings to show or hide the Steps tab
 - Add conditional Steps tab visibility based on user preference (hidden when 12-step content disabled)
 - Add redirect from Steps screen to home when 12-step content is disabled
+- Hide 12 Steps quick action button on dashboard when 12-step content is disabled
 - Add database migration for `show_twelve_step_content` column on profiles table
 - Add full release history view in What's New modal with collapsible version sections
 - Add WhatsNewVersionSection component with expand/collapse, NEW badge, and feature sorting by type

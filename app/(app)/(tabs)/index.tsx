@@ -488,16 +488,18 @@ export default function HomeScreen() {
       )}
 
       <View testID="home-quick-actions" style={styles.quickActions}>
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => router.push('/steps')}
-          accessibilityRole="button"
-          accessibilityLabel="Open 12 Steps, Learn and Reflect"
-        >
-          <BookOpen size={32} color={theme.primary} />
-          <Text style={styles.actionTitle}>12 Steps</Text>
-          <Text style={styles.actionSubtitle}>Learn & Reflect</Text>
-        </TouchableOpacity>
+        {profile?.show_twelve_step_content !== false && (
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/steps')}
+            accessibilityRole="button"
+            accessibilityLabel="Open 12 Steps, Learn and Reflect"
+          >
+            <BookOpen size={32} color={theme.primary} />
+            <Text style={styles.actionTitle}>12 Steps</Text>
+            <Text style={styles.actionSubtitle}>Learn & Reflect</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={styles.actionCard}
           onPress={() => router.push('/tasks')}

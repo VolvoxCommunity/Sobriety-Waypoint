@@ -17,16 +17,19 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 // Mocks
 // =============================================================================
 
-const mockProfile = {
+let mockProfile: Record<string, unknown> = {
   id: 'user-123',
   email: 'test@example.com',
   display_name: 'Test U.',
   sobriety_date: '2024-01-01',
 };
 
+const mockRefreshProfile = jest.fn();
+
 jest.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     profile: mockProfile,
+    refreshProfile: mockRefreshProfile,
   }),
 }));
 
@@ -119,6 +122,14 @@ describe('HomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Reset to default profile
+    mockProfile = {
+      id: 'user-123',
+      email: 'test@example.com',
+      display_name: 'Test U.',
+      sobriety_date: '2024-01-01',
+    };
+
     // Default mock for supabase queries
     mockFrom.mockImplementation(() => ({
       select: jest.fn().mockReturnThis(),
@@ -153,6 +164,42 @@ describe('HomeScreen', () => {
       await waitFor(() => {
         expect(screen.getByText('12 Steps')).toBeTruthy();
         expect(screen.getByText('Manage Tasks')).toBeTruthy();
+      });
+    });
+
+    it('hides 12 Steps button when show_twelve_step_content is false', async () => {
+      mockProfile = {
+        ...mockProfile,
+        show_twelve_step_content: false,
+      };
+
+      renderWithTheme(<HomeScreen />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('12 Steps')).toBeNull();
+        expect(screen.getByText('Manage Tasks')).toBeTruthy();
+      });
+    });
+
+    it('shows 12 Steps button when show_twelve_step_content is true', async () => {
+      mockProfile = {
+        ...mockProfile,
+        show_twelve_step_content: true,
+      };
+
+      renderWithTheme(<HomeScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('12 Steps')).toBeTruthy();
+      });
+    });
+
+    it('shows 12 Steps button when show_twelve_step_content is undefined (default)', async () => {
+      // mockProfile already doesn't have show_twelve_step_content set
+      renderWithTheme(<HomeScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByText('12 Steps')).toBeTruthy();
       });
     });
   });
