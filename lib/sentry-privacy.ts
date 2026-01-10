@@ -231,13 +231,24 @@ function sanitizeConsoleBreadcrumbData(data: Record<string, unknown>): Record<st
   return sanitized;
 }
 
+/** Represents a sanitized value that may contain filtered or circular markers */
+type SanitizedValue =
+  | string
+  | number
+  | boolean
+  | null
+  | '[Filtered]'
+  | '[Circular]'
+  | SanitizedValue[]
+  | { [key: string]: SanitizedValue };
+
 /**
  * Recursively sanitize object by replacing sensitive fields with '[Filtered]'
  * Handles circular references by tracking visited objects
  */
-function sanitizeObject(obj: any, visited = new WeakSet()): any {
-  if (!obj || typeof obj !== 'object') {
-    return obj;
+function sanitizeObject(obj: unknown, visited = new WeakSet<object>()): SanitizedValue {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return obj as SanitizedValue;
   }
 
   // Detect circular references
@@ -251,7 +262,7 @@ function sanitizeObject(obj: any, visited = new WeakSet()): any {
     return obj.map((item) => sanitizeObject(item, visited));
   }
 
-  const sanitized: any = {};
+  const sanitized: Record<string, SanitizedValue> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (SENSITIVE_FIELDS.includes(key.toLowerCase())) {
       sanitized[key] = '[Filtered]';
@@ -264,7 +275,7 @@ function sanitizeObject(obj: any, visited = new WeakSet()): any {
     } else if (typeof value === 'object') {
       sanitized[key] = sanitizeObject(value, visited);
     } else {
-      sanitized[key] = value;
+      sanitized[key] = value as SanitizedValue;
     }
   }
 
