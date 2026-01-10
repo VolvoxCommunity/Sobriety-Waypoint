@@ -53,6 +53,27 @@ export type NotificationData =
   | ConnectionRequestNotificationData
   | MessageNotificationData;
 
+/** Maps each NotificationType to its corresponding data payload type */
+export type NotificationDataByType = {
+  task_assigned: TaskAssignedNotificationData;
+  task_completed: TaskCompletedNotificationData;
+  milestone: MilestoneNotificationData;
+  connection_request: ConnectionRequestNotificationData;
+  message: MessageNotificationData;
+};
+
+/** Type-safe notification with discriminated data based on notification type */
+export type TypedNotification<T extends NotificationType = NotificationType> = {
+  id: string;
+  user_id: string;
+  type: T;
+  title: string;
+  content: string;
+  data: NotificationDataByType[T];
+  read_at?: string;
+  created_at: string;
+};
+
 // =============================================================================
 // Database Interfaces
 // =============================================================================

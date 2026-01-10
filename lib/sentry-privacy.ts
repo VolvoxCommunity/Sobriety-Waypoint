@@ -247,16 +247,43 @@ type SanitizedValue =
  * Handles circular references by tracking visited objects
  */
 function sanitizeObject(obj: unknown, visited = new WeakSet<object>()): SanitizedValue {
-  if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return obj as SanitizedValue;
+  // Handle null and undefined
+  if (obj === null) {
+    return null;
+  }
+  if (obj === undefined) {
+    return null; // Convert undefined to null for JSON compatibility
+  }
+
+  // Handle valid primitive types
+  const objType = typeof obj;
+  if (objType === 'string') {
+    return obj as string;
+  }
+  if (objType === 'number') {
+    return obj as number;
+  }
+  if (objType === 'boolean') {
+    return obj as boolean;
+  }
+
+  // Filter out non-serializable primitive types (symbol, bigint, function)
+  if (objType === 'symbol' || objType === 'bigint' || objType === 'function') {
+    return '[Filtered]';
+  }
+
+  // At this point, obj must be an object type
+  if (objType !== 'object') {
+    // Safety check for any unexpected types
+    return '[Filtered]';
   }
 
   // Detect circular references
-  if (visited.has(obj)) {
+  if (visited.has(obj as object)) {
     return '[Circular]';
   }
 
-  visited.add(obj);
+  visited.add(obj as object);
 
   if (Array.isArray(obj)) {
     return obj.map((item) => sanitizeObject(item, visited));
@@ -275,7 +302,8 @@ function sanitizeObject(obj: unknown, visited = new WeakSet<object>()): Sanitize
     } else if (typeof value === 'object') {
       sanitized[key] = sanitizeObject(value, visited);
     } else {
-      sanitized[key] = value as SanitizedValue;
+      // Recursively handle to ensure non-serializable primitives are filtered
+      sanitized[key] = sanitizeObject(value, visited);
     }
   }
 
